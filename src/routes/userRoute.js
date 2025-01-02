@@ -1,0 +1,21 @@
+const express = require('express');
+const router = express.Router();
+import catchAsync from '~/utils/catchAsync';
+import validate from '~/middlewares/validate';
+import authenticate from '~/middlewares/authenticate';
+import userValidation from '~/validations/userValidation';
+import userController from '~/controllers/userController';
+
+
+router.get('/', authenticate('user:read'), validate(userValidation.getUsers), catchAsync(userController.getUsers));
+router.post('/', authenticate('user:create'), validate(userValidation.createUser), catchAsync(userController.createUser));
+router.get('/:userId', authenticate('user:read'), validate(userValidation.getUser), catchAsync(userController.getUser));
+router.put('/:userId', authenticate('user:update'), validate(userValidation.updateUser), catchAsync(userController.updateUser));
+router.delete(
+	'/:userId',
+	authenticate('user:delete'),
+	validate(userValidation.deleteUser),
+	catchAsync(userController.deleteUser)
+);
+
+export default router;

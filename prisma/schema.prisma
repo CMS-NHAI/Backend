@@ -1,0 +1,218 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+   schemas  = ["common", "tenant_nhai"]
+}
+
+
+
+// schema.prisma
+
+// Enum for login method
+enum LoginMethod {
+  OTP
+  Email
+  Password
+  Biometric
+}
+
+// Enum for login status
+enum LoginStatus {
+  Success
+  Failed
+}
+
+// Organization model
+model Organization {
+  org_id                Int        @id @default(autoincrement())
+  org_unique_name       String     @default(uuid()) @db.Uuid
+  name                  String
+  org_type              String
+  contractor_agency_type String?
+  date_of_incorporation DateTime?
+  selection_method      String?
+  empanelment_start_date DateTime?
+  empanelment_end_date  DateTime?
+  tender_ucc            String?
+  tender_id             String?
+  organization_data     Json?
+  contact_email         String?
+  invite_status         String    @default("PENDING")
+  created_at            DateTime  @default(now())
+  created_by            String?
+  updated_at            DateTime  @default(now()) @updatedAt
+  updated_by            String?
+  users                 UserMaster[]
+
+  @@schema("common")
+}
+
+// UserMaster model
+model UserMaster {
+  user_id                Int        @id @default(autoincrement())
+  unique_username        String     @unique @db.Uuid
+  sap_id                 String?    @unique
+  name                   String
+  first_name            String?
+  middle_name           String?
+  last_name             String?
+  email                  String?    @unique
+  mobile_number         Int?       @unique
+  user_type             String
+  organization_id       Int?       @default(-1)
+  level_id              Int        @default(-1)
+  user_role             Json
+  designation           String?
+  gender                String?
+  nationality           String?
+  date_of_birth         DateTime?
+  pan                   Json?
+  Aadhar_image          String
+  User_image            String
+  password_hash        String?
+  user_data            Json?
+  is_kyc_verified      Boolean?
+  last_kyc_verified_date DateTime?
+  is_active             Boolean?
+  inactive_at          DateTime?
+  deactivation_reason  String?
+  activation_status    String?    @db.VarChar(20)
+  created_at           DateTime   @default(now())
+  created_by           String?
+  updated_at           DateTime   @default(now()) @updatedAt
+  updated_by           String?
+
+  organization         Organization @relation(fields: [organization_id], references: [org_id])
+  authentications      Authentication[]
+  event_logs           EventLog[]
+  event_log_histories  EventLogHistory[]
+
+  @@schema("tenant_nhai")
+}
+
+// UserMapping model
+model UserMapping {
+  user_mapping_id      Int        @id @default(autoincrement())
+  user_id              Int
+  unique_username      String     @unique
+  old_user_id          Int?
+  old_user_name        String?
+  old_user_role        Int        @default(-1)
+  user_mapping_data    Json?
+  created_at           DateTime   @default(now())
+  created_by           String?
+  updated_at           DateTime   @default(now()) @updatedAt
+  updated_by           String?
+
+  user                 UserMaster @relation(fields: [user_id], references: [user_id])
+
+  @@schema("common")
+}
+
+// MasterCodes model
+model MasterCodes {
+  mastercodesid        Int        @id @default(autoincrement())
+  code_name            String     @unique
+  code_value           String
+  description          String
+  associated_field     String
+  type                 String
+  master_data          Json?
+  category             String
+  remarks              String?
+  created_at           DateTime   @default(now())
+  created_by           String?
+  updated_at           DateTime   @default(now()) @updatedAt
+  updated_by           String?
+
+   @@schema("common")
+}
+
+// Authentication model
+model Authentication {
+  auth_id             Int        @id @default(autoincrement())
+  user_id             Int
+  login_method        LoginMethod
+  login_status        LoginStatus
+  login_time          DateTime   @default(now())
+  ip_address          String
+  device_type         String
+  retry_count         Int        @default(0)
+  session_duration    String?
+  created_at          DateTime   @default(now())
+  created_by          String?
+  updated_at          DateTime   @default(now()) @updatedAt
+  updated_by          String?
+
+  user                UserMaster @relation(fields: [user_id], references: [user_id])
+
+   @@schema("tenant_nhai")
+}
+
+// EventLog model
+model EventLog {
+  event_id            Int        @id @default(autoincrement())
+  event_type          String?
+  event_timestamp     DateTime?
+  user_id            Int?
+  ip_address          String?
+  device_info         String?
+  event_status        String?
+  event_details       Json?
+  created_at          DateTime   @default(now())
+  created_by          String?
+  updated_at          DateTime   @default(now()) @updatedAt
+  updated_by          String?
+  user                UserMaster? @relation(fields: [user_id], references: [user_id])
+
+  @@schema("tenant_nhai")
+}
+
+// EventLogHistory model
+model EventLogHistory {
+  event_history_id    Int        @id @default(autoincrement())
+  event_id            Int
+  event_type          String?
+  event_timestamp     DateTime?
+  user_id            Int?
+  ip_address          String?
+  device_info         String?
+  event_status        String?
+  event_details       Json?
+  created_at          DateTime   @default(now())
+  created_by          String?
+  updated_at          DateTime   @default(now()) @updatedAt
+  updated_by          String?
+
+  user                UserMaster? @relation(fields: [user_id], references: [user_id])
+
+  @@schema("tenant_nhai")
+}
+
+// SupportingDocuments model
+model SupportingDocuments {
+  document_id         Int        @id @default(autoincrement())
+  document_type       String
+  key_id              Int?
+  key_name            String
+  document_name       String?
+  document_path       String?
+  is_deleted          Boolean    @default(false)
+  created_by          String?
+  created_at          DateTime   @default(now())
+  updated_by          String?
+  updated_at          DateTime   @default(now()) @updatedAt
+
+  @@schema("tenant_nhai")
+}

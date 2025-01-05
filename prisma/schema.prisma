@@ -1,218 +1,312 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client-js"
-  previewFeatures = ["multiSchema"]
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema", "postgresqlExtensions","fullTextSearch"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-   schemas  = ["common", "tenant_nhai"]
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis(version: "3.5.0"), uuid_ossp(map: "uuid-ossp", schema: "public")]
+  schemas    = ["public","common", "tenant_nhai"]
 }
 
-
-
-// schema.prisma
-
-// Enum for login method
-enum LoginMethod {
-  OTP
-  Email
-  Password
-  Biometric
-}
-
-// Enum for login status
-enum LoginStatus {
-  Success
-  Failed
-}
-
-// Organization model
-model Organization {
-  org_id                Int        @id @default(autoincrement())
-  org_unique_name       String     @default(uuid()) @db.Uuid
-  name                  String
-  org_type              String
-  contractor_agency_type String?
-  date_of_incorporation DateTime?
-  selection_method      String?
-  empanelment_start_date DateTime?
-  empanelment_end_date  DateTime?
-  tender_ucc            String?
-  tender_id             String?
-  organization_data     Json?
-  contact_email         String?
-  invite_status         String    @default("PENDING")
-  created_at            DateTime  @default(now())
-  created_by            String?
-  updated_at            DateTime  @default(now()) @updatedAt
-  updated_by            String?
-  users                 UserMaster[]
+model mastercodes {
+  mastercodesid    Int      @id @default(autoincrement())
+  code_name        String   @unique @db.VarChar(50)
+  code_value       String   @db.VarChar(50)
+  description      String
+  associated_field String   @db.VarChar(50)
+  type             String   @db.VarChar(50)
+  master_data      Json?    @db.Json
+  category         String   @db.VarChar(50)
+  remarks          String?
+  created_at       DateTime @default(now()) @db.Timestamp(6)
+  created_by       String?  @db.VarChar(100)
+  updated_at       DateTime @default(now()) @db.Timestamp(6)
+  updated_by       String?  @db.VarChar(100)
 
   @@schema("common")
 }
 
-// UserMaster model
-model UserMaster {
-  user_id                Int        @id @default(autoincrement())
-  unique_username        String     @unique @db.Uuid
-  sap_id                 String?    @unique
-  name                   String
-  first_name            String?
-  middle_name           String?
-  last_name             String?
-  email                  String?    @unique
-  mobile_number         Int?       @unique
-  user_type             String
-  organization_id       Int?       @default(-1)
-  level_id              Int        @default(-1)
-  user_role             Json
-  designation           String?
-  gender                String?
-  nationality           String?
-  date_of_birth         DateTime?
-  pan                   Json?
-  Aadhar_image          String
-  User_image            String
-  password_hash        String?
-  user_data            Json?
-  is_kyc_verified      Boolean?
-  last_kyc_verified_date DateTime?
-  is_active             Boolean?
-  inactive_at          DateTime?
-  deactivation_reason  String?
-  activation_status    String?    @db.VarChar(20)
-  created_at           DateTime   @default(now())
-  created_by           String?
-  updated_at           DateTime   @default(now()) @updatedAt
-  updated_by           String?
-
-  organization         Organization @relation(fields: [organization_id], references: [org_id])
-  authentications      Authentication[]
-  event_logs           EventLog[]
-  event_log_histories  EventLogHistory[]
-
-  @@schema("tenant_nhai")
-}
-
-// UserMapping model
-model UserMapping {
-  user_mapping_id      Int        @id @default(autoincrement())
-  user_id              Int
-  unique_username      String     @unique
-  old_user_id          Int?
-  old_user_name        String?
-  old_user_role        Int        @default(-1)
-  user_mapping_data    Json?
-  created_at           DateTime   @default(now())
-  created_by           String?
-  updated_at           DateTime   @default(now()) @updatedAt
-  updated_by           String?
-
-  user                 UserMaster @relation(fields: [user_id], references: [user_id])
+model organization_master {
+  org_id                 Int           @id @default(autoincrement())
+  org_unique_name        String?       @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                   String        @db.VarChar(255)
+  org_type               String        @db.VarChar(100)
+  contractor_agency_type String?       @db.VarChar(100)
+  date_of_incorporation  DateTime?     @db.Date
+  selection_method       String?       @db.VarChar(100)
+  empanelment_start_date DateTime?     @db.Date
+  empanelment_end_date   DateTime?     @db.Date
+  tender_ucc             String?       @db.VarChar(100)
+  tender_id              String?       @db.VarChar(100)
+  organization_data      Json?         @db.Json
+  contact_email          String?       @db.VarChar(255)
+  invite_status          String?       @default("PENDING") @db.VarChar(20)
+  created_at             DateTime?     @default(now()) @db.Timestamptz(6)
+  created_by             String?       @db.VarChar(100)
+  updated_at             DateTime?     @default(now()) @db.Timestamptz(6)
+  updated_by             String?       @db.VarChar(100)
+  user_master            user_master[]
 
   @@schema("common")
 }
 
-// MasterCodes model
-model MasterCodes {
-  mastercodesid        Int        @id @default(autoincrement())
-  code_name            String     @unique
-  code_value           String
-  description          String
-  associated_field     String
-  type                 String
-  master_data          Json?
-  category             String
-  remarks              String?
-  created_at           DateTime   @default(now())
-  created_by           String?
-  updated_at           DateTime   @default(now()) @updatedAt
-  updated_by           String?
+model user_mapping {
+  user_mapping_id   Int          @id @default(autoincrement())
+  user_id           Int?
+  unique_username   String?      @unique @db.VarChar(50)
+  old_user_id       Int?
+  old_user_name     String?      @db.VarChar(50)
+  old_user_role     Int          @default(-1)
+  user_mapping_data Json?        @db.Json
+  created_at        DateTime?    @default(now()) @db.Timestamp(6)
+  created_by        String?      @default(dbgenerated("CURRENT_TIMESTAMP")) @db.VarChar(100)
+  updated_at        DateTime?    @default(now()) @db.Timestamp(6)
+  updated_by        String?      @default(dbgenerated("CURRENT_TIMESTAMP")) @db.VarChar(100)
+  user_master       user_master? @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
 
-   @@schema("common")
+  @@schema("common")
 }
 
-// Authentication model
-model Authentication {
-  auth_id             Int        @id @default(autoincrement())
-  user_id             Int
-  login_method        LoginMethod
-  login_status        LoginStatus
-  login_time          DateTime   @default(now())
-  ip_address          String
-  device_type         String
-  retry_count         Int        @default(0)
-  session_duration    String?
-  created_at          DateTime   @default(now())
-  created_by          String?
-  updated_at          DateTime   @default(now()) @updatedAt
-  updated_by          String?
-
-  user                UserMaster @relation(fields: [user_id], references: [user_id])
-
-   @@schema("tenant_nhai")
-}
-
-// EventLog model
-model EventLog {
-  event_id            Int        @id @default(autoincrement())
-  event_type          String?
-  event_timestamp     DateTime?
-  user_id            Int?
-  ip_address          String?
-  device_info         String?
-  event_status        String?
-  event_details       Json?
-  created_at          DateTime   @default(now())
-  created_by          String?
-  updated_at          DateTime   @default(now()) @updatedAt
-  updated_by          String?
-  user                UserMaster? @relation(fields: [user_id], references: [user_id])
+model actions {
+  action_id   Int       @id @default(autoincrement())
+  action_name String    @unique @db.VarChar(50)
+  description String?
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  created_by  String?   @db.VarChar(100)
 
   @@schema("tenant_nhai")
 }
 
-// EventLogHistory model
-model EventLogHistory {
-  event_history_id    Int        @id @default(autoincrement())
-  event_id            Int
-  event_type          String?
-  event_timestamp     DateTime?
-  user_id            Int?
-  ip_address          String?
-  device_info         String?
-  event_status        String?
-  event_details       Json?
-  created_at          DateTime   @default(now())
-  created_by          String?
-  updated_at          DateTime   @default(now()) @updatedAt
-  updated_by          String?
-
-  user                UserMaster? @relation(fields: [user_id], references: [user_id])
+model authentication {
+  auth_id          Int                         @id @default(autoincrement())
+  user_id          Int
+  login_method     Unsupported("login_method")
+  login_status     Unsupported("login_status")
+  login_time       DateTime                    @default(now()) @db.Timestamp(6)
+  ip_address       String                      @db.VarChar(45)
+  device_type      String                      @db.VarChar(50)
+  retry_count      Int                         @default(0)
+  session_duration DateTime?                   @db.Time(6)
+  created_at       DateTime                    @default(now()) @db.Timestamptz(6)
+  created_by       String?                     @db.VarChar(100)
+  updated_at       DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_by       String?                     @db.VarChar(100)
+  user_master      user_master                 @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
 
   @@schema("tenant_nhai")
 }
 
-// SupportingDocuments model
-model SupportingDocuments {
-  document_id         Int        @id @default(autoincrement())
-  document_type       String
-  key_id              Int?
-  key_name            String
-  document_name       String?
-  document_path       String?
-  is_deleted          Boolean    @default(false)
-  created_by          String?
-  created_at          DateTime   @default(now())
-  updated_by          String?
-  updated_at          DateTime   @default(now()) @updatedAt
+model event_log {
+  event_id        Int          @id @default(autoincrement())
+  event_type      String?      @db.VarChar(50)
+  event_timestamp DateTime?    @db.Timestamp(6)
+  user_id         BigInt?
+  ip_address      String?      @db.VarChar(45)
+  device_info     String?      @db.VarChar(255)
+  event_status    String?      @db.VarChar(20)
+  event_details   Json?        @db.Json
+  created_at      DateTime?    @db.Timestamp(6)
+  created_by      String?      @db.VarChar(100)
+  updated_at      DateTime?    @db.Timestamp(6)
+  updated_by      String?      @db.VarChar(100)
+  user_master     user_master? @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("tenant_nhai")
+}
+
+model event_log_history {
+  event_history_id Int          @id @default(autoincrement())
+  event_id         BigInt?
+  event_type       String?      @db.VarChar(50)
+  event_timestamp  DateTime?    @db.Timestamp(6)
+  user_id          BigInt?
+  ip_address       String?      @db.VarChar(45)
+  device_info      String?      @db.VarChar(255)
+  event_status     String?      @db.VarChar(20)
+  event_details    Json?        @db.Json
+  created_at       DateTime?    @db.Timestamp(6)
+  created_by       String?      @db.VarChar(100)
+  updated_at       DateTime?    @db.Timestamp(6)
+  updated_by       String?      @db.VarChar(100)
+  user_master      user_master? @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("tenant_nhai")
+}
+
+model location_master {
+  id                    String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                  String?                  @db.VarChar(255)
+  type                  String?                  @db.VarChar(50)
+  geometry              Unsupported("geometry")?
+  properties            Json?
+  created_at            DateTime?                @default(now()) @db.Timestamp(6)
+  created_by            String?                  @db.VarChar(100)
+  parent_location_id    String?                  @db.Uuid
+  hierarchy_path        Unsupported("ltree")?
+  location_master       location_master?         @relation("location_masterTolocation_master", fields: [parent_location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  other_location_master location_master[]        @relation("location_masterTolocation_master")
+  resources             resources[]
+
+  @@schema("tenant_nhai")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model policies {
+  id                    String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  policy_name           String                   @unique @db.VarChar(255)
+  description           String?
+  subject_condition     Json?
+  resource_condition    Json?
+  spatial_condition     Unsupported("geometry")?
+  action_condition      Json?
+  environment_condition Json?
+  temporal_condition    Json?
+  effect                String                   @db.VarChar(10)
+  priority              Int?                     @default(0)
+  created_at            DateTime?                @default(now()) @db.Timestamp(6)
+  created_by            String?                  @db.VarChar(100)
+
+  @@schema("tenant_nhai")
+}
+
+model resource_attributes {
+  id              String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  resource_id     String?                  @db.Uuid
+  attribute_name  String                   @db.VarChar(100)
+  attribute_value Json
+  geometry        Unsupported("geometry")?
+  valid_from      DateTime?                @db.Timestamptz(6)
+  valid_to        DateTime?                @db.Timestamptz(6)
+  created_at      DateTime?                @default(now()) @db.Timestamp(6)
+  created_by      String?                  @db.VarChar(100)
+  resources       resources?               @relation(fields: [resource_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("tenant_nhai")
+}
+
+model resource_cache {
+  id          String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  resource_id String?                  @db.Uuid
+  cached_data Json?
+  geometry    Unsupported("geometry")?
+  last_sync   DateTime?                @db.Timestamptz(6)
+  version     Int?
+  is_dirty    Boolean?                 @default(false)
+  created_at  DateTime?                @default(now()) @db.Timestamp(6)
+  created_by  String?                  @db.VarChar(100)
+  resources   resources?               @relation(fields: [resource_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("tenant_nhai")
+}
+
+model resources {
+  id                  String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  resource_type       String                   @db.VarChar(50)
+  resource_name       String                   @db.VarChar(255)
+  resource_path       String                   @unique @db.VarChar(255)
+  geometry            Unsupported("geometry")?
+  properties          Json?
+  metadata            Json?
+  created_at          DateTime?                @default(now()) @db.Timestamp(6)
+  created_by          String?                  @db.VarChar(100)
+  location_id         String?                  @db.Uuid
+  parent_resource_id  String?                  @db.Uuid
+  resource_attributes resource_attributes[]
+  resource_cache      resource_cache[]
+  location_master     location_master?         @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  resources           resources?               @relation("resourcesToresources", fields: [parent_resource_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  other_resources     resources[]              @relation("resourcesToresources")
+
+  @@schema("tenant_nhai")
+}
+
+model supporting_documents {
+  document_id   Int       @id @default(autoincrement())
+  document_type String    @db.VarChar(255)
+  key_id        Int?
+  key_name      String    @db.VarChar(255)
+  document_name String?
+  document_path String?
+  is_deleted    Boolean?  @default(false)
+  created_by    String?   @db.VarChar(100)
+  created_at    DateTime? @default(now()) @db.Timestamptz(6)
+  updated_by    String?   @db.VarChar(100)
+  updated_at    DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@schema("tenant_nhai")
+}
+
+model user_attributes {
+  attribute_id    Int          @id @default(autoincrement())
+  user_id         Int?
+  attribute_name  String       @db.VarChar(100)
+  attribute_value Json
+  created_at      DateTime?    @default(now()) @db.Timestamp(6)
+  created_by      String?      @db.VarChar(100)
+  user_master     user_master? @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("tenant_nhai")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model user_master {
+  user_id                Int                  @id @default(autoincrement())
+  unique_username        String?              @unique @db.Uuid
+  sap_id                 String?              @unique @db.VarChar(50)
+  name                   String               @db.VarChar(100)
+  first_name             String?              @db.VarChar(50)
+  middle_name            String?              @db.VarChar(50)
+  last_name              String?              @db.VarChar(50)
+  email                  String?              @unique @db.VarChar(100)
+  mobile_number          Int?                 @unique
+  user_type              String               @db.VarChar(20)
+  organization_id        Int?                 @default(-1)
+  level_id               Int                  @default(-1)
+  user_role              Json                 @db.Json
+  designation            String?              @db.VarChar(100)
+  gender                 String?              @db.VarChar(10)
+  nationality            String?              @db.VarChar(100)
+  date_of_birth          DateTime?            @db.Date
+  pan                    Json?                @db.Json
+  aadhar_image           String
+  user_image             String
+  password_hash          String?              @db.VarChar(255)
+  user_data              Json?                @db.Json
+  is_kyc_verified        Boolean?
+  last_kyc_verified_date DateTime?            @db.Timestamptz(6)
+  is_active              Boolean?
+  inactive_at            DateTime?            @db.Timestamptz(6)
+  deactivation_reason    String?              @db.VarChar(255)
+  activation_status      String?              @db.VarChar(20)
+  created_at             DateTime?            @default(now()) @db.Timestamp(6)
+  created_by             String?              @db.VarChar(100)
+  updated_at             DateTime?            @default(now()) @db.Timestamp(6)
+  updated_by             String?              @db.VarChar(100)
+  user_mapping           user_mapping[]
+  authentication         authentication[]
+  event_log              event_log[]
+  event_log_history      event_log_history[]
+  user_attributes        user_attributes[]
+  organization_master    organization_master? @relation(fields: [organization_id], references: [org_id], onDelete: NoAction, onUpdate: NoAction)
+  user_sessions          user_sessions[]
+
+  @@schema("tenant_nhai")
+}
+
+model user_sessions {
+  id            String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id       Int?
+  device_id     String?      @db.VarChar(255)
+  device_type   String?      @db.VarChar(50)
+  device_info   Json?
+  push_token    String?
+  session_token String?      @unique
+  last_active   DateTime?    @db.Timestamptz(6)
+  is_valid      Boolean?     @default(true)
+  created_by    String?      @db.VarChar(100)
+  user_master   user_master? @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@schema("tenant_nhai")
 }

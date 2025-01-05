@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "npm run dev",
-    "dev": "cross-env NODE_ENV=development nodemon src --exec babel-node",
+    "dev": "nodemon ./src/index.js",
     "build": "babel src -d dist",
     "prod": "pm2-runtime start ecosystem.config.js --env production",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -44,12 +44,13 @@
     "pm2": "^5.4.3",
     "redis": "^4.7.0",
     "sharp": "^0.33.5",
+    "twilio": "^5.4.0",
     "uuid": "^11.0.3",
     "validator": "^13.12.0",
     "winston": "^3.17.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.12",
+    "nodemon": "^2.0.22",
     "prettier": "^2.4.0",
     "prisma": "^6.1.0"
   }

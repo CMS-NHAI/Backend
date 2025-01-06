@@ -8,7 +8,7 @@
     "dev": "nodemon ./src/index.js",
     "build": "babel src -d dist",
     "prod": "pm2-runtime start ecosystem.config.js --env production",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": ""
   },
   "keywords": [],
   "author": "",

@@ -27,5 +27,6 @@ app.use('/api/v1', routes);
 app.use(error.converter);
 app.use(error.notFound);
 app.use(error.handler);
+console.log("Test");
 
 export default app;

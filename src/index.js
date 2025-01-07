@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import bodyParser from 'body-parser'
 import router from "./routes/otpRoutes.js";
+import userrouter from "./routes/userRoutes.js";
 //const otpRoutes = require('./routes/otpRoutes');
 //const userRoutes = require('./routes/userRoutes');
 //import { userRoutes } from "./routes/userRoutes.js"
@@ -29,7 +30,8 @@ app.use(bodyParser.json());
 
 app.use(express.json()); 
 
-app.use('/api/otp', router);
+app.use('/api/v1/otp', router);
+app.use('/api/v1/user', userrouter);
 //app.use('/api/user', userRoutes);
 //app.use("/api/v1/article", ArticleRouter);
 //app.use("/api/v1/user", UserRouter);

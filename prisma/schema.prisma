@@ -1,13 +1,13 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["multiSchema", "postgresqlExtensions","fullTextSearch"]
+  previewFeatures = ["multiSchema", "postgresqlExtensions"]
 }
 
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
   extensions = [postgis(version: "3.5.0"), uuid_ossp(map: "uuid-ossp", schema: "public")]
-  schemas    = ["public","common", "tenant_nhai"]
+  schemas    = ["common", "public", "tenant_nhai"]
 }
 
 model mastercodes {
@@ -80,20 +80,20 @@ model actions {
 }
 
 model authentication {
-  auth_id          Int                         @id @default(autoincrement())
+  auth_id          Int          @id @default(autoincrement())
   user_id          Int
-  login_method     Unsupported("login_method")
-  login_status     Unsupported("login_status")
-  login_time       DateTime                    @default(now()) @db.Timestamp(6)
-  ip_address       String                      @db.VarChar(45)
-  device_type      String                      @db.VarChar(50)
-  retry_count      Int                         @default(0)
-  session_duration DateTime?                   @db.Time(6)
-  created_at       DateTime                    @default(now()) @db.Timestamptz(6)
-  created_by       String?                     @db.VarChar(100)
-  updated_at       DateTime                    @default(now()) @db.Timestamptz(6)
-  updated_by       String?                     @db.VarChar(100)
-  user_master      user_master                 @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
+  login_method     login_method
+  login_status     login_status
+  login_time       DateTime     @default(now()) @db.Timestamp(6)
+  ip_address       String       @db.VarChar(45)
+  device_type      String       @db.VarChar(50)
+  retry_count      Int          @default(0)
+  session_duration DateTime?    @db.Time(6)
+  created_at       DateTime     @default(now()) @db.Timestamptz(6)
+  created_by       String?      @db.VarChar(100)
+  updated_at       DateTime     @default(now()) @db.Timestamptz(6)
+  updated_by       String?      @db.VarChar(100)
+  user_master      user_master  @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
 
   @@schema("tenant_nhai")
 }
@@ -102,7 +102,7 @@ model event_log {
   event_id        Int          @id @default(autoincrement())
   event_type      String?      @db.VarChar(50)
   event_timestamp DateTime?    @db.Timestamp(6)
-  user_id         BigInt?
+  user_id         Int?
   ip_address      String?      @db.VarChar(45)
   device_info     String?      @db.VarChar(255)
   event_status    String?      @db.VarChar(20)
@@ -121,7 +121,7 @@ model event_log_history {
   event_id         BigInt?
   event_type       String?      @db.VarChar(50)
   event_timestamp  DateTime?    @db.Timestamp(6)
-  user_id          BigInt?
+  user_id          Int?
   ip_address       String?      @db.VarChar(45)
   device_info      String?      @db.VarChar(255)
   event_status     String?      @db.VarChar(20)
@@ -252,15 +252,15 @@ model user_attributes {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model user_master {
-  user_id                Int                  @id @default(autoincrement())
-  unique_username        String?              @unique @db.Uuid
+  user_id                 Int       @id @default(autoincrement())
+  unique_username        String   @unique                      // Unique string field for the username
   sap_id                 String?              @unique @db.VarChar(50)
   name                   String               @db.VarChar(100)
   first_name             String?              @db.VarChar(50)
   middle_name            String?              @db.VarChar(50)
   last_name              String?              @db.VarChar(50)
   email                  String?              @unique @db.VarChar(100)
-  mobile_number          Int?                 @unique
+  mobile_number          String?              @unique @db.VarChar(20)
   user_type              String               @db.VarChar(20)
   organization_id        Int?                 @default(-1)
   level_id               Int                  @default(-1)
@@ -284,6 +284,13 @@ model user_master {
   created_by             String?              @db.VarChar(100)
   updated_at             DateTime?            @default(now()) @db.Timestamp(6)
   updated_by             String?              @db.VarChar(100)
+  otp                    String?              @db.VarChar(6)
+  otp_timestamp          DateTime?            @db.Timestamp(6)
+  is_digilocker_verified Boolean?             @default(false)
+  office_location        String?              @db.VarChar(255)
+  is_email_verified      Boolean?             @default(false)
+  is_whatsapp_update     Boolean?             @default(false)
+  verified_status        Boolean  @default(false)
   user_mapping           user_mapping[]
   authentication         authentication[]
   event_log              event_log[]
@@ -309,4 +316,31 @@ model user_sessions {
   user_master   user_master? @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@schema("tenant_nhai")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model spatial_ref_sys {
+  srid      Int     @id
+  auth_name String? @db.VarChar(256)
+  auth_srid Int?
+  srtext    String? @db.VarChar(2048)
+  proj4text String? @db.VarChar(2048)
+
+  @@schema("public")
+}
+
+enum login_method {
+  OTP
+  Email
+  Password
+  Biometric
+
+  @@schema("public")
+}
+
+enum login_status {
+  Success
+  Failed
+
+  @@schema("public")
 }

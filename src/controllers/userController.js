@@ -19,7 +19,8 @@ const getEmployeeBySAPID = async (sapId) => {
         email: true,
         designation: true, 
         office_location : true,
-        is_digilocker_verified : true // Select only the required fields
+        is_digilocker_verified : true ,
+        name : true// Select only the required fields
       },
     });
 
@@ -124,6 +125,125 @@ export const signup = async (req, res) => {
       message: 'SAP ID is required.',
     });
   }
+
+  try {
+    const employee = await getEmployeeBySAPID(sap_id);
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        status: 404,
+        message: 'Employee not found with the provided SAP ID.',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Success',
+      data: employee,
+    });
+  } catch (err) {
+    console.error('Error during API request:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Error retrieving employee information.',
+    });
+  }
+};
+
+export const getUserDetails = async (req, res) => {
+  const { mobile_number } = req.body;
+
+  // Validate phone number
+  if (!mobile_number) {
+    return res.status(400).json({
+      status: "failure",
+      message: "mobile_number is required.",
+    });
+  }
+
+  if (!validatePhoneNumber(mobile_number)) {
+    return res.status(400).json({
+      status: "failure",
+      message: "Mobile number must be in the format +91 followed by exactly 10 digits.",
+    });
+  }
+
+  try {
+    // Fetch user details using mobile_no
+    const user = await getUserByPhoneNo(mobile_number);
+
+    if (!user) {
+      return res.status(404).json({
+        status: "failure",
+        message: "User not found with the provided phone number.",
+      });
+    }
+
+    // Construct and send the success response
+    res.status(200).json({
+      status: "success",
+      message: "User details retrieved successfully.",
+      data: {
+        sap_id: user.sap_id,
+        name: user.name,
+        date_of_birth: user.date_of_birth,  // Assuming date_of_birth is returned as a Date object
+        mobile_number: user.mobile_number,
+        email_id: user.email,
+        designation: user.designation,
+        office_location: user.office_location,
+      },
+    });
+  } catch (err) {
+    console.error('Error during API request:', err);
+    res.status(500).json({
+      status: "failure",
+      message: "Error retrieving user information.",
+    });
+  }
+};
+const getUserByPhoneNo = async (mobile_number) => {
+  try {
+    console.log("1");
+    // Query the user_master table to get user details by mobile_number
+    const user = await prisma.user_master.findUnique({
+      where: {
+        mobile_number: mobile_number,  // Search by phone_number
+       },
+      select: {
+        sap_id: true,
+        name: true,
+        date_of_birth: true,
+        mobile_number: true,
+        email: true,
+        designation: true,
+        office_location: true,
+      },
+    });
+     console.log('user' , user);
+    return user; // Return user data or null if not found
+  } catch (err) {
+    console.error('Error fetching user information:', err);
+    throw err;
+  }
+};
+export const getSapDetails = async (req, res) => {
+  // const { sap_id , device_id, client_id} = req.body;
+  const { sap_id } = req.body;
+   console.log("1");
+  if (!sap_id) {
+    return res.status(400).json({
+      success: false,
+      status: 400,
+      message: 'SAP ID is required.',
+    });
+  }
+  // if (!sap_id || !device_id || !client_id) {
+  //   return res.status(400).json({
+  //     status: "failure",
+  //     message: "sap_id, device_id, and client_id are required.",
+  //   });
+  // }
 
   try {
     const employee = await getEmployeeBySAPID(sap_id);

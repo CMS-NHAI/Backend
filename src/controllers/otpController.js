@@ -89,8 +89,6 @@ export const sendOtpToUser = async (req, res) => {
     });
 
   } catch (err) {
-    console.log(err);
-    console.error(err);
     res.status(500).json({
       success: false,
       status: 500,

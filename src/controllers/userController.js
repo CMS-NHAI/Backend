@@ -20,19 +20,22 @@ const getEmployeeBySAPID = async (sapId) => {
         designation: true, 
         office_location : true,
         is_digilocker_verified : true ,
-        name : true// Select only the required fields
+        name : true
       },
     });
 
     if (!employee) {
-      return null;  // Return null if no employee is found
+      return null; 
     }
 
-    return employee;  // Return the employee data
+    return employee; 
 
   } catch (err) {
-    console.error('Error fetching employee information:', err);
-    throw err;
+    return res.status(400).json({
+      success: false,
+      status: 400,
+      message: err,
+    });
   }
 };
 
@@ -143,10 +146,9 @@ export const signup = async (req, res) => {
       data: employee,
     });
   } catch (err) {
-    console.error('Error during API request:', err);
     res.status(500).json({
       success: false,
-      message: 'Error retrieving employee information.',
+      message: err,
     });
   }
 };
@@ -187,8 +189,9 @@ export const getUserDetails = async (req, res) => {
     const user = await getUserByPhoneNo(mobile_number);
 
     if (!user) {
-      return res.status(404).json({
+      return res.status(200).json({
         success: "false",
+        status : 200,
         message: "User not found with the provided phone number.",
       });
     }
@@ -293,7 +296,6 @@ export const getSapDetails = async (req, res) => {
       data: employee,
     });
   } catch (err) {
-    console.error('Error during API request:', err);
     res.status(500).json({
       success: false,
       message: err,

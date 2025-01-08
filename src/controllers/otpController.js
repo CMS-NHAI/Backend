@@ -34,7 +34,6 @@ export const sendOtpToUser = async (req, res) => {
     // const user = await prismaClient.user.findUnique({
     //   where: { phone_number },
     // });
-    console.log(prisma);
     const user = await prisma.user_master.findUnique({  // Use correct model name
         where: { mobile_number: mobile_number},  // Assuming `mobile_number` is the field to search
       });
@@ -74,7 +73,6 @@ export const sendOtpToUser = async (req, res) => {
 
     const otp = generateOTP();
     const otp_timestamp = new Date();
-
     await prisma.user_master.update({
       where: { mobile_number },
       data: { otp, otp_timestamp },

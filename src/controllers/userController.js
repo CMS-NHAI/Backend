@@ -2,7 +2,7 @@ import prisma from "../config/prismaClient.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import validatePhoneNumber from "../utils/validation.js";
-
+import fetch from 'node-fetch';
 
 const getEmployeeBySAPID = async (sapId) => {
   try {
@@ -17,18 +17,18 @@ const getEmployeeBySAPID = async (sapId) => {
         mobile_number: true,
         date_of_birth: true,
         email: true,
-        designation: true, 
-        office_location : true,
-        is_digilocker_verified : true ,
-        name : true
+        designation: true,
+        office_location: true,
+        is_digilocker_verified: true,
+        name: true
       },
     });
 
     if (!employee) {
-      return null; 
+      return null;
     }
 
-    return employee; 
+    return employee;
 
   } catch (err) {
     return res.status(400).json({
@@ -100,12 +100,12 @@ export const verifyOtp = async (req, res) => {
       data: {
         access_token: access_token,
         //name: user.first_name + ' ' + user.last_name,
-        name : user.name,
+        name: user.name,
         mobile_number: user.mobile_number,
         email: user.email,
         designation: user.designation,
-        is_digilocker_verified : user.is_digilocker_verified,
-        office_location : user.office_location
+        is_digilocker_verified: user.is_digilocker_verified,
+        office_location: user.office_location
       },
     });
   } catch (err) {
@@ -191,7 +191,7 @@ export const getUserDetails = async (req, res) => {
     if (!user) {
       return res.status(200).json({
         success: "false",
-        status : 200,
+        status: 200,
         message: "User not found with the provided phone number.",
       });
     }
@@ -214,7 +214,7 @@ export const getUserDetails = async (req, res) => {
     console.error('Error during API request:', err);
     res.status(500).json({
       success: "false",
-      status : 500,
+      status: 500,
       message: err,
     });
   }
@@ -226,7 +226,7 @@ export const getUserByPhoneNo = async (mobile_number) => {
     const user = await prisma.user_master.findUnique({
       where: {
         mobile_number: mobile_number,  // Search by phone_number
-       },
+      },
       select: {
         sap_id: true,
         name: true,
@@ -237,12 +237,12 @@ export const getUserByPhoneNo = async (mobile_number) => {
         office_location: true,
       },
     });
-     console.log('user' , user);
+    console.log('user', user);
     return user; // Return user data or null if not found
   } catch (err) {
     res.status(500).json({
       success: "false",
-      status : 500,
+      status: 500,
       message: err,
     });
 
@@ -251,8 +251,8 @@ export const getUserByPhoneNo = async (mobile_number) => {
 export const getSapDetails = async (req, res) => {
   // const { sap_id , device_id, client_id} = req.body;
   const { sap_id } = req.body;
-   console.log("1");
-   const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
+  console.log("1");
+  const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
 
   if (!token) {
     return res.status(401).json({
@@ -267,7 +267,7 @@ export const getSapDetails = async (req, res) => {
       message: 'SAP ID is required.',
     });
   }
- 
+
   // if (!sap_id || !device_id || !client_id) {
   //   return res.status(400).json({
   //     status: "failure",
@@ -303,8 +303,132 @@ export const getSapDetails = async (req, res) => {
   }
 };
 
+export const authenticateEntity = async (req, res) => {
+  {
+    const { code } = req.body;
+
+    if (!code) {
+      return res.status(400).json({
+        success: false,
+        status: 400,
+        message: 'invalid credentials',
+      });
+    }
 
 
+
+    try {
+
+      const query = {
+        code: code,
+        grant_type: "authorization_code",
+        redirect_uri: "http://localhost:3000/myauth",
+        client_id: "RF6AE19E50",
+        client_secret: "8d1da0745546e8118507",
+        code_verifier: "YglEu2eLv_kB8tbSiKOyZnpKRPCDFgW2uigiAn_D-DkO6-JRcchJx8k7x2x-vXXJG.3"
+      }
+
+      const resAccessToken = await fetch('https://entity.digilocker.gov.in/public/oauth2/1/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(query) // Convert your data to a JSON string
+      });
+
+      if (resAccessToken.ok) {
+        // Parse the JSON response
+        const jsonResponse = await resAccessToken.json();
+
+        // Log the response to inspect the content
+        res.status(200).json({
+          success: true,
+          message: 'Success',
+          // data: employee,
+        });
+        console.log('JSON Response:', jsonResponse);
+      } else {
+        // Handle unsuccessful response (non-200 status codes)
+        console.log('Error:', resAccessToken.status, resAccessToken.statusText);
+        const errorData = await resAccessToken.json();
+        console.log('Error details:', errorData);
+        res.status(resAccessToken.status).json({
+          status: false,
+          ...errorData
+        });
+      }
+
+      
+    } catch (err) {
+      res.status(500).json({
+        success: false,
+        message: err,
+      });
+    }
+  };
+}
+
+export const getAllUsers = async (req, res) => {
+  try {
+    const pageSize = parseInt(req.query.pageSize) || 10;  
+    const page = parseInt(req.query.page) || 1;  
+
+    if (pageSize <= 0 || page <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid page or pageSize. Both should be positive integers.',
+      });
+    }
+
+    // Calculate skip and take based on pageSize and page
+    const skip = (page - 1) * pageSize;
+    const take = pageSize;
+
+    // Query users from the user_master table with pagination
+    const users = await prisma.user_master.findMany({
+      skip: skip,
+      take: take,
+      select: {
+        sap_id: true,
+        name: true,
+        mobile_number: true,
+        email: true,
+        designation: true,
+        office_location: true,
+        is_digilocker_verified: true,
+        date_of_birth: true,
+      }
+    });
+
+    // If no users are found, return a message
+    if (users.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'No users found.',
+        data: [],
+      });
+    }
+
+    // Get the total count of users for pagination info
+    const totalUsers = await prisma.user_master.count();
+
+    // Return the paginated list of users
+    return res.status(200).json({
+      success: true,
+      message: 'Users retrieved successfully.',
+      data: users,
+      pagination: {
+        page,
+        pageSize,
+        total: totalUsers,
+        totalPages: Math.ceil(totalUsers / pageSize),
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      message: err
+    });
+  }
+};
 
 
 

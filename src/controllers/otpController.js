@@ -64,9 +64,9 @@ export const sendOtpToUser = async (req, res) => {
         //       user_image : "HEE" // Status indicating the user is pending activation
         //     },
         //   });
-      return res.status(400).json({
+      return res.status(200).json({
         success: false,
-        status: 400,
+        status: 200,
         message: 'User not registered with this phone number.',
       });
       
@@ -94,7 +94,7 @@ export const sendOtpToUser = async (req, res) => {
     res.status(500).json({
       success: false,
       status: 500,
-      message: 'Error sending OTP. Please try again later.',
+      message: err,
     });
   }
 };

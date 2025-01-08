@@ -84,7 +84,7 @@ export const verifyOtp = async (req, res) => {
     };
 
     // Replace 'your_secret_key' with your actual secret key for signing the token
-    const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '6m' });
+    const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '15m' });
     await prisma.user_master.update({
       where: { mobile_number },
       data: { verified_status: true },
@@ -162,6 +162,15 @@ export const getUserDetails = async (req, res) => {
     });
   }
 
+  const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authorization token is required.',
+    });
+  }
+
   if (!validatePhoneNumber(mobile_number)) {
     return res.status(400).json({
       status: "failure",
@@ -171,11 +180,15 @@ export const getUserDetails = async (req, res) => {
 
   try {
     // Fetch user details using mobile_no
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY); // Use the appropriate secret key or public key
+
+    // You can now use the decoded token, for example, to check the user ID or role:
+    console.log('Decoded token:', decoded);
     const user = await getUserByPhoneNo(mobile_number);
 
     if (!user) {
       return res.status(404).json({
-        status: "failure",
+        success: "false",
         message: "User not found with the provided phone number.",
       });
     }
@@ -197,12 +210,13 @@ export const getUserDetails = async (req, res) => {
   } catch (err) {
     console.error('Error during API request:', err);
     res.status(500).json({
-      status: "failure",
-      message: "Error retrieving user information.",
+      success: "false",
+      status : 500,
+      message: err,
     });
   }
 };
-const getUserByPhoneNo = async (mobile_number) => {
+export const getUserByPhoneNo = async (mobile_number) => {
   try {
     console.log("1");
     // Query the user_master table to get user details by mobile_number
@@ -231,6 +245,14 @@ export const getSapDetails = async (req, res) => {
   // const { sap_id , device_id, client_id} = req.body;
   const { sap_id } = req.body;
    console.log("1");
+   const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authorization token is required.',
+    });
+  }
   if (!sap_id) {
     return res.status(400).json({
       success: false,
@@ -238,6 +260,7 @@ export const getSapDetails = async (req, res) => {
       message: 'SAP ID is required.',
     });
   }
+ 
   // if (!sap_id || !device_id || !client_id) {
   //   return res.status(400).json({
   //     status: "failure",
@@ -246,6 +269,10 @@ export const getSapDetails = async (req, res) => {
   // }
 
   try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY); // Use the appropriate secret key or public key
+
+    // You can now use the decoded token, for example, to check the user ID or role:
+    console.log('Decoded token:', decoded);
     const employee = await getEmployeeBySAPID(sap_id);
 
     if (!employee) {
@@ -265,7 +292,7 @@ export const getSapDetails = async (req, res) => {
     console.error('Error during API request:', err);
     res.status(500).json({
       success: false,
-      message: 'Error retrieving employee information.',
+      message: err,
     });
   }
 };

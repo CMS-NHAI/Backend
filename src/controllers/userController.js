@@ -133,9 +133,9 @@ export const signup = async (req, res) => {
     const employee = await getEmployeeBySAPID(sap_id);
 
     if (!employee) {
-      return res.status(404).json({
+      return res.status(200).json({
         success: false,
-        status: 404,
+        status: 200,
         message: 'Employee not found with the provided SAP ID.',
       });
     }

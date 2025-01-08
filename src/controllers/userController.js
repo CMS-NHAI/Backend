@@ -20,19 +20,22 @@ const getEmployeeBySAPID = async (sapId) => {
         designation: true, 
         office_location : true,
         is_digilocker_verified : true ,
-        name : true// Select only the required fields
+        name : true
       },
     });
 
     if (!employee) {
-      return null;  // Return null if no employee is found
+      return null; 
     }
 
-    return employee;  // Return the employee data
+    return employee; 
 
   } catch (err) {
-    console.error('Error fetching employee information:', err);
-    throw err;
+    return res.status(400).json({
+      success: false,
+      status: 400,
+      message: err,
+    });
   }
 };
 
@@ -61,9 +64,9 @@ export const verifyOtp = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(404).json({
+      return res.status(200).json({
         success: false,
-        status: 404,
+        status: 200,
         message: 'User not registered.',
       });
     }
@@ -72,9 +75,9 @@ export const verifyOtp = async (req, res) => {
     console.log(user.otp);
     console.log(otp);
     if (otp !== "12345") {
-      return res.status(400).json({
+      return res.status(200).json({
         success: false,
-        status: 400,
+        status: 200,
         message: 'Invalid OTP.',
       });
     }
@@ -110,7 +113,7 @@ export const verifyOtp = async (req, res) => {
     res.status(500).json({
       success: false,
       status: 500,
-      message: 'Error verifying OTP.',
+      message: err,
     });
   }
 };
@@ -130,9 +133,9 @@ export const signup = async (req, res) => {
     const employee = await getEmployeeBySAPID(sap_id);
 
     if (!employee) {
-      return res.status(404).json({
+      return res.status(200).json({
         success: false,
-        status: 404,
+        status: 200,
         message: 'Employee not found with the provided SAP ID.',
       });
     }
@@ -143,10 +146,9 @@ export const signup = async (req, res) => {
       data: employee,
     });
   } catch (err) {
-    console.error('Error during API request:', err);
     res.status(500).json({
       success: false,
-      message: 'Error retrieving employee information.',
+      message: err,
     });
   }
 };
@@ -157,7 +159,7 @@ export const getUserDetails = async (req, res) => {
   // Validate phone number
   if (!mobile_number) {
     return res.status(400).json({
-      status: "failure",
+      success: "false",
       message: "mobile_number is required.",
     });
   }
@@ -173,7 +175,7 @@ export const getUserDetails = async (req, res) => {
 
   if (!validatePhoneNumber(mobile_number)) {
     return res.status(400).json({
-      status: "failure",
+      success: "false",
       message: "Mobile number must be in the format +91 followed by exactly 10 digits.",
     });
   }
@@ -187,8 +189,9 @@ export const getUserDetails = async (req, res) => {
     const user = await getUserByPhoneNo(mobile_number);
 
     if (!user) {
-      return res.status(404).json({
+      return res.status(200).json({
         success: "false",
+        status : 200,
         message: "User not found with the provided phone number.",
       });
     }
@@ -237,8 +240,12 @@ export const getUserByPhoneNo = async (mobile_number) => {
      console.log('user' , user);
     return user; // Return user data or null if not found
   } catch (err) {
-    console.error('Error fetching user information:', err);
-    throw err;
+    res.status(500).json({
+      success: "false",
+      status : 500,
+      message: err,
+    });
+
   }
 };
 export const getSapDetails = async (req, res) => {
@@ -276,9 +283,9 @@ export const getSapDetails = async (req, res) => {
     const employee = await getEmployeeBySAPID(sap_id);
 
     if (!employee) {
-      return res.status(404).json({
+      return res.status(200).json({
         success: false,
-        status: 404,
+        status: 200,
         message: 'Employee not found with the provided SAP ID.',
       });
     }
@@ -289,7 +296,6 @@ export const getSapDetails = async (req, res) => {
       data: employee,
     });
   } catch (err) {
-    console.error('Error during API request:', err);
     res.status(500).json({
       success: false,
       message: err,

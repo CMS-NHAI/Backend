@@ -84,6 +84,7 @@ export const digiLockerUserDetail = async (req, res) => {
     const eAdharXml = await eAdharDetail.text(); // Get the XML response text
     const eAdharJson = await parseXmlToJson(eAdharXml); // Parse XML to JSON
 
+    
     // Return a structured response
     return res.status(200).json({
       status: "success",

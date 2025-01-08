@@ -34,7 +34,6 @@ export const sendOtpToUser = async (req, res) => {
     // const user = await prismaClient.user.findUnique({
     //   where: { phone_number },
     // });
-    console.log(prisma);
     const user = await prisma.user_master.findUnique({  // Use correct model name
         where: { mobile_number: mobile_number},  // Assuming `mobile_number` is the field to search
       });
@@ -64,9 +63,9 @@ export const sendOtpToUser = async (req, res) => {
         //       user_image : "HEE" // Status indicating the user is pending activation
         //     },
         //   });
-      return res.status(400).json({
+      return res.status(200).json({
         success: false,
-        status: 400,
+        status: 200,
         message: 'User not registered with this phone number.',
       });
       
@@ -74,7 +73,6 @@ export const sendOtpToUser = async (req, res) => {
 
     const otp = generateOTP();
     const otp_timestamp = new Date();
-
     await prisma.user_master.update({
       where: { mobile_number },
       data: { otp, otp_timestamp },
@@ -89,12 +87,10 @@ export const sendOtpToUser = async (req, res) => {
     });
 
   } catch (err) {
-    console.log(err);
-    console.error(err);
     res.status(500).json({
       success: false,
       status: 500,
-      message: 'Error sending OTP. Please try again later.',
+      message: err,
     });
   }
 };

@@ -6,6 +6,7 @@ import cors from 'cors';
 import bodyParser from 'body-parser'
 import router from "./routes/otpRoutes.js";
 import userrouter from "./routes/userRoutes.js";
+import authrouter from "./routes/authRoute.js"
 //const otpRoutes = require('./routes/otpRoutes');
 //const userRoutes = require('./routes/userRoutes');
 //import { userRoutes } from "./routes/userRoutes.js"
@@ -32,6 +33,7 @@ app.use(express.json());
 
 app.use('/api/v1/otp', router);
 app.use('/api/v1/user', userrouter);
+app.use('/api/v1/auth', authrouter);
 //app.use('/api/user', userRoutes);
 //app.use("/api/v1/article", ArticleRouter);
 //app.use("/api/v1/user", UserRouter);

@@ -3,10 +3,12 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import validatePhoneNumber from "../utils/validation.js";
 import fetch from 'node-fetch';
-
+import { otpmobileValidationSchema } from "../validations/userValidation.js";  
+import { sapValidationSchema } from "../validations/sapValidation.js";
+import { phoneValidationSchema } from "../validations/otpValidation.js";
 const getEmployeeBySAPID = async (sapId) => {
   try {
-    console.log("1");
+    
     // Query the user_master table using Prisma to get the employee information
     const employee = await prisma.user_master.findUnique({
       where: {
@@ -42,19 +44,13 @@ const getEmployeeBySAPID = async (sapId) => {
 export const verifyOtp = async (req, res) => {
   const { mobile_number, otp } = req.body;
 
-  if (!mobile_number || !otp) {
-    return res.status(400).json({
-      success: false,
-      status: 400,
-      message: 'Mobile number and OTP are required.',
-    });
-  }
+  const { error } = otpmobileValidationSchema.validate({ mobile_number, otp });
 
-  if (!validatePhoneNumber(mobile_number)) {
+  if (error) {
     return res.status(400).json({
       success: false,
       status: 400,
-      message: 'Mobile number must be in the format +91 followed by exactly 10 digits.',
+      message: error.details[0].message,
     });
   }
 
@@ -121,13 +117,16 @@ export const verifyOtp = async (req, res) => {
 export const signup = async (req, res) => {
   const { sap_id } = req.body;
 
-  if (!sap_id) {
+  const { error } = sapValidationSchema.validate({ sap_id });
+
+  if (error) {
     return res.status(400).json({
       success: false,
       status: 400,
-      message: 'SAP ID is required.',
+      message: error.details[0].message,
     });
   }
+
 
   try {
     const employee = await getEmployeeBySAPID(sap_id);
@@ -156,11 +155,13 @@ export const signup = async (req, res) => {
 export const getUserDetails = async (req, res) => {
   const { mobile_number } = req.body;
 
-  // Validate phone number
-  if (!mobile_number) {
+  const { error } = phoneValidationSchema.validate({ mobile_number });
+
+  if (error) {
     return res.status(400).json({
-      success: "false",
-      message: "mobile_number is required.",
+      success: false,
+      status: 400,
+      message: error.details[0].message,
     });
   }
 
@@ -173,18 +174,9 @@ export const getUserDetails = async (req, res) => {
     });
   }
 
-  if (!validatePhoneNumber(mobile_number)) {
-    return res.status(400).json({
-      success: "false",
-      message: "Mobile number must be in the format +91 followed by exactly 10 digits.",
-    });
-  }
-
   try {
-    // Fetch user details using mobile_no
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY); // Use the appropriate secret key or public key
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY); 
 
-    // You can now use the decoded token, for example, to check the user ID or role:
     console.log('Decoded token:', decoded);
     const user = await getUserByPhoneNo(mobile_number);
 
@@ -221,7 +213,7 @@ export const getUserDetails = async (req, res) => {
 };
 export const getUserByPhoneNo = async (mobile_number) => {
   try {
-    console.log("1");
+    
     // Query the user_master table to get user details by mobile_number
     const user = await prisma.user_master.findUnique({
       where: {
@@ -260,11 +252,14 @@ export const getSapDetails = async (req, res) => {
       message: 'Authorization token is required.',
     });
   }
-  if (!sap_id) {
+ 
+  const { error } = sapValidationSchema.validate({ sap_id });
+
+  if (error) {
     return res.status(400).json({
       success: false,
       status: 400,
-      message: 'SAP ID is required.',
+      message: error.details[0].message,
     });
   }
 

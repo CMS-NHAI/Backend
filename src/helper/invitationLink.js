@@ -3,12 +3,6 @@ import moment from 'moment';
 
 /**
  * Generates a configurable invitation link.
- *
- * @param {Object} options - The configuration options for the invitation.
- * @param {string} options.baseUrl - The base URL where the invitation will point to.
- * @param {number} options.expiryTime - Expiry time in minutes (default 1440 minutes = 24 hours).
- * @param {Object} options.extraParams - Additional query parameters to append to the link.
- * @returns {string} - The generated invitation link.
  */
 const generateInvitationLink = ({
   baseUrl = "https://example.com/invite",

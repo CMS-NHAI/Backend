@@ -23,7 +23,7 @@ export const sendOtpToUser = async (req, res) => {
       message: error.details[0].message,
     });
   }
-  if(!count)
+  if(!count || count<0)
   {
     return res.status(400).json({
       success: false,
@@ -76,9 +76,9 @@ export const sendOtpToUser = async (req, res) => {
       const currentTimestamp = new Date();
       const timeDifference = currentTimestamp - otpTimestamp;
       // Convert time difference from milliseconds to hours
-      const timeDifferenceInHours = timeDifference / 1000;
+      const timeDifferencesInSeconds = timeDifference / 1000;
 
-      if (timeDifferenceInHours < SEND_RESEND_OTP_CONSTANT) {
+      if (timeDifferencesInSeconds < SEND_RESEND_OTP_CONSTANT) {
         return res.status(400).json({
           success: false,
           status: 400,

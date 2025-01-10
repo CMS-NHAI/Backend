@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 const uniqueUsername = uuidv4();
 
 export const sendOtpToUser = async (req, res) => {
-  const { mobile_number , resend_count } = req.body;
+  const { mobile_number , count } = req.body;
   const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
 
 
@@ -22,12 +22,12 @@ export const sendOtpToUser = async (req, res) => {
       message: error.details[0].message,
     });
   }
-  if(!resend_count)
+  if(!count)
   {
     return res.status(400).json({
       success: false,
       status: 400,
-      message: "resend_count parameter is missing",
+      message: "count parameter is missing",
     });
   }
   try {
@@ -70,7 +70,7 @@ export const sendOtpToUser = async (req, res) => {
       
     }
     
-    if (resend_count === 1) {
+    if (count === 1) {
       const otpTimestamp = new Date(user.otp_timestamp);
       const currentTimestamp = new Date();
       const timeDifference = currentTimestamp - otpTimestamp;

@@ -1,0 +1,1 @@
+export const SEND_RESEND_OTP_CONSTANT = 300

@@ -4,6 +4,7 @@ import sendOTP from "../services/twilioService.js"
 import  generateOTP  from "../utils/otpGenerator.js"; 
 import  validatePhoneNumber  from "../utils/validation.js";
 import { phoneValidationSchema } from "../validations/otpValidation.js";
+import { SEND_RESEND_OTP_CONSTANT } from '../constants/constant.js'; 
 import { v4 as uuidv4 } from 'uuid';
 
 const uniqueUsername = uuidv4();
@@ -74,15 +75,14 @@ export const sendOtpToUser = async (req, res) => {
       const otpTimestamp = new Date(user.otp_timestamp);
       const currentTimestamp = new Date();
       const timeDifference = currentTimestamp - otpTimestamp;
-
       // Convert time difference from milliseconds to hours
-      const timeDifferenceInHours = timeDifference / (1000 * 60 * 60);
+      const timeDifferenceInHours = timeDifference / 1000;
 
-      if (timeDifferenceInHours < 2) {
+      if (timeDifferenceInHours < SEND_RESEND_OTP_CONSTANT) {
         return res.status(400).json({
           success: false,
           status: 400,
-          message: 'Otp resend limit exceeded, please wait for 2 hours',
+          message: 'Otp resend limit exceeded, please retry after 5 minutes',
         });
       }
     }

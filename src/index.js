@@ -36,7 +36,7 @@ app.use('/api/v1/user', userrouter);
 //app.use("/api/v1/article", ArticleRouter);
 //app.use("/api/v1/user", UserRouter);
 
-const PORT =  process.env.PORT || 3002;
+const PORT =  process.env.PORT || 3004;
 //const server = http.createServer(app);
 
 app.listen(PORT, () => {

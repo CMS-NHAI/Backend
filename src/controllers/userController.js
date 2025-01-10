@@ -22,7 +22,8 @@ const getEmployeeBySAPID = async (sapId) => {
         designation: true,
         office_location: true,
         is_digilocker_verified: true,
-        name: true
+        name: true,
+        user_type : true
       },
     });
 
@@ -58,7 +59,7 @@ export const verifyOtp = async (req, res) => {
     const user = await prisma.user_master.findUnique({
       where: { mobile_number },
     });
-
+    console.log(user);
     if (!user) {
       return res.status(200).json({
         success: false,
@@ -101,7 +102,8 @@ export const verifyOtp = async (req, res) => {
         email: user.email,
         designation: user.designation,
         is_digilocker_verified: user.is_digilocker_verified,
-        office_location: user.office_location
+        office_location: user.office_location,
+        user_type : user.user_type
       },
     });
   } catch (err) {
@@ -200,6 +202,7 @@ export const getUserDetails = async (req, res) => {
         email_id: user.email,
         designation: user.designation,
         office_location: user.office_location,
+        user_type : user.user_type
       },
     });
   } catch (err) {
@@ -227,6 +230,7 @@ export const getUserByPhoneNo = async (mobile_number) => {
         email: true,
         designation: true,
         office_location: true,
+        user_type : true
       },
     });
     console.log('user', user);
@@ -390,6 +394,7 @@ export const getAllUsers = async (req, res) => {
         office_location: true,
         is_digilocker_verified: true,
         date_of_birth: true,
+        user_type : true
       }
     });
 

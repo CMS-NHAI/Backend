@@ -59,7 +59,6 @@ export const verifyOtp = async (req, res) => {
     const user = await prisma.user_master.findUnique({
       where: { mobile_number },
     });
-    console.log(user);
     if (!user) {
       return res.status(200).json({
         success: false,

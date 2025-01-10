@@ -38,31 +38,7 @@ export const sendOtpToUser = async (req, res) => {
       });
     // console.log(user);
     if (!user) {
-        // u = await prisma.user_master.create({
-        //     data: {
-        //       // unique_username: uuidv4(),
-        //       mobile_number: mobile_number,
-        //       name: 'Amit',  // Dummy name or leave it blank
-        //       first_name: 'Amit',  // First name can also be default
-        //       user_type: 'Internal - Permanent',  // A type to indicate the user is not yet registered
-        //       user_role: { role: 'UNREGISTERED' },  // You can set a default role
-        //       email: 'user1@gmail.com',  // No email for a dummy user
-        //       is_active: false,  // Set to false for unregistered users
-        //       is_kyc_verified: false,  // Assuming KYC is not verified for dummy users
-        //       otp: generateOTP(),  // Generate OTP
-        //       otp_timestamp: new Date(),
-        //       created_at: new Date(),
-        //       updated_at: new Date(),
-        //       // Optional: You can fill in additional fields if needed (e.g., `activation_status`)
-        //       activation_status: 'Pending', 
-        //       organization_id: 1,
-        //       unique_username : uniqueUsername,
-        //       sap_id : "SAP12345",
-        //       aadhar_image : "HTTP",
-        //       user_image : "HEE" // Status indicating the user is pending activation
-        //     },
-        //   });
-        //   console.log(u);
+        
       return res.status(200).json({
         success: false,
         status: 200,

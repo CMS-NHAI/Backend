@@ -82,7 +82,7 @@ export const sendOtpToUser = async (req, res) => {
         return res.status(400).json({
           success: false,
           status: 400,
-          message: 'Otp resend limit exceeded, please retry after 5 minutes',
+          message: `Otp resend limit exceeded, please retry after ${SEND_RESEND_OTP_CONSTANT / 60} minutes`,
         });
       }
     }

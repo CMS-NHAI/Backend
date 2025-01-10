@@ -36,7 +36,7 @@ export const sendOtpToUser = async (req, res) => {
     const user = await prisma.user_master.findUnique({  // Use correct model name
         where: { mobile_number: mobile_number},  // Assuming `mobile_number` is the field to search
       });
-    console.log(user);
+    // console.log(user);
     if (!user) {
         // u = await prisma.user_master.create({
         //     data: {

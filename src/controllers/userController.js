@@ -3,9 +3,11 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import validatePhoneNumber from "../utils/validation.js";
 import fetch from 'node-fetch';
+import { STATUS_CODES } from "../constants/statusCodesConstant.js";
 import { otpmobileValidationSchema } from "../validations/userValidation.js";  
 import { sapValidationSchema } from "../validations/sapValidation.js";
 import { phoneValidationSchema } from "../validations/otpValidation.js";
+
 const getEmployeeBySAPID = async (sapId) => {
   try {
     
@@ -34,9 +36,9 @@ const getEmployeeBySAPID = async (sapId) => {
     return employee;
 
   } catch (err) {
-    return res.status(400).json({
+    return res.status(STATUS_CODES.BAD_REQUEST).json({
       success: false,
-      status: 400,
+      status: STATUS_CODES.BAD_REQUEST,
       message: err,
     });
   }
@@ -48,9 +50,9 @@ export const verifyOtp = async (req, res) => {
   const { error } = otpmobileValidationSchema.validate({ mobile_number, otp });
 
   if (error) {
-    return res.status(400).json({
+    return res.status(STATUS_CODES.BAD_REQUEST).json({
       success: false,
-      status: 400,
+      status: STATUS_CODES.BAD_REQUEST,
       message: error.details[0].message,
     });
   }
@@ -60,9 +62,9 @@ export const verifyOtp = async (req, res) => {
       where: { mobile_number },
     });
     if (!user) {
-      return res.status(200).json({
+      return res.status(STATUS_CODES.NOT_FOUND).json({
         success: false,
-        status: 200,
+        status: STATUS_CODES.NOT_FOUND,
         message: 'User not registered.',
       });
     }
@@ -71,9 +73,9 @@ export const verifyOtp = async (req, res) => {
     console.log(user.otp);
     console.log(otp);
     if (otp !== "12345") {
-      return res.status(200).json({
+      return res.status(STATUS_CODES.UNAUTHORIZED).json({
         success: false,
-        status: 200,
+        status: STATUS_CODES.UNAUTHORIZED,
         message: 'Invalid OTP.',
       });
     }
@@ -89,9 +91,9 @@ export const verifyOtp = async (req, res) => {
       data: { verified_status: true },
     });
 
-    res.status(200).json({
+    res.status(STATUS_CODES.OK).json({
       success: true,
-      status: 200,
+      status: STATUS_CODES.OK,
       message: 'OTP verified successfully.',
       data: {
         access_token: access_token,
@@ -107,9 +109,9 @@ export const verifyOtp = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
-      status: 500,
+      status: STATUS_CODES.INTERNAL_SERVER_ERROR,
       message: err,
     });
   }
@@ -121,9 +123,9 @@ export const signup = async (req, res) => {
   const { error } = sapValidationSchema.validate({ sap_id });
 
   if (error) {
-    return res.status(400).json({
+    return res.status(STATUS_CODES.BAD_REQUEST).json({
       success: false,
-      status: 400,
+      status: STATUS_CODES.BAD_REQUEST,
       message: error.details[0].message,
     });
   }
@@ -133,20 +135,20 @@ export const signup = async (req, res) => {
     const employee = await getEmployeeBySAPID(sap_id);
 
     if (!employee) {
-      return res.status(200).json({
+      return res.status(STATUS_CODES.OK).json({
         success: false,
-        status: 200,
+        status: STATUS_CODES.OK,
         message: 'Employee not found with the provided SAP ID.',
       });
     }
 
-    res.status(200).json({
+    res.status(STATUS_CODES.OK).json({
       success: true,
       message: 'Success',
       data: employee,
     });
   } catch (err) {
-    res.status(500).json({
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: err,
     });
@@ -159,9 +161,9 @@ export const getUserDetails = async (req, res) => {
   const { error } = phoneValidationSchema.validate({ mobile_number });
 
   if (error) {
-    return res.status(400).json({
+    return res.status(STATUS_CODES.BAD_REQUEST).json({
       success: false,
-      status: 400,
+      status: STATUS_CODES.BAD_REQUEST,
       message: error.details[0].message,
     });
   }
@@ -169,7 +171,7 @@ export const getUserDetails = async (req, res) => {
   const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
 
   if (!token) {
-    return res.status(401).json({
+    return res.status(STATUS_CODES.UNAUTHORIZED).json({
       success: false,
       message: 'Authorization token is required.',
     });
@@ -182,15 +184,15 @@ export const getUserDetails = async (req, res) => {
     const user = await getUserByPhoneNo(mobile_number);
 
     if (!user) {
-      return res.status(200).json({
+      return res.status(STATUS_CODES.OK).json({
         success: "false",
-        status: 200,
+        status: STATUS_CODES.OK,
         message: "User not found with the provided phone number.",
       });
     }
 
     // Construct and send the success response
-    res.status(200).json({
+    res.status(STATUS_CODES.OK).json({
       status: "success",
       message: "User details retrieved successfully.",
       data: {
@@ -206,9 +208,9 @@ export const getUserDetails = async (req, res) => {
     });
   } catch (err) {
     console.error('Error during API request:', err);
-    res.status(500).json({
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: "false",
-      status: 500,
+      status: STATUS_CODES.INTERNAL_SERVER_ERROR,
       message: err,
     });
   }
@@ -235,9 +237,9 @@ export const getUserByPhoneNo = async (mobile_number) => {
     console.log('user', user);
     return user; // Return user data or null if not found
   } catch (err) {
-    res.status(500).json({
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: "false",
-      status: 500,
+      status: STATUS_CODES.INTERNAL_SERVER_ERROR,
       message: err,
     });
 
@@ -250,7 +252,7 @@ export const getSapDetails = async (req, res) => {
   const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
 
   if (!token) {
-    return res.status(401).json({
+    return res.status(STATUS_CODES.UNAUTHORIZED).json({
       success: false,
       message: 'Authorization token is required.',
     });
@@ -259,9 +261,9 @@ export const getSapDetails = async (req, res) => {
   const { error } = sapValidationSchema.validate({ sap_id });
 
   if (error) {
-    return res.status(400).json({
+    return res.status(STATUS_CODES.BAD_REQUEST).json({
       success: false,
-      status: 400,
+      status: STATUS_CODES.BAD_REQUEST,
       message: error.details[0].message,
     });
   }
@@ -281,20 +283,20 @@ export const getSapDetails = async (req, res) => {
     const employee = await getEmployeeBySAPID(sap_id);
 
     if (!employee) {
-      return res.status(200).json({
+      return res.status(STATUS_CODES.NOT_FOUND).json({
         success: false,
-        status: 200,
+        status: STATUS_CODES.NOT_FOUND,
         message: 'Employee not found with the provided SAP ID.',
       });
     }
 
-    res.status(200).json({
+    res.status(STATUS_CODES.OK).json({
       success: true,
       message: 'Success',
       data: employee,
     });
   } catch (err) {
-    res.status(500).json({
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: err,
     });
@@ -370,7 +372,7 @@ export const getAllUsers = async (req, res) => {
     const page = parseInt(req.query.page) || 1;  
 
     if (pageSize <= 0 || page <= 0) {
-      return res.status(400).json({
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
         success: false,
         message: 'Invalid page or pageSize. Both should be positive integers.',
       });
@@ -399,9 +401,9 @@ export const getAllUsers = async (req, res) => {
 
     // If no users are found, return a message
     if (users.length === 0) {
-      return res.status(200).json({
-        success: true,
-        message: 'No users found.',
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
+        success: false,
+        message: 'Users not found.',
         data: [],
       });
     }
@@ -410,7 +412,7 @@ export const getAllUsers = async (req, res) => {
     const totalUsers = await prisma.user_master.count();
 
     // Return the paginated list of users
-    return res.status(200).json({
+    return res.status(STATUS_CODES.OK).json({
       success: true,
       message: 'Users retrieved successfully.',
       data: users,
@@ -422,7 +424,7 @@ export const getAllUsers = async (req, res) => {
       },
     });
   } catch (err) {
-    return res.status(500).json({
+    return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: err
     });

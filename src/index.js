@@ -7,6 +7,8 @@ import cors from 'cors';
 import bodyParser from 'body-parser'
 import router from "./routes/otpRoutes.js";
 import userrouter from "./routes/userRoutes.js";
+import {STATUS_CODES} from "./constants/statusCodesConstant.js"
+import {APP_CONSTANTS}  from "./constants/appConstants.js"
 
 
 const app = express();
@@ -35,6 +37,12 @@ app.use('/api/v1/user', userrouter);
 //app.use('/api/user', userRoutes);
 //app.use("/api/v1/article", ArticleRouter);
 //app.use("/api/v1/user", UserRouter);
+
+app.get('/', (req, res) => {
+  res.status(STATUS_CODES.OK).send({
+    message: `Welcome to Datalake 3.0 ${APP_CONSTANTS.APP_NAME} v${APP_CONSTANTS.VERSION}`,
+  });
+});
 
 const PORT =  process.env.PORT || 3004;
 //const server = http.createServer(app);

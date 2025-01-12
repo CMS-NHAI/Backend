@@ -315,18 +315,16 @@ export const authenticateEntity = async (req, res) => {
       });
     }
 
+     try {
 
-
-    try {
-
-      const query = {
-        code: code,
-        grant_type: "authorization_code",
-        redirect_uri: "http://localhost:3000/myauth",
-        client_id: "RF6AE19E50",
-        client_secret: "8d1da0745546e8118507",
-        code_verifier: "YglEu2eLv_kB8tbSiKOyZnpKRPCDFgW2uigiAn_D-DkO6-JRcchJx8k7x2x-vXXJG.3"
-      }
+          const query = {
+            code: code,
+            grant_type: "authorization_code",
+            redirect_uri: "http://localhost:3000/myauth",
+            client_id: "RF6AE19E50",
+            client_secret: "8d1da0745546e8118507",
+            code_verifier: "YglEu2eLv_kB8tbSiKOyZnpKRPCDFgW2uigiAn_D-DkO6-JRcchJx8k7x2x-vXXJG.3"
+          }
 
       const resAccessToken = await fetch('https://entity.digilocker.gov.in/public/oauth2/1/token', {
         method: 'POST',

@@ -4,6 +4,7 @@ import sendOTP from "../services/twilioService.js"
 import  generateOTP  from "../utils/otpGenerator.js"; 
 import  validatePhoneNumber  from "../utils/validation.js";
 import { phoneValidationSchema } from "../validations/otpValidation.js";
+import { otpmobileValidationSchema } from "../validations/otpMobileValidation.js";
 import { SEND_RESEND_OTP_CONSTANT } from '../constants/constant.js'; 
 import { v4 as uuidv4 } from 'uuid';
 
@@ -87,4 +88,56 @@ export const sendOtpToUser = async (req, res) => {
   }
 };
 
- export default sendOtpToUser;
+export const authenticateOtp = async (req, res)  => {
+  try {
+    // Validate the request body using Joi
+    const { error } = otpmobileValidationSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
+
+    const { mobile_no, email, otp, ord_id, purpose } = req.body;
+    if(!mobile_no && !email)
+    {
+      return res.status(400).json({ message: 'email or phone_number is required ' });
+    }
+    
+    const validOtp = '12345'; 
+    if (otp !== validOtp) {
+      return res.status(400).json({ message: 'Invalid OTP.' });
+    }
+
+    // Simulate fetching user details after OTP verification
+    // const userDetails = {
+    //   name: 'Amit Chaman',
+    //   role: ['admin', 'manager'], // Example roles; replace with actual role logic
+    // };
+    // const user = await prisma.user_master.findUnique({
+    //   where: {
+    //     OR: [
+    //       { mobile_no: mobile_no },
+    //       { email: email }
+    //     ]
+    //   }
+    // });
+    const user = await prisma.user_master.findUnique({
+      where: {
+        mobile_number: mobile_no,  // Search by sap_id
+      }
+    });
+
+    // If user not found, return an error response
+    if (!user) {
+      return res.status(200).json({ message: 'User not found.' });
+    }
+
+    // Respond with verified status and user details
+    return res.status(200).json({
+      verified: 'yes',
+      user_details: user,
+    });
+  } catch (error) {
+    return res.status(500).json(error.message);
+  }
+}
+

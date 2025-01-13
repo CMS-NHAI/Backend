@@ -31,7 +31,9 @@ app.use(bodyParser.json());
 app.use(express.json()); 
 
 app.use('/api/v1/otp', router);
+app.use('/api/v1/auth', router);
 app.use('/api/v1/user', userrouter);
+app.use('/api/v1/', userrouter);
 //app.use('/api/user', userRoutes);
 //app.use("/api/v1/article", ArticleRouter);
 //app.use("/api/v1/user", UserRouter);

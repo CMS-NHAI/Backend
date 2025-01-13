@@ -6,6 +6,10 @@ import fetch from 'node-fetch';
 import { otpmobileValidationSchema } from "../validations/userValidation.js";  
 import { sapValidationSchema } from "../validations/sapValidation.js";
 import { phoneValidationSchema } from "../validations/otpValidation.js";
+import { createUserValidationSchema } from "../validations/createUserValidation.js";
+import { v4 as uuidv4 } from 'uuid';
+
+const uniqueUsername = uuidv4();
 const getEmployeeBySAPID = async (sapId) => {
   try {
     
@@ -429,6 +433,83 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
+export const createUser = async (req, res) => {
+  // Validate the request body using Joi
+  const { error } = createUserValidationSchema.validate(req.body);
+
+  if (error) {
+    return res.status(400).json({
+      success: false,
+      status: 400,
+      message: error.details[0].message,
+    });
+  }
+
+  const { sap_id, name, email, mobile_number, user_type, designation, date_of_birth, unique_username, user_role, aadhar_image, user_image, organization_id} = req.body;
+
+  try {
+    // Check if the user already exists by SAP ID or mobile_number
+    const existingUser = await prisma.user_master.findFirst({
+      where: {
+        OR: [
+          { sap_id },
+          { mobile_number },
+          { email }
+        ]
+      }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        status: 400,
+        message: 'User with this SAP ID, email, or mobile number already exists.',
+      });
+    }
+    const formattedDate = new Date(date_of_birth).toISOString(); 
+    // Create the user in the database
+    const newUser = await prisma.user_master.create({
+      data: {
+        sap_id,
+        name,
+        email,
+        mobile_number,
+        user_type,
+        designation,
+        date_of_birth : formattedDate,
+        office_location: 'PIU',  // Assuming a default office location
+        unique_username : uniqueUsername,
+        user_role,
+        aadhar_image,
+        user_image,
+        organization_id
+      },
+    });
+
+    // Respond with the created user data
+    return res.status(201).json({
+      success: true,
+      message: 'User created successfully.',
+      data: {
+        sap_id: newUser.sap_id,
+        name: newUser.name,
+        date_of_birth: newUser.date_of_birth,
+        mobile_number: newUser.mobile_number,
+        email_id: newUser.email,
+        designation: newUser.designation,
+        office_location: newUser.office_location,
+        unique_username : newUser.unique_username
+      },
+    });
+  } catch (err) {
+    console.error('Error creating user:', err);
+    return res.status(500).json({
+      success: false,
+      status: 500,
+      message: 'An error occurred while creating the user.',
+    });
+  }
+};
 
 
 

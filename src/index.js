@@ -1,4 +1,5 @@
 import express from "express";
+import i18n from 'i18n';
 import { config } from 'dotenv';
 import compression from 'compression';
 import helmet from 'helmet';
@@ -6,22 +7,23 @@ import cors from 'cors';
 import bodyParser from 'body-parser'
 import router from "./routes/otpRoutes.js";
 import userrouter from "./routes/userRoutes.js";
-//const otpRoutes = require('./routes/otpRoutes');
-//const userRoutes = require('./routes/userRoutes');
-//import { userRoutes } from "./routes/userRoutes.js"
-//const userRoutes = require('./routes/userRoutes');
+import {STATUS_CODES} from "./constants/statusCodesConstant.js"
+import {APP_CONSTANTS}  from "./constants/appConstants.js"
 
-//dotenv.config();
-//import ArticleRouter from "./routes/ArticleRoute.js";
-//import UserRouter from "./routes/userRoute.js";
-//import {eurekaClient} from ".config/eurekaClient.js"
-//const eurekaClient = require('./config/eurekaClient.js');
-//const esClient = require('./config/elasticsearch.js')
 
 const app = express();
 
 config();
 
+i18n.configure({
+  locales: ['en'],             // Supported languages
+  directory: './locales',    // Path to the translation files
+  defaultLocale: 'en',       // Default language
+  queryParameter: 'lang',   // Optional query parameter for language
+  objectNotation: true     // Enable nested keys in translation files
+});
+
+app.use(i18n.init);
 app.use(helmet());
 app.use(express.urlencoded({ extended: true }));
 app.use(compression());
@@ -38,10 +40,16 @@ app.use('/api/v1/', userrouter);
 //app.use("/api/v1/article", ArticleRouter);
 //app.use("/api/v1/user", UserRouter);
 
+app.get('/', (req, res) => {
+  res.status(STATUS_CODES.OK).send({
+    message: `Welcome to Datalake 3.0 ${APP_CONSTANTS.APP_NAME} v${APP_CONSTANTS.VERSION}`,
+  });
+});
+
 const PORT =  process.env.PORT || 3004;
 //const server = http.createServer(app);
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0',() => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 

@@ -340,7 +340,7 @@ export const authenticateEntity = async (req, res) => {
         const jsonResponse = await resAccessToken.json();
 
         // Log the response to inspect the content
-        res.status(200).json({
+        res.status(STATUS_CODES.OK).json({
           success: true,
           message: 'Success',
           // data: employee,
@@ -359,7 +359,7 @@ export const authenticateEntity = async (req, res) => {
 
       
     } catch (err) {
-      res.status(500).json({
+      res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: err,
       });
@@ -437,14 +437,14 @@ export const createUser = async (req, res) => {
   const { error } = createUserValidationSchema.validate(req.body);
 
   if (error) {
-    return res.status(400).json({
+    return res.status(STATUS_CODES.BAD_REQUEST).json({
       success: false,
       status: 400,
       message: error.details[0].message,
     });
   }
 
-  const { sap_id, name, email, mobile_number, user_type, designation, date_of_birth, unique_username, user_role, aadhar_image, user_image, organization_id} = req.body;
+  const { sap_id, name, email, mobile_number, user_type, designation, date_of_birth, user_role, aadhar_image, user_image, organization_id} = req.body;
 
   try {
     // Check if the user already exists by SAP ID or mobile_number
@@ -459,7 +459,7 @@ export const createUser = async (req, res) => {
     });
 
     if (existingUser) {
-      return res.status(400).json({
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
         success: false,
         status: 400,
         message: 'User with this SAP ID, email, or mobile number already exists.',
@@ -476,7 +476,7 @@ export const createUser = async (req, res) => {
         user_type,
         designation,
         date_of_birth : formattedDate,
-        office_location: 'PIU',  // Assuming a default office location
+        office_location: 'PIU',  
         unique_username : uniqueUsername,
         user_role,
         aadhar_image,
@@ -505,7 +505,7 @@ export const createUser = async (req, res) => {
     return res.status(500).json({
       success: false,
       status: 500,
-      message: 'An error occurred while creating the user.',
+      message: err.message,
     });
   }
 };

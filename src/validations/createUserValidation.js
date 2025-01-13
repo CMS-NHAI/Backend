@@ -40,10 +40,6 @@ export const createUserValidationSchema = Joi.object({
     'date.less': 'Date of birth cannot be a future date.',
     'any.required': 'Date of birth is required.',
   }),
-  unique_username: Joi.string().alphanum().min(3).max(30).required().messages({
-    'string.empty': 'Unique username is required.',
-    'any.required': 'Unique username is required.',
-  }),
   user_role: Joi.string().required().messages({
     'string.empty': 'User role is required.',
     'any.required': 'User role is required.'

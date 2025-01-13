@@ -7,6 +7,7 @@ import { phoneValidationSchema } from "../validations/otpValidation.js";
 import { otpmobileValidationSchema } from "../validations/otpMobileValidation.js";
 import { SEND_RESEND_OTP_CONSTANT } from '../constants/constant.js'; 
 import { v4 as uuidv4 } from 'uuid';
+import { STATUS_CODES } from "../constants/statusCodesConstant.js";
 
 const uniqueUsername = uuidv4();
 
@@ -117,18 +118,24 @@ export const authenticateOtp = async (req, res)  => {
     // Validate the request body using Joi
     const { error } = otpmobileValidationSchema.validate(req.body);
     if (error) {
-      return res.status(400).json({ message: error.details[0].message });
+      return res.status(STATUS_CODES.BAD_REQUEST).json({ message: error.details[0].message });
     }
 
     const { mobile_no, email, otp, ord_id, purpose } = req.body;
     if(!mobile_no && !email)
     {
-      return res.status(400).json({ message: 'email or phone_number is required ' });
+      return res.status(STATUS_CODES.BAD_REQUEST).json({ 
+        success : false,
+        status : 400,
+        message: 'email or phone_number is required ' });
     }
     
     const validOtp = '12345'; 
     if (otp !== validOtp) {
-      return res.status(400).json({ message: 'Invalid OTP.' });
+      return res.status(STATUS_CODES.BAD_REQUEST).json({ 
+        success : false,
+        status : 400,
+        message: 'Invalid OTP.' });
     }
 
     // Simulate fetching user details after OTP verification
@@ -146,22 +153,27 @@ export const authenticateOtp = async (req, res)  => {
     // });
     const user = await prisma.user_master.findUnique({
       where: {
-        mobile_number: mobile_no,  // Search by sap_id
+        mobile_number: mobile_no,  
       }
     });
 
     // If user not found, return an error response
     if (!user) {
-      return res.status(200).json({ message: 'User not found.' });
+      return res.status(STATUS_CODES.ACCEPTED).json({ 
+        success : false,
+        status : 200,
+        message: 'User not found.' });
     }
 
     // Respond with verified status and user details
-    return res.status(200).json({
+    return res.status(STATUS_CODES.ACCEPTED).json({
+      success : true,
+      status : 200,
       verified: 'yes',
       user_details: user,
     });
   } catch (error) {
-    return res.status(500).json(error.message);
+    return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json(error.message);
   }
 }
 

@@ -8,6 +8,8 @@ import { otpmobileValidationSchema } from "../validations/userValidation.js";
 import { sapValidationSchema } from "../validations/sapValidation.js";
 import { phoneValidationSchema } from "../validations/otpValidation.js";
 import { createUserValidationSchema } from "../validations/createUserValidation.js";
+import { updateUserStatusValidationSchema } from "../validations/updateUserStatusValidation.js";
+import { updateUserValidationSchema } from '../validations/updateUserValidation.js';
 import { v4 as uuidv4 } from 'uuid';
 
 const uniqueUsername = uuidv4();
@@ -503,6 +505,140 @@ export const createUser = async (req, res) => {
   } catch (err) {
     console.error('Error creating user:', err);
     return res.status(500).json({
+      success: false,
+      status: 500,
+      message: err.message,
+    });
+  }
+};
+
+export const updateUserStatus = async (req, res) => {
+  // Validate the request body using Joi
+  const { error } = updateUserStatusValidationSchema.validate(req.body);
+
+  if (error) {
+    return res.status(STATUS_CODES.BAD_REQUEST).json({
+      success: false,
+      status: 400,
+      message: error.details[0].message,
+    });
+  }
+
+  const { user_id, status } = req.body;
+
+  try {
+    // Find the user by user_id
+    const user = await prisma.user_master.findUnique({
+      where: { user_id },
+    });
+    console.log(' user ', user);
+    if (!user) {
+      return res.status(STATUS_CODES.ACCEPTED).json({
+        success: false,
+        status: 200,
+        message: 'User not found.',
+      });
+    }
+
+    // Set is_active based on the status
+    const is_active = status === 'active';
+
+    // Update the user's status and is_active field
+    const updatedUser = await prisma.user_master.update({
+      where: { user_id },
+      data: {
+        is_active, // Set is_active based on the status
+      },
+    });
+
+    // Respond with the updated user data
+    return res.status(STATUS_CODES.ACCEPTED).json({
+      success: true,
+      message: 'User status updated successfully.',
+      data: {
+        user_id: updatedUser.user_id,
+        is_active: updatedUser.is_active, // Include is_active in the response
+      },
+    });
+  } catch (err) {
+    console.error('Error updating user status:', err);
+    return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      status: 500,
+      message: err.message,
+    });
+  }
+};
+
+export const updateUser = async (req, res) => {
+  // Define valid user types (ensure these match the constraints in your database)
+  const allowedUserTypes = ['Internal - Permanent', 'External', 'Contractual']; // Replace with actual valid values
+
+  // Validate the request body using Joi
+  const { error } = updateUserValidationSchema.validate(req.body);
+
+  if (error) {
+    return res.status(STATUS_CODES.BAD_REQUEST).json({
+      success: false,
+      status: 400,
+      message: error.details[0].message,
+    });
+  }
+
+  const { user_id, sap_id, name, email, mobile_number, user_type, designation, dob } = req.body;
+
+  // Check if the user_type is valid
+  if (!allowedUserTypes.includes(user_type)) {
+    return res.status(STATUS_CODES.BAD_REQUEST).json({
+      success: false,
+      status: 400,
+      message: 'Invalid user_type. Please provide a valid user_type.',
+    });
+  }
+
+  try {
+    // Find the user by user_id
+    const user = await prisma.user_master.findUnique({
+      where: { user_id: parseInt(user_id, 10) },
+    });
+
+    if (!user) {
+      return res.status(STATUS_CODES.ACCEPTED).json({
+        success: false,
+        status: 200,
+        message: 'User not found.',
+      });
+    }
+
+    // Update user information
+    const updatedUser = await prisma.user_master.update({
+      where: { user_id: parseInt(user_id, 10) },
+      data: {
+        sap_id,
+        name,
+        email,
+        mobile_number,
+        user_type, // Make sure this is valid now
+        designation
+      },
+    });
+
+    // Respond with the updated user data
+    return res.status(STATUS_CODES.OK).json({
+      success: true,
+      message: 'User updated successfully.',
+      data: {
+        sap_id: updatedUser.sap_id,
+        name: updatedUser.name,
+        mobile_number: updatedUser.mobile_number,
+        email_id: updatedUser.email,
+        user_type: updatedUser.user_type,
+        designation: updatedUser.designation
+      },
+    });
+  } catch (err) {
+    console.error('Error updating user:', err);
+    return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
       status: 500,
       message: err.message,

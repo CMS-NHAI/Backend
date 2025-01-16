@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import bodyParser from 'body-parser'
 import router from "./routes/otpRoutes.js";
+import agencyrouter from "./routes/agencyRoutes.js";
 import userrouter from "./routes/userRoutes.js";
 import {STATUS_CODES} from "./constants/statusCodesConstant.js"
 import {APP_CONSTANTS}  from "./constants/appConstants.js"
@@ -21,7 +22,7 @@ i18n.configure({
   defaultLocale: 'en',       // Default language
   queryParameter: 'lang',   // Optional query parameter for language
   objectNotation: true     // Enable nested keys in translation files
-});
+});  
 
 app.use(i18n.init);
 app.use(helmet());
@@ -36,6 +37,7 @@ app.use('/api/v1/otp', router);
 app.use('/api/v1/auth', router);
 app.use('/api/v1/user', userrouter);
 app.use('/api/v1/', userrouter);
+app.use('/api/v1/agency', agencyrouter)
 //app.use('/api/user', userRoutes);
 //app.use("/api/v1/article", ArticleRouter);
 //app.use("/api/v1/user", UserRouter);

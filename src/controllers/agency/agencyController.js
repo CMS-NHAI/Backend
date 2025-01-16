@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { STATUS_CODES } from "../../constants/statusCodesConstant.js";
 
 /**
- *Get Agency Details by Agency Id.*
+ *Get Agency Details by Agency Id.*  
  **/
 
  export const agencyDetailById = async(req, res) => {

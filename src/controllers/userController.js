@@ -288,9 +288,9 @@ export const getSapDetails = async (req, res) => {
     const employee = await getEmployeeBySAPID(sap_id);
 
     if (!employee) {
-      return res.status(STATUS_CODES.NOT_FOUND).json({
+      return res.status(STATUS_CODES.OK).json({
         success: false,
-        status: STATUS_CODES.NOT_FOUND,
+        status: 200,
         message: 'Employee not found with the provided SAP ID.',
       });
     }

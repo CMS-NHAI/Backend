@@ -88,7 +88,15 @@ export const sendOtpToUser = async (req, res) => {
         });
       }
     }
-
+    if (count > 5) {
+      
+        return res.status(400).json({
+          success: false,
+          status: 400,
+          message: `Otp resend limit exceeded, please retry after ${SEND_RESEND_OTP_CONSTANT / 60} minutes`,
+        });
+      
+    }
     const otp = generateOTP();
     const otp_timestamp = new Date();
     await prisma.user_master.update({

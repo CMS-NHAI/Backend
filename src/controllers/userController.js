@@ -488,7 +488,7 @@ export const createUser = async (req, res) => {
     });
 
     // Respond with the created user data
-    return res.status(201).json({
+    return res.status(STATUS_CODES.CREATED).json({
       success: true,
       message: 'User created successfully.',
       data: {
@@ -504,7 +504,7 @@ export const createUser = async (req, res) => {
     });
   } catch (err) {
     console.error('Error creating user:', err);
-    return res.status(500).json({
+    return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
       status: 500,
       message: err.message,
@@ -533,7 +533,7 @@ export const updateUserStatus = async (req, res) => {
     });
     console.log(' user ', user);
     if (!user) {
-      return res.status(STATUS_CODES.ACCEPTED).json({
+      return res.status(STATUS_CODES.OK).json({
         success: false,
         status: 200,
         message: 'User not found.',
@@ -552,7 +552,7 @@ export const updateUserStatus = async (req, res) => {
     });
 
     // Respond with the updated user data
-    return res.status(STATUS_CODES.ACCEPTED).json({
+    return res.status(STATUS_CODES.OK).json({
       success: true,
       message: 'User status updated successfully.',
       data: {
@@ -603,7 +603,7 @@ export const updateUser = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(STATUS_CODES.ACCEPTED).json({
+      return res.status(STATUS_CODES.OK).json({
         success: false,
         status: 200,
         message: 'User not found.',

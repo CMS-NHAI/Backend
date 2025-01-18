@@ -5,9 +5,11 @@ import  generateOTP  from "../utils/otpGenerator.js";
 import  validatePhoneNumber  from "../utils/validation.js";
 import { phoneValidationSchema } from "../validations/otpValidation.js";
 import { otpmobileValidationSchema } from "../validations/otpMobileValidation.js";
-import { SEND_RESEND_OTP_CONSTANT } from '../constants/constant.js'; 
+import { OTP_CONSTANT, SEND_RESEND_OTP_CONSTANT } from '../constants/constant.js'; 
 import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 import { STATUS_CODES } from "../constants/statusCodesConstant.js";
+
 
 const uniqueUsername = uuidv4();
 
@@ -34,7 +36,7 @@ export const sendOtpToUser = async (req, res) => {
     });
   }
   try {
-   
+      prisma.otp
     const user = await prisma.user_master.findUnique({  // Use correct model name
         where: { mobile_number: mobile_number},  // Assuming `mobile_number` is the field to search
       });
@@ -184,4 +186,70 @@ export const authenticateOtp = async (req, res)  => {
     return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json(error.message);
   }
 }
+
+export const sendOtpToUserLatest = async (req, res) =>{
+
+  const { mobile_number } = req.body;
+  const { error } = phoneValidationSchema.validate({ mobile_number });
+  if (error) {
+    return res.status(STATUS_CODES.BAD_REQUEST).json({
+      success: false,
+      status: STATUS_CODES.BAD_REQUEST,
+      message: error.details[0].message || 'Invalid phone number.',
+    });
+  }
+
+  const user = await prisma.user_master.findUnique({  
+    where: { mobile_number: mobile_number},  
+    select: {
+      user_id: true,
+    }
+  });
+
+
+  const generateOtp = () => crypto.randomInt(10000, 99999).toString();
+
+
+  try { 
+    const recentOtps = await prisma.otp_verification.count({
+      where: {
+        user_id: user.user_id,
+        otp_sent_timestamp: {
+          gte: new Date(Date.now() - 5 * 60 * 1000), // Last 24 hours 24 * 60 * 60 *1000
+        },
+        is_deleted: false,
+      },
+    });
+
+    if (recentOtps >= OTP_CONSTANT.MAX_OTP_LIMIT) {
+      return res.status(STATUS_CODES.TOO_MANY_REQUESTS).json({ message: "Max OTP limit reached." });
+    }
+
+    // Generate OTP
+    const otp = generateOtp();
+    const expirationTime = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+    
+    //   
+    await prisma.otp_verification.create({
+      data: {
+        otp_id: crypto.randomUUID(),
+        user_id: user.user_id,
+        otp_sent_timestamp: new Date(),
+        otp_verification_status: "PENDING",
+        otp_expiration: expirationTime,
+        otp_verification_method: 'SMS'//method,
+      },
+    });
+
+    // Send the OTP (via email/SMS)
+    console.log(`OTP for user Mobile ${mobile_number}: ${otp}`);
+
+    res.json({ message: "OTP sent successfully." });
+  } catch (error) {
+    console.error(error);
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ message: "Internal server error." });
+  }
+}
+
+
 

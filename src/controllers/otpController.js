@@ -188,7 +188,7 @@ export const authenticateOtp = async (req, res)  => {
 }
 
 export const sendOtpToUserLatest = async (req, res) =>{
-
+  
   const { mobile_number } = req.body;
   const { error } = phoneValidationSchema.validate({ mobile_number });
   if (error) {
@@ -222,7 +222,10 @@ export const sendOtpToUserLatest = async (req, res) =>{
     });
 
     if (recentOtps >= OTP_CONSTANT.MAX_OTP_LIMIT) {
-      return res.status(STATUS_CODES.TOO_MANY_REQUESTS).json({ message: "Max OTP limit reached." });
+      return res.status(STATUS_CODES.TOO_MANY_REQUESTS).json({ 
+        success: true,
+        status: OTP_CONSTANT.MAX_OTP_LIMIT,
+        message: "Max OTP limit reached." });
     }
 
     // Generate OTP
@@ -251,7 +254,10 @@ export const sendOtpToUserLatest = async (req, res) =>{
     });
   } catch (error) {
     console.error(error);
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ message: "Internal server error." });
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+      message: "Internal server error." });
   }
 }
 

@@ -169,14 +169,14 @@ export const authenticateOtp = async (req, res)  => {
 
     // If user not found, return an error response
     if (!user) {
-      return res.status(STATUS_CODES.ACCEPTED).json({ 
+      return res.status(STATUS_CODES.OK).json({ 
         success : false,
         status : 200,
         message: 'User not found.' });
     }
 
     // Respond with verified status and user details
-    return res.status(STATUS_CODES.ACCEPTED).json({
+    return res.status(STATUS_CODES.OK).json({
       success : true,
       status : 200,
       verified: 'yes',

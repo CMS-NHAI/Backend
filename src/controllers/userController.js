@@ -90,7 +90,7 @@ export const verifyOtp = async (req, res) => {
     };
 
     // Replace 'your_secret_key' with your actual secret key for signing the token
-    const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '15m' });
+    const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '2d' });
     await prisma.user_master.update({
       where: { mobile_number },
       data: { verified_status: true },
@@ -288,9 +288,9 @@ export const getSapDetails = async (req, res) => {
     const employee = await getEmployeeBySAPID(sap_id);
 
     if (!employee) {
-      return res.status(STATUS_CODES.NOT_FOUND).json({
+      return res.status(STATUS_CODES.OK).json({
         success: false,
-        status: STATUS_CODES.NOT_FOUND,
+        status: 200,
         message: 'Employee not found with the provided SAP ID.',
       });
     }
@@ -488,7 +488,7 @@ export const createUser = async (req, res) => {
     });
 
     // Respond with the created user data
-    return res.status(201).json({
+    return res.status(STATUS_CODES.CREATED).json({
       success: true,
       message: 'User created successfully.',
       data: {
@@ -504,7 +504,7 @@ export const createUser = async (req, res) => {
     });
   } catch (err) {
     console.error('Error creating user:', err);
-    return res.status(500).json({
+    return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
       status: 500,
       message: err.message,
@@ -533,7 +533,7 @@ export const updateUserStatus = async (req, res) => {
     });
     console.log(' user ', user);
     if (!user) {
-      return res.status(STATUS_CODES.ACCEPTED).json({
+      return res.status(STATUS_CODES.OK).json({
         success: false,
         status: 200,
         message: 'User not found.',
@@ -552,7 +552,7 @@ export const updateUserStatus = async (req, res) => {
     });
 
     // Respond with the updated user data
-    return res.status(STATUS_CODES.ACCEPTED).json({
+    return res.status(STATUS_CODES.OK).json({
       success: true,
       message: 'User status updated successfully.',
       data: {
@@ -603,7 +603,7 @@ export const updateUser = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(STATUS_CODES.ACCEPTED).json({
+      return res.status(STATUS_CODES.OK).json({
         success: false,
         status: 200,
         message: 'User not found.',
@@ -645,6 +645,105 @@ export const updateUser = async (req, res) => {
     });
   }
 };
+
+export const verifyOtpLatest = async (req, res) =>{
+  //console.log("bhawesh")
+
+  const { mobile_number, otp } = req.body;
+
+  const { error } = otpmobileValidationSchema.validate({ mobile_number, otp });
+  if (error) {
+    return res.status(STATUS_CODES.BAD_REQUEST).json({
+      success: false,
+      status: STATUS_CODES.BAD_REQUEST,
+      message: error.details[0].message,
+    });
+  }
+  try {
+      const user = await prisma.user_master.findUnique({  
+        where: { mobile_number: mobile_number},  
+       // select: {
+       //   user_id: true,
+       // }
+      });
+
+      const record = await prisma.otp_verification.findFirst({
+        where: {
+          user_id: user.user_id,
+          is_deleted: false,
+        },
+        orderBy: {
+          otp_sent_timestamp: 'desc', // Get the latest OTP
+        },
+      });
+
+      if (!record) {
+        throw new Error('No OTP found for the user.');
+      }
+    
+      // Check expiration
+      if (record.otp_expiration < new Date()) {
+        throw new Error('OTP has expired.');
+      }
+
+       // Increment attempt count
+        await prisma.otp_verification.update({
+          where: { otp_id: record.otp_id },
+          data: { otp_attempt_count: record.otp_attempt_count + 1 },
+        });
+
+        // Validate OTP (here assuming OTP is stored securely for demo purposes)
+        if (otp !== '12345') {
+          throw new Error('Invalid OTP.');
+        }
+
+        // Mark as verified
+        const updatedRecord = await prisma.otp_verification.update({
+          where: { otp_id: record.otp_id },
+          data: { otp_verification_status: 'VERIFIED' },
+        });
+
+        const payload = {
+          user_id: user.id, // Include the user ID (or any other info)
+          phone_number: user.mobile_number,
+        };
+    
+        // Replace 'your_secret_key' with your actual secret key for signing the token
+        const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '2d' });
+        await prisma.user_master.update({
+          where: { mobile_number },
+          data: { verified_status: true },
+        });
+    
+        res.status(STATUS_CODES.OK).json({
+          success: true,
+          status: STATUS_CODES.OK,
+          message: 'OTP verified successfully.',
+          data: {
+            access_token: access_token,
+            //name: user.first_name + ' ' + user.last_name,
+            name: user.name,
+            mobile_number: user.mobile_number,
+            email: user.email,
+            designation: user.designation,
+            is_digilocker_verified: user.is_digilocker_verified,
+            office_location: user.office_location,
+            user_type : user.user_type
+          },
+        });
+      } catch (err) {
+        console.error(err);
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+          success: false,
+          status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+          message: err,
+        });
+      }
+
+
+    }
+      
+      
 
 
 

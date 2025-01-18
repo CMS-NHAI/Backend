@@ -223,7 +223,7 @@ export const sendOtpToUserLatest = async (req, res) =>{
 
     if (recentOtps >= OTP_CONSTANT.MAX_OTP_LIMIT) {
       return res.status(STATUS_CODES.TOO_MANY_REQUESTS).json({ 
-        success: true,
+        success: false,
         status: OTP_CONSTANT.MAX_OTP_LIMIT,
         message: "Max OTP limit reached." });
     }
@@ -257,7 +257,7 @@ export const sendOtpToUserLatest = async (req, res) =>{
     res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
       status: STATUS_CODES.INTERNAL_SERVER_ERROR,
-      message: "Internal server error." });
+      message: "Mobile Number is not Registered." });
   }
 }
 

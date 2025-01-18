@@ -78,9 +78,9 @@ export const verifyOtp = async (req, res) => {
     console.log(user.otp);
     console.log(otp);
     if (otp !== "12345") {
-      return res.status(STATUS_CODES.UNAUTHORIZED).json({
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
         success: false,
-        status: STATUS_CODES.UNAUTHORIZED,
+        status: STATUS_CODES.BAD_REQUEST,
         message: 'Invalid OTP.',
       });
     }

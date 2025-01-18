@@ -82,6 +82,11 @@ export const GetAgencyList = async(req, res) =>{
         tin: true,
         gst_number: true,
         pan: true,
+        organization_data:true,
+        is_active:true,
+        created_by:true,
+        created_by:true,
+
         //spoc_details : true,
         //tin: true
         //contact_number

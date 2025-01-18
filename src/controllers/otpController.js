@@ -244,7 +244,11 @@ export const sendOtpToUserLatest = async (req, res) =>{
     // Send the OTP (via email/SMS)
     console.log(`OTP for user Mobile ${mobile_number}: ${otp}`);
 
-    res.json({ message: "OTP sent successfully." });
+    res.json({ 
+      success: true,
+      status: 200,
+      message: "OTP sent successfully." 
+    });
   } catch (error) {
     console.error(error);
     res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ message: "Internal server error." });

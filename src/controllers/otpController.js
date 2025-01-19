@@ -224,7 +224,7 @@ export const sendOtpToUserLatest = async (req, res) =>{
     if (recentOtps >= OTP_CONSTANT.MAX_OTP_LIMIT) {
       return res.status(STATUS_CODES.TOO_MANY_REQUESTS).json({ 
         success: false,
-        status: OTP_CONSTANT.MAX_OTP_LIMIT,
+        status: STATUS_CODES.TOO_MANY_REQUESTS,
         message: "Max OTP limit reached." });
     }
 

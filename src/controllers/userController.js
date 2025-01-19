@@ -736,7 +736,7 @@ export const verifyOtpLatest = async (req, res) =>{
           },
         });
       } catch (err) {
-        //console.error(err);
+        console.error(err);
         res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
           success: false,
           status: STATUS_CODES.INTERNAL_SERVER_ERROR,

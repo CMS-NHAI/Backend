@@ -3,7 +3,16 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import validatePhoneNumber from "../utils/validation.js";
 import fetch from 'node-fetch';
+import { STATUS_CODES } from "../constants/statusCodesConstant.js";
+import { otpmobileValidationSchema } from "../validations/userValidation.js";  
+import { sapValidationSchema } from "../validations/sapValidation.js";
+import { phoneValidationSchema } from "../validations/otpValidation.js";
+import { createUserValidationSchema } from "../validations/createUserValidation.js";
+import { updateUserStatusValidationSchema } from "../validations/updateUserStatusValidation.js";
+import { updateUserValidationSchema } from '../validations/updateUserValidation.js';
+import { v4 as uuidv4 } from 'uuid';
 
+const uniqueUsername = uuidv4();
 const getEmployeeBySAPID = async (sapId) => {
   try {
     console.log("1");
@@ -75,9 +84,9 @@ export const verifyOtp = async (req, res) => {
     console.log(user.otp);
     console.log(otp);
     if (otp !== "12345") {
-      return res.status(200).json({
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
         success: false,
-        status: 200,
+        status: STATUS_CODES.BAD_REQUEST,
         message: 'Invalid OTP.',
       });
     }
@@ -87,7 +96,7 @@ export const verifyOtp = async (req, res) => {
     };
 
     // Replace 'your_secret_key' with your actual secret key for signing the token
-    const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '15m' });
+    const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '2d' });
     await prisma.user_master.update({
       where: { mobile_number },
       data: { verified_status: true },
@@ -283,7 +292,7 @@ export const getSapDetails = async (req, res) => {
     const employee = await getEmployeeBySAPID(sap_id);
 
     if (!employee) {
-      return res.status(200).json({
+      return res.status(STATUS_CODES.OK).json({
         success: false,
         status: 200,
         message: 'Employee not found with the provided SAP ID.',
@@ -339,7 +348,7 @@ export const authenticateEntity = async (req, res) => {
         const jsonResponse = await resAccessToken.json();
 
         // Log the response to inspect the content
-        res.status(200).json({
+        res.status(STATUS_CODES.OK).json({
           success: true,
           message: 'Success',
           // data: employee,
@@ -358,7 +367,7 @@ export const authenticateEntity = async (req, res) => {
 
       
     } catch (err) {
-      res.status(500).json({
+      res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: err,
       });
@@ -430,6 +439,320 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
+export const createUser = async (req, res) => {
+  // Validate the request body using Joi
+  const { error } = createUserValidationSchema.validate(req.body);
+
+  if (error) {
+    return res.status(STATUS_CODES.BAD_REQUEST).json({
+      success: false,
+      status: 400,
+      message: error.details[0].message,
+    });
+  }
+
+  const { sap_id, name, email, mobile_number, user_type, designation, date_of_birth, user_role, aadhar_image, user_image, organization_id} = req.body;
+
+  try {
+    // Check if the user already exists by SAP ID or mobile_number
+    const existingUser = await prisma.user_master.findFirst({
+      where: {
+        OR: [
+          { sap_id },
+          { mobile_number },
+          { email }
+        ]
+      }
+    });
+
+    if (existingUser) {
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
+        success: false,
+        status: 400,
+        message: 'User with this SAP ID, email, or mobile number already exists.',
+      });
+    }
+    const formattedDate = new Date(date_of_birth).toISOString(); 
+    // Create the user in the database
+    const newUser = await prisma.user_master.create({
+      data: {
+        sap_id,
+        name,
+        email,
+        mobile_number,
+        user_type,
+        designation,
+        date_of_birth : formattedDate,
+        office_location: 'PIU',  
+        unique_username : uniqueUsername,
+        user_role,
+        aadhar_image,
+        user_image,
+        organization_id
+      },
+    });
+
+    // Respond with the created user data
+    return res.status(STATUS_CODES.CREATED).json({
+      success: true,
+      message: 'User created successfully.',
+      data: {
+        sap_id: newUser.sap_id,
+        name: newUser.name,
+        date_of_birth: newUser.date_of_birth,
+        mobile_number: newUser.mobile_number,
+        email_id: newUser.email,
+        designation: newUser.designation,
+        office_location: newUser.office_location,
+        unique_username : newUser.unique_username
+      },
+    });
+  } catch (err) {
+    console.error('Error creating user:', err);
+    return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      status: 500,
+      message: err.message,
+    });
+  }
+};
+
+export const updateUserStatus = async (req, res) => {
+  // Validate the request body using Joi
+  const { error } = updateUserStatusValidationSchema.validate(req.body);
+
+  if (error) {
+    return res.status(STATUS_CODES.BAD_REQUEST).json({
+      success: false,
+      status: 400,
+      message: error.details[0].message,
+    });
+  }
+
+  const { user_id, status } = req.body;
+
+  try {
+    // Find the user by user_id
+    const user = await prisma.user_master.findUnique({
+      where: { user_id },
+    });
+    console.log(' user ', user);
+    if (!user) {
+      return res.status(STATUS_CODES.OK).json({
+        success: false,
+        status: 200,
+        message: 'User not found.',
+      });
+    }
+
+    // Set is_active based on the status
+    const is_active = status === 'active';
+
+    // Update the user's status and is_active field
+    const updatedUser = await prisma.user_master.update({
+      where: { user_id },
+      data: {
+        is_active, // Set is_active based on the status
+      },
+    });
+
+    // Respond with the updated user data
+    return res.status(STATUS_CODES.OK).json({
+      success: true,
+      message: 'User status updated successfully.',
+      data: {
+        user_id: updatedUser.user_id,
+        is_active: updatedUser.is_active, // Include is_active in the response
+      },
+    });
+  } catch (err) {
+    console.error('Error updating user status:', err);
+    return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      status: 500,
+      message: err.message,
+    });
+  }
+};
+
+export const updateUser = async (req, res) => {
+  // Define valid user types (ensure these match the constraints in your database)
+  const allowedUserTypes = ['Internal - Permanent', 'External', 'Contractual']; // Replace with actual valid values
+
+  // Validate the request body using Joi
+  const { error } = updateUserValidationSchema.validate(req.body);
+
+  if (error) {
+    return res.status(STATUS_CODES.BAD_REQUEST).json({
+      success: false,
+      status: 400,
+      message: error.details[0].message,
+    });
+  }
+
+  const { user_id, sap_id, name, email, mobile_number, user_type, designation, dob } = req.body;
+
+  // Check if the user_type is valid
+  if (!allowedUserTypes.includes(user_type)) {
+    return res.status(STATUS_CODES.BAD_REQUEST).json({
+      success: false,
+      status: 400,
+      message: 'Invalid user_type. Please provide a valid user_type.',
+    });
+  }
+
+  try {
+    // Find the user by user_id
+    const user = await prisma.user_master.findUnique({
+      where: { user_id: parseInt(user_id, 10) },
+    });
+
+    if (!user) {
+      return res.status(STATUS_CODES.OK).json({
+        success: false,
+        status: 200,
+        message: 'User not found.',
+      });
+    }
+
+    // Update user information
+    const updatedUser = await prisma.user_master.update({
+      where: { user_id: parseInt(user_id, 10) },
+      data: {
+        sap_id,
+        name,
+        email,
+        mobile_number,
+        user_type, // Make sure this is valid now
+        designation
+      },
+    });
+
+    // Respond with the updated user data
+    return res.status(STATUS_CODES.OK).json({
+      success: true,
+      message: 'User updated successfully.',
+      data: {
+        sap_id: updatedUser.sap_id,
+        name: updatedUser.name,
+        mobile_number: updatedUser.mobile_number,
+        email_id: updatedUser.email,
+        user_type: updatedUser.user_type,
+        designation: updatedUser.designation
+      },
+    });
+  } catch (err) {
+    console.error('Error updating user:', err);
+    return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      status: 500,
+      message: err.message,
+    });
+  }
+};
+
+export const verifyOtpLatest = async (req, res) =>{
+     const { mobile_number, otp } = req.body;
+     const { error } = otpmobileValidationSchema.validate({ mobile_number, otp });
+      if (error) {
+          return res.status(STATUS_CODES.BAD_REQUEST).json({
+          success: false,
+          status: STATUS_CODES.BAD_REQUEST,
+          message: error.details[0].message,
+         });
+      }
+  try {
+      const user = await prisma.user_master.findUnique({  
+        where: { mobile_number: mobile_number},  
+      });
+
+      const record = await prisma.otp_verification.findFirst({
+        where: {
+          user_id: user.user_id,
+          is_deleted: false,
+        },
+        orderBy: {
+          otp_sent_timestamp: 'desc', 
+        },
+      });
+
+      if (!record) {
+        return res.status(STATUS_CODES.NOT_FOUND).json({
+          success: false,
+          status: STATUS_CODES.NOT_FOUND,
+          message: 'No OTP found for the user.',
+        })
+      }
+      if (record.otp_expiration < new Date()) {
+        // Check expiration
+        return res.status(STATUS_CODES.GONE).json({
+          success: false,
+          status: STATUS_CODES.GONE,
+          message: 'OTP has expired.',
+        })
+      }
+
+       await prisma.otp_verification.update({
+          // Increment attempt count
+          where: { otp_id: record.otp_id },
+          data: { otp_attempt_count: record.otp_attempt_count + 1 },
+        });
+        if (otp !== '12345') {
+           // Validate OTP (here assuming OTP is stored securely for demo purposes)
+              return res.status(STATUS_CODES.UNAUTHORIZED).json({
+               success: false,
+               status: STATUS_CODES.UNAUTHORIZED,
+               message: 'Invalid OTP.',
+             })    
+
+        } 
+        const updatedRecord = await prisma.otp_verification.update({
+          //Mark as verified
+          where: { otp_id: record.otp_id },
+          data: { otp_verification_status: 'VERIFIED' },
+        });
+
+        const payload = {
+          user_id: user.id, // Include the user ID (or any other info)
+          phone_number: user.mobile_number,
+        };
+    
+        // Replace 'your_secret_key' with your actual secret key for signing the token
+        const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '2d' });
+        await prisma.user_master.update({
+          where: { mobile_number },
+          data: { verified_status: true },
+        });
+    
+        res.status(STATUS_CODES.OK).json({
+          success: true,
+          status: STATUS_CODES.OK,
+          message: 'OTP verified successfully.',
+          data: {
+            access_token: access_token,
+            //name: user.first_name + ' ' + user.last_name,
+            name: user.name,
+            mobile_number: user.mobile_number,
+            email: user.email,
+            designation: user.designation,
+            is_digilocker_verified: user.is_digilocker_verified,
+            office_location: user.office_location,
+            user_type : user.user_type
+          },
+        });
+      } catch (err) {
+        console.error(err);
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+          success: false,
+          status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+          message: 'An unexpected error occurred. Please try again later.',
+        });
+      }
+
+
+    }
+      
+      
 
 
 

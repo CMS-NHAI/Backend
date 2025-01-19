@@ -698,7 +698,7 @@ export const verifyOtpLatest = async (req, res) =>{
                success: false,
                status: STATUS_CODES.UNAUTHORIZED,
                message: 'Invalid OTP.',
-             })
+             })    
 
         } 
         const updatedRecord = await prisma.otp_verification.update({

@@ -647,24 +647,18 @@ export const updateUser = async (req, res) => {
 };
 
 export const verifyOtpLatest = async (req, res) =>{
-  //console.log("bhawesh")
-
-  const { mobile_number, otp } = req.body;
-
-  const { error } = otpmobileValidationSchema.validate({ mobile_number, otp });
-  if (error) {
-    return res.status(STATUS_CODES.BAD_REQUEST).json({
-      success: false,
-      status: STATUS_CODES.BAD_REQUEST,
-      message: error.details[0].message,
-    });
-  }
+     const { mobile_number, otp } = req.body;
+     const { error } = otpmobileValidationSchema.validate({ mobile_number, otp });
+      if (error) {
+          return res.status(STATUS_CODES.BAD_REQUEST).json({
+          success: false,
+          status: STATUS_CODES.BAD_REQUEST,
+          message: error.details[0].message,
+         });
+      }
   try {
       const user = await prisma.user_master.findUnique({  
         where: { mobile_number: mobile_number},  
-       // select: {
-       //   user_id: true,
-       // }
       });
 
       const record = await prisma.otp_verification.findFirst({
@@ -673,32 +667,42 @@ export const verifyOtpLatest = async (req, res) =>{
           is_deleted: false,
         },
         orderBy: {
-          otp_sent_timestamp: 'desc', // Get the latest OTP
+          otp_sent_timestamp: 'desc', 
         },
       });
 
       if (!record) {
-        throw new Error('No OTP found for the user.');
+        return res.status(STATUS_CODES.NOT_FOUND).json({
+          success: false,
+          status: STATUS_CODES.NOT_FOUND,
+          message: 'No OTP found for the user.',
+        })
       }
-    
-      // Check expiration
       if (record.otp_expiration < new Date()) {
-        throw new Error('OTP has expired.');
+        // Check expiration
+        return res.status(STATUS_CODES.GONE).json({
+          success: false,
+          status: STATUS_CODES.GONE,
+          message: 'OTP has expired.',
+        })
       }
 
-       // Increment attempt count
-        await prisma.otp_verification.update({
+       await prisma.otp_verification.update({
+          // Increment attempt count
           where: { otp_id: record.otp_id },
           data: { otp_attempt_count: record.otp_attempt_count + 1 },
         });
-
-        // Validate OTP (here assuming OTP is stored securely for demo purposes)
         if (otp !== '12345') {
-          throw new Error('Invalid OTP.');
-        }
+           // Validate OTP (here assuming OTP is stored securely for demo purposes)
+              return res.status(STATUS_CODES.UNAUTHORIZED).json({
+               success: false,
+               status: STATUS_CODES.UNAUTHORIZED,
+               message: 'Invalid OTP.',
+             })
 
-        // Mark as verified
+        } 
         const updatedRecord = await prisma.otp_verification.update({
+          //Mark as verified
           where: { otp_id: record.otp_id },
           data: { otp_verification_status: 'VERIFIED' },
         });
@@ -732,11 +736,11 @@ export const verifyOtpLatest = async (req, res) =>{
           },
         });
       } catch (err) {
-        console.error(err);
+        //console.error(err);
         res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
           success: false,
           status: STATUS_CODES.INTERNAL_SERVER_ERROR,
-          message: err,
+          message: 'An unexpected error occurred. Please try again later.',
         });
       }
 

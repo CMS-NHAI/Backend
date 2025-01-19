@@ -3,8 +3,8 @@ import { verifyOtp, verifyOtpLatest,  signup , getUserDetails , getSapDetails, a
 import checkToken  from '../middlewares/checkToken.js';
 const router = Router();
 
-router.post('/verify-otp', verifyOtp);
-//router.post('/verify-otp', verifyOtpLatest);
+//router.post('/verify-otp', verifyOtp);
+router.post('/verify-otp', verifyOtpLatest);
 router.post('/signup',signup );
 router.post('/get-user-details', getUserDetails);
 router.post('/getsap', getSapDetails);

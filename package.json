@@ -49,7 +49,10 @@
     "twilio": "^5.4.0",
     "uuid": "^11.0.4",
     "validator": "^13.12.0",
-    "winston": "^3.17.0"
+    "winston": "^3.17.0",
+    "xml2js": "^0.6.2",
+    "keycloak-connect": "^26.1.0",
+    "express-session": "^1.18.1"
   },
   "devDependencies": {
     "nodemon": "^2.0.22",

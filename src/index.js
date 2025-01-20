@@ -10,6 +10,12 @@ import agencyRoutes from "./routes/agencyRoutes.js";
 import userrouter from "./routes/userRoutes.js";
 import {STATUS_CODES} from "./constants/statusCodesConstant.js"
 import {APP_CONSTANTS}  from "./constants/appConstants.js"
+import rolerouter from "./routes/keycloak/roleRoute.js";
+import scoperouter from "./routes/keycloak/scopeRoute.js";
+import resourcerouter from './routes/keycloak/resourceRoute.js';
+import policyrouter from './routes/keycloak/policyRoute.js'
+import keycloakUserRouter from './routes/keycloak/userRoute.js'
+import authrouter from "./routes/authRoute.js"
 
 const app = express();
 
@@ -37,6 +43,14 @@ app.use('/api/v1/auth', router);
 app.use('/api/v1/user', userrouter);
 app.use('/api/v1/', userrouter);
 app.use('/api/v1/agencies', agencyRoutes)
+// keycloak route
+app.use('/api/v1/role', rolerouter);
+app.use('/api/v1/scope', scoperouter);
+app.use('/api/v1/resource', resourcerouter);
+app.use('/api/v1/policy', policyrouter);
+app.use('/api/v1/keycloak/user', keycloakUserRouter);
+app.use('/api/v1/auth', authrouter);
+
 //app.use('/api/user', userRoutes);
 //app.use("/api/v1/article", ArticleRouter);
 //app.use("/api/v1/user", UserRouter);

@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import checkToken  from '../middlewares/checkToken.js';
 // import catchAsync from '~/utils/catchAsync';
 // import validate from '~/middlewares/validate';
 // import authenticate from '~/middlewares/authenticate';
@@ -18,7 +19,7 @@ const router = Router();
 // router.post('/verify-email', validate(authValidation.verifyEmail), catchAsync(authController.verifyEmail));
 // router.post('/forgot-password', validate(authValidation.forgotPassword), catchAsync(authController.forgotPassword));
 // router.post('/reset-password', validate(authValidation.resetPassword), catchAsync(authController.resetPassword));
-router.post('/digilocker-user-detail', digiLockerUserDetail);
-router.post('/digilocker-registration', digiLockerFinalRegistration);
+router.post('/digilocker-user-detail', checkToken, digiLockerUserDetail);
+router.post('/digilocker-registration', checkToken, digiLockerFinalRegistration);
 
 export default router;

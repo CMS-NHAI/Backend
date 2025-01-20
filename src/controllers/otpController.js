@@ -3,7 +3,7 @@ import prisma  from "../config/prismaClient.js";
 import sendOTP from "../services/twilioService.js"
 import  generateOTP  from "../utils/otpGenerator.js"; 
 import  validatePhoneNumber  from "../utils/validation.js";
-import { phoneValidationSchema } from "../validations/otpValidation.js";
+import { otpSchema, phoneValidationSchema  } from "../validations/otpValidation.js";
 import { otpmobileValidationSchema } from "../validations/otpMobileValidation.js";
 import { OTP_CONSTANT, SEND_RESEND_OTP_CONSTANT } from '../constants/constant.js'; 
 import { v4 as uuidv4 } from 'uuid';
@@ -188,9 +188,9 @@ export const authenticateOtp = async (req, res)  => {
 }
 
 export const sendOtpToUserLatest = async (req, res) =>{
-
-  const { mobile_number } = req.body;
-  const { error } = phoneValidationSchema.validate({ mobile_number });
+  
+  const { mobile_number, email, otp_verification_method } = req.body;
+  const { error } = otpSchema.validate({ mobile_number, email, otp_verification_method });
   if (error) {
     return res.status(STATUS_CODES.BAD_REQUEST).json({
       success: false,
@@ -205,7 +205,7 @@ export const sendOtpToUserLatest = async (req, res) =>{
       user_id: true,
     }
   });
-
+ 
 
   const generateOtp = () => crypto.randomInt(10000, 99999).toString();
 
@@ -222,7 +222,10 @@ export const sendOtpToUserLatest = async (req, res) =>{
     });
 
     if (recentOtps >= OTP_CONSTANT.MAX_OTP_LIMIT) {
-      return res.status(STATUS_CODES.TOO_MANY_REQUESTS).json({ message: "Max OTP limit reached." });
+      return res.status(STATUS_CODES.TOO_MANY_REQUESTS).json({ 
+        success: false,
+        status: STATUS_CODES.TOO_MANY_REQUESTS,
+        message: "Max OTP limit reached." });
     }
 
     // Generate OTP
@@ -244,10 +247,17 @@ export const sendOtpToUserLatest = async (req, res) =>{
     // Send the OTP (via email/SMS)
     console.log(`OTP for user Mobile ${mobile_number}: ${otp}`);
 
-    res.json({ message: "OTP sent successfully." });
+    res.json({ 
+      success: true,
+      status: 200,
+      message: "OTP sent successfully." 
+    });
   } catch (error) {
     console.error(error);
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ message: "Internal server error." });
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+      message: "Mobile Number is not Registered." });
   }
 }
 

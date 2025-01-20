@@ -44,7 +44,7 @@ const getEmployeeBySAPID = async (sapId) => {
     return res.status(STATUS_CODES.BAD_REQUEST).json({
       success: false,
       status: STATUS_CODES.BAD_REQUEST,
-      message: err,
+      message: err.message,
     });
   }
 };
@@ -117,7 +117,7 @@ export const verifyOtp = async (req, res) => {
     res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
       status: STATUS_CODES.INTERNAL_SERVER_ERROR,
-      message: err,
+      message: err.message,
     });
   }
 };
@@ -155,7 +155,7 @@ export const signup = async (req, res) => {
   } catch (err) {
     res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: err,
+      message: err.message,
     });
   }
 };
@@ -216,7 +216,7 @@ export const getUserDetails = async (req, res) => {
     res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: "false",
       status: STATUS_CODES.INTERNAL_SERVER_ERROR,
-      message: err,
+      message: err.message,
     });
   }
 };
@@ -245,7 +245,7 @@ export const getUserByPhoneNo = async (mobile_number) => {
     res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: "false",
       status: STATUS_CODES.INTERNAL_SERVER_ERROR,
-      message: err,
+      message: err.message,
     });
 
   }
@@ -303,7 +303,7 @@ export const getSapDetails = async (req, res) => {
   } catch (err) {
     res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: err,
+      message: err.message,
     });
   }
 };
@@ -363,7 +363,7 @@ export const authenticateEntity = async (req, res) => {
     } catch (err) {
       res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
         success: false,
-        message: err,
+        message: err.message,
       });
     }
   };
@@ -371,6 +371,7 @@ export const authenticateEntity = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
+    
     const pageSize = parseInt(req.query.pageSize) || 10;  
     const page = parseInt(req.query.page) || 1;  
 
@@ -384,9 +385,17 @@ export const getAllUsers = async (req, res) => {
     // Calculate skip and take based on pageSize and page
     const skip = (page - 1) * pageSize;
     const take = pageSize;
-
-    // Query users from the user_master table with pagination
+    
     const users = await prisma.user_master.findMany({
+      where: {
+        registration_invitation: {
+          some: {
+            user_id: {
+              equals: prisma.user_master.user_id, // Match user_id in registration_invitation with user_master's user_id
+            },
+          },
+        },
+      },
       skip: skip,
       take: take,
       select: {
@@ -398,9 +407,39 @@ export const getAllUsers = async (req, res) => {
         office_location: true,
         is_digilocker_verified: true,
         date_of_birth: true,
-        user_type : true
-      }
+        user_type: true,
+        created_at: true,
+        created_by: true,
+        user_role: true,
+        office_mobile_number: true,
+      },
     });
+
+
+    const totalUsers = await prisma.user_master.count({
+      where: {
+        registration_invitation: {
+          some: {
+            user_id: {
+              equals: prisma.user_master.user_id, 
+            },
+          },
+        },
+      },
+    });
+    
+    
+    // If no users are found, return a message
+    if (users.length === 0) {
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
+        success: false,
+        message: 'Users not found.',
+        data: [],
+      });
+    }
+
+    // Get the total count of users that have a registration invitation
+    
 
     // If no users are found, return a message
     if (users.length === 0) {
@@ -412,7 +451,7 @@ export const getAllUsers = async (req, res) => {
     }
 
     // Get the total count of users for pagination info
-    const totalUsers = await prisma.user_master.count();
+    // const totalUsers = await prisma.user_master.count();
 
     // Return the paginated list of users
     return res.status(STATUS_CODES.OK).json({
@@ -429,7 +468,7 @@ export const getAllUsers = async (req, res) => {
   } catch (err) {
     return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: err
+      message: err.message
     });
   }
 };
@@ -647,24 +686,18 @@ export const updateUser = async (req, res) => {
 };
 
 export const verifyOtpLatest = async (req, res) =>{
-  //console.log("bhawesh")
-
-  const { mobile_number, otp } = req.body;
-
-  const { error } = otpmobileValidationSchema.validate({ mobile_number, otp });
-  if (error) {
-    return res.status(STATUS_CODES.BAD_REQUEST).json({
-      success: false,
-      status: STATUS_CODES.BAD_REQUEST,
-      message: error.details[0].message,
-    });
-  }
+     const { mobile_number, otp } = req.body;
+     const { error } = otpmobileValidationSchema.validate({ mobile_number, otp });
+      if (error) {
+          return res.status(STATUS_CODES.BAD_REQUEST).json({
+          success: false,
+          status: STATUS_CODES.BAD_REQUEST,
+          message: error.details[0].message,
+         });
+      }
   try {
       const user = await prisma.user_master.findUnique({  
         where: { mobile_number: mobile_number},  
-       // select: {
-       //   user_id: true,
-       // }
       });
 
       const record = await prisma.otp_verification.findFirst({
@@ -673,32 +706,42 @@ export const verifyOtpLatest = async (req, res) =>{
           is_deleted: false,
         },
         orderBy: {
-          otp_sent_timestamp: 'desc', // Get the latest OTP
+          otp_sent_timestamp: 'desc', 
         },
       });
 
       if (!record) {
-        throw new Error('No OTP found for the user.');
+        return res.status(STATUS_CODES.NOT_FOUND).json({
+          success: false,
+          status: STATUS_CODES.NOT_FOUND,
+          message: 'No OTP found for the user.',
+        })
       }
-    
-      // Check expiration
       if (record.otp_expiration < new Date()) {
-        throw new Error('OTP has expired.');
+        // Check expiration
+        return res.status(STATUS_CODES.GONE).json({
+          success: false,
+          status: STATUS_CODES.GONE,
+          message: 'OTP has expired.',
+        })
       }
 
-       // Increment attempt count
-        await prisma.otp_verification.update({
+       await prisma.otp_verification.update({
+          // Increment attempt count
           where: { otp_id: record.otp_id },
           data: { otp_attempt_count: record.otp_attempt_count + 1 },
         });
-
-        // Validate OTP (here assuming OTP is stored securely for demo purposes)
         if (otp !== '12345') {
-          throw new Error('Invalid OTP.');
-        }
+           // Validate OTP (here assuming OTP is stored securely for demo purposes)
+              return res.status(STATUS_CODES.UNAUTHORIZED).json({
+               success: false,
+               status: STATUS_CODES.UNAUTHORIZED,
+               message: 'Invalid OTP.',
+             })    
 
-        // Mark as verified
+        } 
         const updatedRecord = await prisma.otp_verification.update({
+          //Mark as verified
           where: { otp_id: record.otp_id },
           data: { otp_verification_status: 'VERIFIED' },
         });
@@ -736,12 +779,78 @@ export const verifyOtpLatest = async (req, res) =>{
         res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
           success: false,
           status: STATUS_CODES.INTERNAL_SERVER_ERROR,
-          message: err,
+          message: err.message,
         });
       }
 
 
     }
+
+
+export const createInvitation = async (req, res) =>{
+
+ 
+  const {
+    org_id,
+    user_id,
+    invite_to, // Email or mobile number
+    invite_message,
+    expiry_date,
+    created_by,
+  } = req.body;
+
+  const generateInvitationLink = (userId) => {
+    const uniqueToken = crypto.randomBytes(16).toString("hex");
+    return `https://example.com/invite/mob/${userId}/${uniqueToken}`;
+  };
+
+
+  if (!org_id || !user_id || !invite_to || !created_by) {
+    return res.status(STATUS_CODES.NOT_FOUND).json({
+      success: false,
+      status:STATUS_CODES.NOT_FOUND,
+       error: "Missing required fields." 
+      });
+  }
+
+
+  try {
+    // Generate a unique invitation link
+    const invitation_link = generateInvitationLink(user_id);
+
+    // Save the invitation in the database
+    const invitation = await prisma.registration_invitation.create({
+      data: {
+        org_id,
+        user_id,
+        invitation_link,
+        short_url: null, // Optionally generate and store a short URL
+        invitation_status: "Pending",
+        invite_to,
+        invite_message,
+        expiry_date: expiry_date ? new Date(expiry_date) : null,
+        created_by,
+      },
+    });
+
+    res.status(201).json({
+      success: true,
+      status:STATUS_CODES.NOT_FOUND,
+      message: "Invitation link created successfully.",
+      invitation,
+    });
+  } catch (error) {
+    console.error("Error creating invitation:", error);
+    res.status(500).json({ 
+      success: false,
+      status:STATUS_CODES.INTERNAL_SERVER_ERROR,
+      error: "An error occurred while creating the invitation." 
+    });
+  }
+
+
+
+}   
       
       
 

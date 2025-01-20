@@ -78,9 +78,9 @@ export const verifyOtp = async (req, res) => {
     console.log(user.otp);
     console.log(otp);
     if (otp !== "12345") {
-      return res.status(STATUS_CODES.BAD_REQUEST).json({
+      return res.status(STATUS_CODES.UNAUTHORIZED).json({
         success: false,
-        status: STATUS_CODES.BAD_REQUEST,
+        status: STATUS_CODES.UNAUTHORIZED,
         message: 'Invalid OTP.',
       });
     }
@@ -785,6 +785,72 @@ export const verifyOtpLatest = async (req, res) =>{
 
 
     }
+
+
+export const createInvitation = async (req, res) =>{
+
+ 
+  const {
+    org_id,
+    user_id,
+    invite_to, // Email or mobile number
+    invite_message,
+    expiry_date,
+    created_by,
+  } = req.body;
+
+  const generateInvitationLink = (userId) => {
+    const uniqueToken = crypto.randomBytes(16).toString("hex");
+    return `https://example.com/invite/mob/${userId}/${uniqueToken}`;
+  };
+
+
+  if (!org_id || !user_id || !invite_to || !created_by) {
+    return res.status(STATUS_CODES.NOT_FOUND).json({
+      success: false,
+      status:STATUS_CODES.NOT_FOUND,
+       error: "Missing required fields." 
+      });
+  }
+
+
+  try {
+    // Generate a unique invitation link
+    const invitation_link = generateInvitationLink(user_id);
+
+    // Save the invitation in the database
+    const invitation = await prisma.registration_invitation.create({
+      data: {
+        org_id,
+        user_id,
+        invitation_link,
+        short_url: null, // Optionally generate and store a short URL
+        invitation_status: "Pending",
+        invite_to,
+        invite_message,
+        expiry_date: expiry_date ? new Date(expiry_date) : null,
+        created_by,
+      },
+    });
+
+    res.status(201).json({
+      success: true,
+      status:STATUS_CODES.NOT_FOUND,
+      message: "Invitation link created successfully.",
+      invitation,
+    });
+  } catch (error) {
+    console.error("Error creating invitation:", error);
+    res.status(500).json({ 
+      success: false,
+      status:STATUS_CODES.INTERNAL_SERVER_ERROR,
+      error: "An error occurred while creating the invitation." 
+    });
+  }
+
+
+
+}   
       
       
 

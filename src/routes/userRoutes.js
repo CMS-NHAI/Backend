@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { verifyOtp, verifyOtpLatest,  signup , getUserDetails , getSapDetails, authenticateEntity, getAllUsers, createUser , updateUserStatus, updateUser} from "../controllers/userController.js"
+import { verifyOtp, createInvitation, verifyOtpLatest,  signup , getUserDetails , getSapDetails, authenticateEntity, getAllUsers, createUser , updateUserStatus, updateUser} from "../controllers/userController.js"
 import checkToken  from '../middlewares/checkToken.js';
 const router = Router();
 
@@ -13,5 +13,6 @@ router.post('/list', checkToken, getAllUsers);
 router.post('/users',checkToken, createUser);
 router.post('/users/status',checkToken, updateUserStatus );
 router.put('/users',checkToken,  updateUser);
+router.post('/user', checkToken, createInvitation);
 
 export default router;

@@ -1,0 +1,15 @@
+{
+    
+    "realm": "nhai-realm", 
+    "serverUrl": "http://localhost:8080",
+    "ssl-required": "external",
+    "clientId": "nhai",
+    "client_name_id":"f251a5af-8b61-49fb-a8af-3d7e391a34fb",
+    "credentials": {
+      "clientSecret": "THttqsduU677fi9n7sfj7XTKzZ2lb1XH"
+    },
+    "use-resource-role-mappings": true,
+    "confidential-port": 0,
+    "public-client": false
+}
+  

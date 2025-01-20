@@ -3,7 +3,7 @@ import prisma  from "../config/prismaClient.js";
 import sendOTP from "../services/twilioService.js"
 import  generateOTP  from "../utils/otpGenerator.js"; 
 import  validatePhoneNumber  from "../utils/validation.js";
-import { phoneValidationSchema } from "../validations/otpValidation.js";
+import { otpSchema, phoneValidationSchema  } from "../validations/otpValidation.js";
 import { otpmobileValidationSchema } from "../validations/otpMobileValidation.js";
 import { OTP_CONSTANT, SEND_RESEND_OTP_CONSTANT } from '../constants/constant.js'; 
 import { v4 as uuidv4 } from 'uuid';
@@ -189,8 +189,8 @@ export const authenticateOtp = async (req, res)  => {
 
 export const sendOtpToUserLatest = async (req, res) =>{
   
-  const { mobile_number } = req.body;
-  const { error } = phoneValidationSchema.validate({ mobile_number });
+  const { mobile_number, email, otp_verification_method } = req.body;
+  const { error } = otpSchema.validate({ mobile_number, email, otp_verification_method });
   if (error) {
     return res.status(STATUS_CODES.BAD_REQUEST).json({
       success: false,

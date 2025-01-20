@@ -6,11 +6,10 @@ import helmet from 'helmet';
 import cors from 'cors';
 import bodyParser from 'body-parser'
 import router from "./routes/otpRoutes.js";
-import agencyrouter from "./routes/agencyRoutes.js";
+import agencyRoutes from "./routes/agencyRoutes.js";
 import userrouter from "./routes/userRoutes.js";
 import {STATUS_CODES} from "./constants/statusCodesConstant.js"
 import {APP_CONSTANTS}  from "./constants/appConstants.js"
-
 
 const app = express();
 
@@ -37,7 +36,7 @@ app.use('/api/v1/otp', router);
 app.use('/api/v1/auth', router);
 app.use('/api/v1/user', userrouter);
 app.use('/api/v1/', userrouter);
-app.use('/api/v1/agency', agencyrouter)
+app.use('/api/v1/agencies', agencyRoutes)
 //app.use('/api/user', userRoutes);
 //app.use("/api/v1/article", ArticleRouter);
 //app.use("/api/v1/user", UserRouter);
@@ -51,7 +50,7 @@ app.get('/', (req, res) => {
 const PORT =  process.env.PORT || 3004;
 //const server = http.createServer(app);
 
-app.listen(PORT, '0.0.0.0',() => {
+app.listen(3004, '0.0.0.0',() => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 

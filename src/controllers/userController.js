@@ -45,7 +45,7 @@ const getEmployeeBySAPID = async (sapId) => {
     return res.status(STATUS_CODES.BAD_REQUEST).json({
       success: false,
       status: STATUS_CODES.BAD_REQUEST,
-      message: err,
+      message: err.message,
     });
   }
 };
@@ -118,7 +118,7 @@ export const verifyOtp = async (req, res) => {
     res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
       status: STATUS_CODES.INTERNAL_SERVER_ERROR,
-      message: err,
+      message: err.message,
     });
   }
 };
@@ -156,7 +156,7 @@ export const signup = async (req, res) => {
   } catch (err) {
     res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: err,
+      message: err.message,
     });
   }
 };
@@ -217,7 +217,7 @@ export const getUserDetails = async (req, res) => {
     res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: "false",
       status: STATUS_CODES.INTERNAL_SERVER_ERROR,
-      message: err,
+      message: err.message,
     });
   }
 };
@@ -246,7 +246,7 @@ export const getUserByPhoneNo = async (mobile_number) => {
     res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: "false",
       status: STATUS_CODES.INTERNAL_SERVER_ERROR,
-      message: err,
+      message: err.message,
     });
 
   }
@@ -304,7 +304,7 @@ export const getSapDetails = async (req, res) => {
   } catch (err) {
     res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: err,
+      message: err.message,
     });
   }
 };
@@ -364,7 +364,7 @@ export const authenticateEntity = async (req, res) => {
     } catch (err) {
       res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
         success: false,
-        message: err,
+        message: err.message,
       });
     }
   };
@@ -372,6 +372,7 @@ export const authenticateEntity = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
+    
     const pageSize = parseInt(req.query.pageSize) || 10;  
     const page = parseInt(req.query.page) || 1;  
 
@@ -385,9 +386,17 @@ export const getAllUsers = async (req, res) => {
     // Calculate skip and take based on pageSize and page
     const skip = (page - 1) * pageSize;
     const take = pageSize;
-
-    // Query users from the user_master table with pagination
+    
     const users = await prisma.user_master.findMany({
+      where: {
+        registration_invitation: {
+          some: {
+            user_id: {
+              equals: prisma.user_master.user_id, // Match user_id in registration_invitation with user_master's user_id
+            },
+          },
+        },
+      },
       skip: skip,
       take: take,
       select: {
@@ -399,9 +408,39 @@ export const getAllUsers = async (req, res) => {
         office_location: true,
         is_digilocker_verified: true,
         date_of_birth: true,
-        user_type : true
-      }
+        user_type: true,
+        created_at: true,
+        created_by: true,
+        user_role: true,
+        office_mobile_number: true,
+      },
     });
+
+
+    const totalUsers = await prisma.user_master.count({
+      where: {
+        registration_invitation: {
+          some: {
+            user_id: {
+              equals: prisma.user_master.user_id, 
+            },
+          },
+        },
+      },
+    });
+    
+    
+    // If no users are found, return a message
+    if (users.length === 0) {
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
+        success: false,
+        message: 'Users not found.',
+        data: [],
+      });
+    }
+
+    // Get the total count of users that have a registration invitation
+    
 
     // If no users are found, return a message
     if (users.length === 0) {
@@ -413,7 +452,7 @@ export const getAllUsers = async (req, res) => {
     }
 
     // Get the total count of users for pagination info
-    const totalUsers = await prisma.user_master.count();
+    // const totalUsers = await prisma.user_master.count();
 
     // Return the paginated list of users
     return res.status(STATUS_CODES.OK).json({
@@ -430,7 +469,7 @@ export const getAllUsers = async (req, res) => {
   } catch (err) {
     return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: err
+      message: err.message
     });
   }
 };
@@ -742,7 +781,7 @@ export const verifyOtpLatest = async (req, res) =>{
         res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
           success: false,
           status: STATUS_CODES.INTERNAL_SERVER_ERROR,
-          message: 'An unexpected error occurred. Please try again later.',
+          message: err.message,
         });
       }
 

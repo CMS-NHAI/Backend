@@ -205,7 +205,7 @@ export const sendOtpToUserLatest = async (req, res) =>{
       user_id: true,
     }
   });
-
+ 
 
   const generateOtp = () => crypto.randomInt(10000, 99999).toString();
 

@@ -44,7 +44,7 @@ const getEmployeeBySAPID = async (sapId) => {
     return res.status(STATUS_CODES.BAD_REQUEST).json({
       success: false,
       status: STATUS_CODES.BAD_REQUEST,
-      message: err,
+      message: err.message,
     });
   }
 };
@@ -117,7 +117,7 @@ export const verifyOtp = async (req, res) => {
     res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
       status: STATUS_CODES.INTERNAL_SERVER_ERROR,
-      message: err,
+      message: err.message,
     });
   }
 };
@@ -155,7 +155,7 @@ export const signup = async (req, res) => {
   } catch (err) {
     res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: err,
+      message: err.message,
     });
   }
 };
@@ -216,7 +216,7 @@ export const getUserDetails = async (req, res) => {
     res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: "false",
       status: STATUS_CODES.INTERNAL_SERVER_ERROR,
-      message: err,
+      message: err.message,
     });
   }
 };
@@ -245,7 +245,7 @@ export const getUserByPhoneNo = async (mobile_number) => {
     res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: "false",
       status: STATUS_CODES.INTERNAL_SERVER_ERROR,
-      message: err,
+      message: err.message,
     });
 
   }
@@ -303,7 +303,7 @@ export const getSapDetails = async (req, res) => {
   } catch (err) {
     res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: err,
+      message: err.message,
     });
   }
 };
@@ -363,7 +363,7 @@ export const authenticateEntity = async (req, res) => {
     } catch (err) {
       res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
         success: false,
-        message: err,
+        message: err.message,
       });
     }
   };
@@ -398,7 +398,12 @@ export const getAllUsers = async (req, res) => {
         office_location: true,
         is_digilocker_verified: true,
         date_of_birth: true,
-        user_type : true
+        user_type : true,
+        created_at : true,
+        created_by : true,
+        user_role : true,
+        office_mobile_number : true
+        
       }
     });
 
@@ -429,7 +434,7 @@ export const getAllUsers = async (req, res) => {
   } catch (err) {
     return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: err
+      message: err.message
     });
   }
 };
@@ -740,7 +745,7 @@ export const verifyOtpLatest = async (req, res) =>{
         res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
           success: false,
           status: STATUS_CODES.INTERNAL_SERVER_ERROR,
-          message: 'An unexpected error occurred. Please try again later.',
+          message: err.message,
         });
       }
 

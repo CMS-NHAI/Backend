@@ -102,7 +102,7 @@ model event_log {
   event_id        Int          @id @default(autoincrement())
   event_type      String?      @db.VarChar(50)
   event_timestamp DateTime?    @db.Timestamp(6)
-  user_id         Int?
+  user_id         Int
   ip_address      String?      @db.VarChar(45)
   device_info     String?      @db.VarChar(255)
   event_status    String?      @db.VarChar(20)
@@ -121,7 +121,7 @@ model event_log_history {
   event_id         BigInt?
   event_type       String?      @db.VarChar(50)
   event_timestamp  DateTime?    @db.Timestamp(6)
-  user_id          Int?
+  user_id          Int
   ip_address       String?      @db.VarChar(45)
   device_info      String?      @db.VarChar(255)
   event_status     String?      @db.VarChar(20)
@@ -136,7 +136,7 @@ model event_log_history {
 }
 
 model location_master {
-  id                    String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id                    String                   @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
   name                  String?                  @db.VarChar(255)
   type                  String?                  @db.VarChar(50)
   geometry              Unsupported("geometry")?
@@ -154,7 +154,7 @@ model location_master {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model policies {
-  id                    String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id                    String                   @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
   policy_name           String                   @unique @db.VarChar(255)
   description           String?
   subject_condition     Json?
@@ -172,7 +172,7 @@ model policies {
 }
 
 model resource_attributes {
-  id              String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id              String                   @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
   resource_id     String?                  @db.Uuid
   attribute_name  String                   @db.VarChar(100)
   attribute_value Json
@@ -187,7 +187,7 @@ model resource_attributes {
 }
 
 model resource_cache {
-  id          String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id          String                   @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
   resource_id String?                  @db.Uuid
   cached_data Json?
   geometry    Unsupported("geometry")?
@@ -202,7 +202,7 @@ model resource_cache {
 }
 
 model resources {
-  id                  String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id                  String                   @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
   resource_type       String                   @db.VarChar(50)
   resource_name       String                   @db.VarChar(255)
   resource_path       String                   @unique @db.VarChar(255)
@@ -252,8 +252,8 @@ model user_attributes {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model user_master {
-  user_id                 Int       @id @default(autoincrement())
-  unique_username        String   @unique                      // Unique string field for the username
+  user_id                Int                  @id @default(autoincrement())
+  unique_username        String?              @unique @db.Uuid
   sap_id                 String?              @unique @db.VarChar(50)
   name                   String               @db.VarChar(100)
   first_name             String?              @db.VarChar(50)
@@ -290,7 +290,9 @@ model user_master {
   office_location        String?              @db.VarChar(255)
   is_email_verified      Boolean?             @default(false)
   is_whatsapp_update     Boolean?             @default(false)
-  verified_status        Boolean  @default(false)
+  verified_status        Boolean?             @default(false)
+  is_admin               Boolean?             @default(false)
+  office_mobile_number   String?              @db.VarChar(10)
   user_mapping           user_mapping[]
   authentication         authentication[]
   event_log              event_log[]
@@ -303,7 +305,7 @@ model user_master {
 }
 
 model user_sessions {
-  id            String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id            String       @id @default(dbgenerated("public.uuid_generate_v4()")) @db.Uuid
   user_id       Int?
   device_id     String?      @db.VarChar(255)
   device_type   String?      @db.VarChar(50)

@@ -1,6 +1,7 @@
 import { getAccessTokenFromDigiLocker } from "../helper/getAccessTokenFromDigiLocker.js";
 import { parseXmlToJson } from "../helper/parseXmlToJson.js";
-// import prisma  from "../config/prismaClient.js";
+import prisma  from "../config/prismaClient.js";
+import jwt from "jsonwebtoken";
 
 /**
  *
@@ -50,23 +51,18 @@ export const digiLockerUserDetail = async (req, res) => {
     const eAdharJson = await parseXmlToJson(eAdharXml); // Parse XML to JSON
 
     // Get the the user email from the access token
-    const decodedToken = jwt.decode(token);
-
-  if (!decodedToken) {
-    return res.status(400).json({ msg: "Invalid token" });
-  }
   // Extract user ID and email from the token payload
-  const userEmail = decodedToken.email;  // Adjust based on how the token is structured
+  const userEmail = req.user.email;  
     // Add digilocker detail into database start (address field is missing)
     const userInfo = {
-      user_email : userEmail,
+      email : userEmail,
       userDetail: userDetail,
       eAdharDetail: eAdharJson,
     }
-    //   const data = await prisma.user_master.update({
-    //     where: { mobile_number: userDetail.mobile },
-    //     user_data: userInfo,
-    // })
+      const data = await prisma.user_master.update({
+        where: { email: userEmail },
+        user_data: userInfo,
+    })
     // Add digilocker detail into database end
 
     return res.status(200).json({
@@ -102,17 +98,11 @@ export const digiLockerFinalRegistration = async(req, res)=>{
   }
 
   // Decode the token (without verifying) to get the payload
-  const decodedToken = jwt.decode(token);
-
-  if (!decodedToken) {
-    return res.status(400).json({ msg: "Invalid token" });
-  }
+  const userEmail = req.user.email;  
 
   // Extract user ID and email from the token payload
-  const userId = decodedToken.userId;  // Adjust based on how the token is structured
-
   const data = await prisma.user_master.update({
-        where: { user_id: userId },
+        where: { email: userEmail },
         is_digilocker_verified: true,
     })
 

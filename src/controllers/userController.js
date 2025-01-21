@@ -11,6 +11,7 @@ import { createUserValidationSchema } from "../validations/createUserValidation.
 import { updateUserStatusValidationSchema } from "../validations/updateUserStatusValidation.js";
 import { updateUserValidationSchema } from '../validations/updateUserValidation.js';
 import { v4 as uuidv4 } from 'uuid';
+import crypto from "crypto";
 
 const uniqueUsername = uuidv4();
 const getEmployeeBySAPID = async (sapId) => {
@@ -748,6 +749,7 @@ export const verifyOtpLatest = async (req, res) =>{
 
         const payload = {
           user_id: user.id, // Include the user ID (or any other info)
+          email:user.email,
           phone_number: user.mobile_number,
         };
     
@@ -789,7 +791,7 @@ export const verifyOtpLatest = async (req, res) =>{
 
 export const createInvitation = async (req, res) =>{
 
- 
+ console.log("bhawesh")
   const {
     org_id,
     user_id,
@@ -822,7 +824,7 @@ export const createInvitation = async (req, res) =>{
     const invitation = await prisma.registration_invitation.create({
       data: {
         org_id,
-        user_id,
+        user_id:5,
         invitation_link,
         short_url: null, // Optionally generate and store a short URL
         invitation_status: "Pending",

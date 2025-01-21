@@ -13,6 +13,6 @@ router.post('/list', checkToken, getAllUsers);
 router.post('/users',checkToken, createUser);
 router.post('/users/status',checkToken, updateUserStatus );
 router.put('/users',checkToken,  updateUser);
-router.post('/user', checkToken, createInvitation);
+router.post('/users/invitationIndividual', checkToken, createInvitation);
 
 export default router;

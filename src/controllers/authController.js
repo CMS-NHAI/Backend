@@ -59,10 +59,18 @@ export const digiLockerUserDetail = async (req, res) => {
       userDetail: userDetail,
       eAdharDetail: eAdharJson,
     }
-      const data = await prisma.user_master.update({
-        where: { email: userEmail },
-        user_data: userInfo,
-    })
+
+    const updatedUser = await prisma.user_master.update({
+      where: { email: userEmail },
+      data: {
+        user_data: userInfo, // Adjust the field name based on your schema
+      },
+    });
+
+    //   const data = await prisma.user_master.update({
+    //     where: { email: userEmail },
+    //     user_data: userInfo,
+    // })
     // Add digilocker detail into database end
 
     return res.status(200).json({
@@ -99,12 +107,18 @@ export const digiLockerFinalRegistration = async(req, res)=>{
 
   // Decode the token (without verifying) to get the payload
   const userEmail = req.user.email;  
-
   // Extract user ID and email from the token payload
-  const data = await prisma.user_master.update({
-        where: { email: userEmail },
+  // const data = await prisma.user_master.update({
+  //       where: { email: userEmail },
+  //       is_digilocker_verified: true,
+  //   })
+
+    const data = await prisma.user_master.update({
+      where: { email: userEmail },
+      data: {
         is_digilocker_verified: true,
-    })
+      },
+    });
 
     res.status(200).json({
       success: true,

@@ -788,10 +788,72 @@ export const verifyOtpLatest = async (req, res) =>{
 
     }
 
+    export const verifyEmailOtpLatest = async (req, res) =>{
+      const { email, otp } = req.body;
+
+      try {
+        const user = await prisma.user_master.findUnique({  
+          where: { email: email},  
+        });
+  
+        
+  
+          if (otp !== '12345') {
+             // Validate OTP (here assuming OTP is stored securely for demo purposes)
+                return res.status(STATUS_CODES.UNAUTHORIZED).json({
+                 success: false,
+                 status: STATUS_CODES.UNAUTHORIZED,
+                 message: 'Invalid OTP.',
+               })    
+  
+          } 
+         
+  
+          const payload = {
+            user_id: user.id, // Include the user ID (or any other info)
+            email:user.email,
+            email: user.email,
+          };
+      
+          // Replace 'your_secret_key' with your actual secret key for signing the token
+          const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '2d' });
+          await prisma.user_master.update({
+            where: { email },
+            data: { verified_status: true },
+          });
+      
+          res.status(STATUS_CODES.OK).json({
+            success: true,
+            status: STATUS_CODES.OK,
+            message: 'Email OTP verified successfully.',
+            data: {
+              access_token: access_token,
+              //name: user.first_name + ' ' + user.last_name,
+              name: user.name,
+              mobile_number: user.mobile_number,
+              email: user.email,
+              designation: user.designation,
+              is_digilocker_verified: user.is_digilocker_verified,
+              office_location: user.office_location,
+              user_type : user.user_type,
+              user_role : user.user_role
+
+            },
+          });
+        } catch (err) {
+          console.error(err);
+          res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+            message: err.message,
+          });
+        }
+      
+    }
+
 
 export const createInvitation = async (req, res) =>{
 
- console.log("bhawesh")
   const {
     org_id,
     user_id,

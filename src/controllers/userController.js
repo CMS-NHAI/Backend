@@ -202,6 +202,7 @@ export const getUserDetails = async (req, res) => {
       status: "success",
       message: "User details retrieved successfully.",
       data: {
+        user_id : user.user_id,
         sap_id: user.sap_id,
         name: user.name,
         date_of_birth: user.date_of_birth,  // Assuming date_of_birth is returned as a Date object
@@ -230,6 +231,7 @@ export const getUserByPhoneNo = async (mobile_number) => {
         mobile_number: mobile_number,  // Search by phone_number
       },
       select: {
+        user_id : true,
         sap_id: true,
         name: true,
         date_of_birth: true,
@@ -772,6 +774,7 @@ export const verifyOtpLatest = async (req, res) =>{
           status: STATUS_CODES.OK,
           message: 'OTP verified successfully.',
           data: {
+            user_id : user.user_id,
             access_token: access_token,
             //name: user.first_name + ' ' + user.last_name,
             name: user.name,
@@ -780,7 +783,8 @@ export const verifyOtpLatest = async (req, res) =>{
             designation: user.designation,
             is_digilocker_verified: user.is_digilocker_verified,
             office_location: user.office_location,
-            user_type : user.user_type
+            user_type : user.user_type,
+            user_role : user.user_role
           },
         });
       } catch (err) {

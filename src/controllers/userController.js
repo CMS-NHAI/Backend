@@ -413,10 +413,16 @@ export const getAllUsers = async (req, res) => {
         created_by: true,
         user_role: true,
         office_mobile_number: true,
+        status : true ,
+        user_id : true,
       },
     });
-
-
+    const usersWithDummyData = users.map(user => ({
+      ...user,
+      user_company_name: 'Company 1',  
+      contract_details: 'Contract 1', 
+    }));
+ 
     const totalUsers = await prisma.user_master.count({
       where: {
         registration_invitation: {
@@ -429,6 +435,7 @@ export const getAllUsers = async (req, res) => {
       },
     });
     
+
     
     // If no users are found, return a message
     if (users.length === 0) {
@@ -458,7 +465,7 @@ export const getAllUsers = async (req, res) => {
     return res.status(STATUS_CODES.OK).json({
       success: true,
       message: 'Users retrieved successfully.',
-      data: users,
+      data: usersWithDummyData,
       pagination: {
         page,
         pageSize,

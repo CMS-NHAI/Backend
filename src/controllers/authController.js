@@ -59,10 +59,18 @@ export const digiLockerUserDetail = async (req, res) => {
       userDetail: userDetail,
       eAdharDetail: eAdharJson,
     }
-      const data = await prisma.user_master.update({
-        where: { email: userEmail },
-        user_data: userInfo,
-    })
+
+    const updatedUser = await prisma.user_master.update({
+      where: { email: userEmail },
+      data: {
+        user_data: userInfo, // Adjust the field name based on your schema
+      },
+    });
+
+    //   const data = await prisma.user_master.update({
+    //     where: { email: userEmail },
+    //     user_data: userInfo,
+    // })
     // Add digilocker detail into database end
 
     return res.status(200).json({

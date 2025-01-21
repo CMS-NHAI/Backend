@@ -91,7 +91,7 @@ export const verifyOtp = async (req, res) => {
     };
 
     // Replace 'your_secret_key' with your actual secret key for signing the token
-    const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '2d' });
+    const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '30d' });
     await prisma.user_master.update({
       where: { mobile_number },
       data: { verified_status: true },

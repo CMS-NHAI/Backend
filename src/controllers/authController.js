@@ -107,12 +107,18 @@ export const digiLockerFinalRegistration = async(req, res)=>{
 
   // Decode the token (without verifying) to get the payload
   const userEmail = req.user.email;  
-
   // Extract user ID and email from the token payload
-  const data = await prisma.user_master.update({
-        where: { email: userEmail },
+  // const data = await prisma.user_master.update({
+  //       where: { email: userEmail },
+  //       is_digilocker_verified: true,
+  //   })
+
+    const data = await prisma.user_master.update({
+      where: { email: userEmail },
+      data: {
         is_digilocker_verified: true,
-    })
+      },
+    });
 
     res.status(200).json({
       success: true,

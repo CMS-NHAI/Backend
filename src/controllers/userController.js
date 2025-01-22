@@ -400,6 +400,7 @@ export const getAllUsers = async (req, res) => {
                 um.date_of_birth,
                 um.user_type,
                 um.created_at,
+                um.status,
                 um.created_by,
                 um.user_role  
             FROM tenant_nhai.user_master AS um

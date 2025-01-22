@@ -10,6 +10,7 @@ import { phoneValidationSchema } from "../validations/otpValidation.js";
 import { createUserValidationSchema } from "../validations/createUserValidation.js";
 import { updateUserStatusValidationSchema } from "../validations/updateUserStatusValidation.js";
 import { updateUserValidationSchema } from '../validations/updateUserValidation.js';
+import { inviteUserValidationSchema } from '../validations/inviteUserValidation.js';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from "crypto";
 
@@ -898,7 +899,71 @@ export const createInvitation = async (req, res) =>{
 
 }   
       
-      
+  export const inviteUser = async (req, res) => {
+
+    const {
+      name,
+      email,
+      mobile_number,
+      office_mobile_number,
+      designation,
+      user_type,
+      status,
+      office,
+      contracts,
+      roles_permission
+      } = req.body;
+  
+    const { error } = inviteUserValidationSchema.validate(req.body);
+
+    if (error) {
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
+        success: false,
+        status: 400,
+        message: error.details[0].message,
+      });
+    }
+
+    const user_role="Manager", aadhar_image="", user_image="", organization_id=1;
+    try {
+    //  Create the user in the database
+      const user = await prisma.user_master.create({
+        data: {
+          name,
+          email,
+          mobile_number,
+          office_mobile_number,
+          designation,
+          user_type,
+          status,
+          created_at: new Date(), 
+          unique_username : uniqueUsername,
+          user_role,
+          aadhar_image,
+          user_image,
+          organization_id,
+          user_data: {
+            office: office || null, 
+            contracts: contracts || null, 
+            roles_permission: roles_permission || [], 
+          },
+        },
+      });
+
+      res.status(STATUS_CODES.CREATED).json({
+        success: true,
+        status: STATUS_CODES.CREATED,
+        message: "User invited successfully."
+      });
+    } catch (error) {
+      console.error("Error inviting user:", error);
+      res.status(500).json({
+        success: false,
+        status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+        message: error.message,
+      });
+    }
+  }
 
 
 

@@ -1003,9 +1003,9 @@ export const inviteUser = async (req, res) => {
   
       // If the user is not found
       if (!user) {
-        return res.status(STATUS_CODES.NOT_FOUND).json({
+        return res.status(STATUS_CODES.OK).json({
           success: false,
-          status: 404,
+          status: 200,
           message: "User not found.",
         });
       }

@@ -91,7 +91,7 @@ export const verifyOtp = async (req, res) => {
     };
 
     // Replace 'your_secret_key' with your actual secret key for signing the token
-    const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '30d' });
+    const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '2d' });
     await prisma.user_master.update({
       where: { mobile_number },
       data: { verified_status: true },
@@ -202,7 +202,6 @@ export const getUserDetails = async (req, res) => {
       status: "success",
       message: "User details retrieved successfully.",
       data: {
-        user_id : user.user_id,
         sap_id: user.sap_id,
         name: user.name,
         date_of_birth: user.date_of_birth,  // Assuming date_of_birth is returned as a Date object
@@ -231,7 +230,6 @@ export const getUserByPhoneNo = async (mobile_number) => {
         mobile_number: mobile_number,  // Search by phone_number
       },
       select: {
-        user_id : true,
         sap_id: true,
         name: true,
         date_of_birth: true,
@@ -415,16 +413,10 @@ export const getAllUsers = async (req, res) => {
         created_by: true,
         user_role: true,
         office_mobile_number: true,
-        status : true ,
-        user_id : true,
       },
     });
-    const usersWithDummyData = users.map(user => ({
-      ...user,
-      user_company_name: 'Company 1',  
-      contract_details: 'Contract 1', 
-    }));
- 
+
+
     const totalUsers = await prisma.user_master.count({
       where: {
         registration_invitation: {
@@ -437,7 +429,6 @@ export const getAllUsers = async (req, res) => {
       },
     });
     
-
     
     // If no users are found, return a message
     if (users.length === 0) {
@@ -467,7 +458,7 @@ export const getAllUsers = async (req, res) => {
     return res.status(STATUS_CODES.OK).json({
       success: true,
       message: 'Users retrieved successfully.',
-      data: usersWithDummyData,
+      data: users,
       pagination: {
         page,
         pageSize,
@@ -774,7 +765,6 @@ export const verifyOtpLatest = async (req, res) =>{
           status: STATUS_CODES.OK,
           message: 'OTP verified successfully.',
           data: {
-            user_id : user.user_id,
             access_token: access_token,
             //name: user.first_name + ' ' + user.last_name,
             name: user.name,
@@ -783,8 +773,7 @@ export const verifyOtpLatest = async (req, res) =>{
             designation: user.designation,
             is_digilocker_verified: user.is_digilocker_verified,
             office_location: user.office_location,
-            user_type : user.user_type,
-            user_role : user.user_role
+            user_type : user.user_type
           },
         });
       } catch (err) {
@@ -799,10 +788,78 @@ export const verifyOtpLatest = async (req, res) =>{
 
     }
 
+export const verifyEmailOtpLatest = async (req, res) =>{
+      const { email, otp } = req.body;
+
+      try {
+        const user = await prisma.user_master.findUnique({  
+          where: { email: email},  
+        });
+        if (!user) {
+          return res.status(STATUS_CODES.NOT_FOUND).json({
+            success: false,
+            status: STATUS_CODES.NOT_FOUND,
+            message: 'No OTP found for the User.'
+          })
+        }
+        console.log(user)
+  
+          if (otp !== '12345') {
+             // Validate OTP (here assuming OTP is stored securely for demo purposes)
+                return res.status(STATUS_CODES.UNAUTHORIZED).json({
+                 success: false,
+                 status: STATUS_CODES.UNAUTHORIZED,
+                 message: 'Invalid OTP.',
+               })    
+  
+          } 
+         
+  
+          const payload = {
+            user_id: user.id, // Include the user ID (or any other info)
+            email:user.email,
+            email: user.email,
+          };
+      
+          // Replace 'your_secret_key' with your actual secret key for signing the token
+          const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '2d' });
+          await prisma.user_master.update({
+            where: { email },
+            data: { verified_status: true },
+          });
+      
+          res.status(STATUS_CODES.OK).json({
+            success: true,
+            status: STATUS_CODES.OK,
+            message: 'Email OTP verified successfully.',
+            data: {
+              access_token: access_token,
+              //name: user.first_name + ' ' + user.last_name,
+              name: user.name,
+              mobile_number: user.mobile_number,
+              email: user.email,
+              designation: user.designation,
+              is_digilocker_verified: user.is_digilocker_verified,
+              office_location: user.office_location,
+              user_type : user.user_type,
+              user_role : user.user_role
+
+            },
+          });
+        } catch (err) {
+          console.error(err);
+          res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+            message: err.message,
+          });
+        }
+      
+    }
+
 
 export const createInvitation = async (req, res) =>{
 
- console.log("bhawesh")
   const {
     org_id,
     user_id,

@@ -7,8 +7,8 @@ export const createAgency = async (req, res) => {
   try {
     const data = req.body
     data['date_of_incorporation']  = new Date(data['date_of_incorporation']).toISOString();
-    data['empanelment_start_date']  = new Date(data['empanelment_start_date']).toISOString();
-    data['empanelment_end_date']  = new Date(data['empanelment_end_date']).toISOString();
+    data['empanelment_start_date'] = new Date(data['empanelment_start_date']).toISOString();
+    data['empanelment_end_date']   = new Date(data['empanelment_end_date']).toISOString();
     const newAgency = await prisma.organization_master.create({ data: data });
     res.status(201).json(newAgency);
   } catch (error) {

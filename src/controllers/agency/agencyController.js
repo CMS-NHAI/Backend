@@ -26,7 +26,9 @@ export const getAllAgencies = async (req, res) => {
     });
     res.status(STATUS_CODES.OK).json(agencies);
   } catch (error) {
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ status:STATUS_CODES.INTERNAL_SERVER_ERROR,error: "Error fetching agencies." });
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ 
+      status:STATUS_CODES.INTERNAL_SERVER_ERROR,
+      error: "Error fetching agencies.", error });
   }
 };
 

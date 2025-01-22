@@ -400,15 +400,20 @@ export const getAllUsers = async (req, res) => {
                 um.user_type,
                 um.created_at,
                 um.created_by,
-                um.user_role
+                um.user_role  
             FROM tenant_nhai.user_master AS um
             INNER JOIN tenant_nhai.registration_invitation AS ri
               ON um.user_id = ri.user_id
             LIMIT ${take} OFFSET ${skip}`;
 
 const totalUsers = 20
-    
-    
+
+const usersWithDummyData = users.map(user => ({
+  ...user,
+  user_company_name: 'Company 1',  
+  contract_details: 'Contract 1', 
+}));
+   // console.log(user)
     // If no users are found, return a message
     if (!users) {
       return res.status(STATUS_CODES.BAD_REQUEST).json({
@@ -420,13 +425,7 @@ const totalUsers = 20
 
     // Get the total count of users that have a registration invitation
     // If no users are found, return a message
-    if (users.length === 0) {
-      return res.status(STATUS_CODES.BAD_REQUEST).json({
-        success: false,
-        message: 'Users not found.',
-        data: [],
-      });
-    }
+    
 
     // Get the total count of users for pagination info
     // const totalUsers = await prisma.user_master.count();
@@ -434,7 +433,7 @@ const totalUsers = 20
     return res.status(STATUS_CODES.OK).json({
       success: true,
       message: 'Users retrieved successfully.',
-      data: users,
+      data: usersWithDummyData,
       pagination: {
         page,
         pageSize,
@@ -445,7 +444,7 @@ const totalUsers = 20
   } catch (err) {
     return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: err.message
+      message: err
     });
   }
 };
@@ -515,7 +514,8 @@ export const createUser = async (req, res) => {
         email_id: newUser.email,
         designation: newUser.designation,
         office_location: newUser.office_location,
-        unique_username : newUser.unique_username
+        unique_username : newUser.unique_username,
+       
       },
     });
   } catch (err) {

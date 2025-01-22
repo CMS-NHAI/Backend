@@ -11,6 +11,7 @@ import { createUserValidationSchema } from "../validations/createUserValidation.
 import { updateUserStatusValidationSchema } from "../validations/updateUserStatusValidation.js";
 import { updateUserValidationSchema } from '../validations/updateUserValidation.js';
 import { inviteUserValidationSchema } from '../validations/inviteUserValidation.js';
+import { userIdValidation } from '../validations/getUserValidation.js';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from "crypto";
 
@@ -391,6 +392,7 @@ export const getAllUsers = async (req, res) => {
     const users = await prisma.$queryRaw`
             SELECT 
                 um.sap_id,
+                um.user_id,
                 um.name,
                 um.mobile_number,
                 um.email,
@@ -402,7 +404,8 @@ export const getAllUsers = async (req, res) => {
                 um.created_at,
                 um.status,
                 um.created_by,
-                um.user_role  
+                um.user_role,
+                um.office_mobile_number
             FROM tenant_nhai.user_master AS um
             INNER JOIN tenant_nhai.registration_invitation AS ri
               ON um.user_id = ri.user_id
@@ -900,7 +903,7 @@ export const createInvitation = async (req, res) =>{
 
 }   
       
-  export const inviteUser = async (req, res) => {
+export const inviteUser = async (req, res) => {
 
     const {
       name,
@@ -914,7 +917,7 @@ export const createInvitation = async (req, res) =>{
       contracts,
       roles_permission
       } = req.body;
-  
+      const uniqueUsername2 = uuidv4();
     const { error } = inviteUserValidationSchema.validate(req.body);
 
     if (error) {
@@ -937,6 +940,19 @@ export const createInvitation = async (req, res) =>{
         message: "Mobile number already exists. Please use a different number.",
       });
     }
+    const existingUserByEmail = await prisma.user_master.findUnique({
+      where: {
+        email: email, // Check if the email is already in use
+      },
+    });
+
+    if (existingUserByEmail) {
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
+        success: false,
+        status: 400,
+        message: "Email already exists. Please use a different email.",
+      });
+    }
     const user_role="Manager", aadhar_image="", user_image="", organization_id=83;
     try {
     //  Create the user in the database
@@ -950,7 +966,7 @@ export const createInvitation = async (req, res) =>{
           user_type,
           status,
           created_at: new Date(), 
-          unique_username : uniqueUsername,
+          unique_username : uniqueUsername2,
           user_role,
           aadhar_image,
           user_image,
@@ -958,7 +974,7 @@ export const createInvitation = async (req, res) =>{
           user_data: {
             office: office || null, 
             contracts: contracts || null, 
-            roles_permission: roles_permission || [], 
+            roles_permission: roles_permission || null, 
           },
         },
       });
@@ -978,6 +994,61 @@ export const createInvitation = async (req, res) =>{
     }
   }
 
+  export const getUserById = async (req, res) => {
+    const { user_id } = req.body;
+  
+    // Validate user_id using Joi validation schema
+    const { error } = userIdValidation.validate(req.body);
+  
+    if (error) {
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
+        success: false,
+        status: 400,
+        message: error.details[0].message,
+      });
+    }
+  
+    try {
+      // Find user by user_id
+      const user = await prisma.user_master.findUnique({
+        where: {
+          user_id: user_id, // Fetch user using user_id
+        },
+      });
+  
+      // If the user is not found
+      if (!user) {
+        return res.status(STATUS_CODES.OK).json({
+          success: false,
+          status: 200,
+          message: "User not found.",
+        });
+      }
+  
+      // Return the user data if found
+      res.status(STATUS_CODES.OK).json({
+        success: true,
+        status: 200,
+        message: "User fetched successfully.",
+        data: user,
+      });
+    } catch (error) {
+      // Handle unexpected errors
+      console.error("Error fetching user:", error);
+      res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        status: 500,
+        message: error.message,
+      });
+    }
+  };
+  
+  
+
+    
+    
+    
+  
 
 
 

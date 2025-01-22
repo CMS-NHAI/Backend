@@ -20,7 +20,7 @@ export const inviteUserValidationSchema = Joi.object({
        'any.required': 'office_mobile_number is required.', // Custom message for missing mobile number
      }), 
   designation: Joi.string().valid('CGM', 'DGM', 'GM', 'Manager').required(), 
-  user_type: Joi.string().valid('Internal - Permanent', 'Contractural', 'External').required(), 
+  user_type: Joi.string().valid('Internal - Permanent', 'Internal - Contractual', 'External').required(), 
   status: Joi.string().valid('Active', 'Inactive', 'Blocked').required(),
   office: Joi.string().optional().allow('').messages({
     'string.empty': 'office can be an empty string.', // Optional message for empty string

@@ -903,9 +903,9 @@ export const createInvitation = async (req, res) =>{
       },
     });
 
-    res.status(201).json({
+    res.status(STATUS_CODES.CREATED).json({
       success: true,
-      status:STATUS_CODES.NOT_FOUND,
+      status:STATUS_CODES.CREATED,
       message: "Invitation link created successfully.",
       invitation,
     });

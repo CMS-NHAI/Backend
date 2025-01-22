@@ -924,7 +924,19 @@ export const createInvitation = async (req, res) =>{
         message: error.details[0].message,
       });
     }
+   const existingUser = await prisma.user_master.findUnique({
+      where: {
+        mobile_number: mobile_number, // Check if the mobile_number is already in use
+      },
+    });
 
+    if (existingUser) {
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
+        success: false,
+        status: 400,
+        message: "Mobile number already exists. Please use a different number.",
+      });
+    }
     const user_role="Manager", aadhar_image="", user_image="", organization_id=83;
     try {
     //  Create the user in the database

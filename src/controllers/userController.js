@@ -405,7 +405,7 @@ export const getAllUsers = async (req, res) => {
                 um.status,
                 um.created_by,
                 um.user_role,
-                um.office_mobile_number,
+                um.office_mobile_number
             FROM tenant_nhai.user_master AS um
             INNER JOIN tenant_nhai.registration_invitation AS ri
               ON um.user_id = ri.user_id

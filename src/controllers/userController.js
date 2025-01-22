@@ -874,7 +874,7 @@ export const createInvitation = async (req, res) =>{
     const invitation = await prisma.registration_invitation.create({
       data: {
         org_id,
-        user_id:5,
+        user_id:user_id,
         invitation_link,
         short_url: null, // Optionally generate and store a short URL
         invitation_status: "Pending",
@@ -979,7 +979,36 @@ export const inviteUser = async (req, res) => {
           },
         },
       });
+      console.log(user)
 
+      ///////////////////////////////////////////////////
+      const generateInvitationLink = (userId) => {
+        const uniqueToken = crypto.randomBytes(16).toString("hex");
+        return `https://example.com/invite/mob/${userId}/${uniqueToken}`;
+      };
+
+      const invitation_link = generateInvitationLink(user_id);
+
+      // Save the invitation in the database
+      /*const invitation = await prisma.registration_invitation.create({
+        data: {
+          org_id:existingUser.org_id,
+          user_id:existingUser.user_id,
+          invitation_link,
+          short_url: null, // Optionally generate and store a short URL
+          invitation_status: "Pending",
+          invite_to,
+          invite_message,
+          expiry_date: expiry_date ? new Date(expiry_date) : null,
+          created_by,
+        },
+      }) */
+
+
+
+
+
+        //////////////////////////////////////////////
       res.status(STATUS_CODES.CREATED).json({
         success: true,
         status: STATUS_CODES.CREATED,

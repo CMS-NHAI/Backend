@@ -20,12 +20,13 @@ export const createAgency = async (req, res) => {
 export const getAllAgencies = async (req, res) => {
   try {
     const agencies = await prisma.organization_master.findMany({
-      where: {
-        deletedAt: null // Only include rows where `deletedAt` is null
-      }
+     // where: {
+       // deletedAt: null // Only include rows where `deletedAt` is null
+     // }
     });
     res.status(STATUS_CODES.OK).json(agencies);
   } catch (error) {
+    console.log(error)
     res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ 
       status:STATUS_CODES.INTERNAL_SERVER_ERROR,
       error: "Error fetching agencies.", error });

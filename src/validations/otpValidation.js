@@ -2,7 +2,7 @@ import Joi from "joi";
 
 
 export const phoneValidationSchema = Joi.object({
-    otp_verification_method: Joi.string().valid('SMS', 'Email').required(),
+    //otp_verification_method: Joi.string().valid('SMS', 'Email').required(),
     mobile_number: Joi.string()
       .pattern(/^\+91\d{10}$/) // Validates India mobile number format (+91 followed by exactly 10 digits)
       .required()

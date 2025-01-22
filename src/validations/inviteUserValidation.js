@@ -22,15 +22,7 @@ export const inviteUserValidationSchema = Joi.object({
   designation: Joi.string().valid('CGM', 'DGM', 'GM', 'Manager').required(), 
   user_type: Joi.string().valid('Internal - Permanent', 'Internal - Contractual', 'External').required(), 
   status: Joi.string().valid('Active', 'Inactive', 'Blocked').required(),
-  office: Joi.string().optional().allow('').messages({
-    'string.empty': 'office can be an empty string.', // Optional message for empty string
-  }), 
-  
-  contracts: Joi.string().optional().allow('').messages({
-    'string.empty': 'contracts can be an empty string.', // Optional message for empty string
-  }),  
-  
-  roles_permission: Joi.array().optional().allow('').messages({
-    'string.empty': 'roles_permission can be an empty string.',
-  })
+  office: Joi.array().items(Joi.string()).allow(null).optional(),  
+  contracts: Joi.array().items(Joi.string()).allow(null).optional(),  
+  roles_permission: Joi.array().items(Joi.string()).allow(null).optional(), 
 });

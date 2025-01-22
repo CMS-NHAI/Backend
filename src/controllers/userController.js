@@ -387,51 +387,30 @@ export const getAllUsers = async (req, res) => {
     const skip = (page - 1) * pageSize;
     const take = pageSize;
     
-    const users = await prisma.user_master.findMany({
-      where: {
-        registration_invitation: {
-          some: {
-            user_id: {
-              equals: prisma.user_master.user_id, // Match user_id in registration_invitation with user_master's user_id
-            },
-          },
-        },
-      },
-      skip: skip,
-      take: take,
-      select: {
-        sap_id: true,
-        name: true,
-        mobile_number: true,
-        email: true,
-        designation: true,
-        office_location: true,
-        is_digilocker_verified: true,
-        date_of_birth: true,
-        user_type: true,
-        created_at: true,
-        created_by: true,
-        user_role: true,
-        office_mobile_number: true,
-      },
-    });
+    const users = await prisma.$queryRaw`
+            SELECT 
+                um.sap_id,
+                um.name,
+                um.mobile_number,
+                um.email,
+                um.designation,
+                um.office_location,
+                um.is_digilocker_verified,
+                um.date_of_birth,
+                um.user_type,
+                um.created_at,
+                um.created_by,
+                um.user_role
+            FROM tenant_nhai.user_master AS um
+            INNER JOIN tenant_nhai.registration_invitation AS ri
+              ON um.user_id = ri.user_id
+            LIMIT ${take} OFFSET ${skip}`;
 
-
-    const totalUsers = await prisma.user_master.count({
-      where: {
-        registration_invitation: {
-          some: {
-            user_id: {
-              equals: prisma.user_master.user_id, 
-            },
-          },
-        },
-      },
-    });
+const totalUsers = 20
     
     
     // If no users are found, return a message
-    if (users.length === 0) {
+    if (!users) {
       return res.status(STATUS_CODES.BAD_REQUEST).json({
         success: false,
         message: 'Users not found.',

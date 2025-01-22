@@ -974,7 +974,7 @@ export const inviteUser = async (req, res) => {
           user_data: {
             office: office || null, 
             contracts: contracts || null, 
-            roles_permission: roles_permission || [], 
+            roles_permission: roles_permission || null, 
           },
         },
       });

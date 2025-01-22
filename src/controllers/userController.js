@@ -12,6 +12,7 @@ import { updateUserStatusValidationSchema } from "../validations/updateUserStatu
 import { updateUserValidationSchema } from '../validations/updateUserValidation.js';
 import { inviteUserValidationSchema } from '../validations/inviteUserValidation.js';
 import { userIdValidation } from '../validations/getUserValidation.js';
+import { editUserValidationSchema } from '../validations/editUserValidation.js';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from "crypto";
 
@@ -1043,10 +1044,10 @@ export const inviteUser = async (req, res) => {
     }
   };
   export const updateUserById = async (req, res) => {
-    const { user_id } = req.body;
+    const { user_id , name , email , mobile_number , office_mobile_number , designation, user_type , status , office, contracts, roles_permission } = req.body;
   
     // Validate user_id using Joi validation schema
-    const { error } = userIdValidation.validate(req.body);
+    const { error } = editUserValidationSchema.validate(req.body);
   
     if (error) {
       return res.status(STATUS_CODES.BAD_REQUEST).json({
@@ -1072,13 +1073,33 @@ export const inviteUser = async (req, res) => {
           message: "User not found.",
         });
       }
-  
+      const updatedUser = await prisma.user_master.update({
+        where: {
+          user_id: user_id, // Find user by user_id
+        },
+        data: {
+          name,
+          email,
+          mobile_number,
+          office_mobile_number,
+          designation,
+          user_type,
+          status,
+          user_data: {
+            update: {
+              office: office || [], 
+              contracts: contracts || [], 
+              roles_permission: roles_permission || [], 
+            },
+          },
+        },
+      });
       // Return the user data if found
       res.status(STATUS_CODES.OK).json({
         success: true,
         status: 200,
-        message: "User fetched successfully.",
-        data: user,
+        message: "User updated successfully.",
+        data: updatedUser,
       });
     } catch (error) {
       // Handle unexpected errors

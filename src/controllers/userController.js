@@ -982,7 +982,7 @@ export const inviteUser = async (req, res) => {
       console.log(user)
 
       ///////////////////////////////////////////////////
-      const generateInvitationLink = (userId) => {
+     /* const generateInvitationLink = (userId) => {
         const uniqueToken = crypto.randomBytes(16).toString("hex");
         return `https://example.com/invite/mob/${userId}/${uniqueToken}`;
       };

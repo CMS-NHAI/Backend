@@ -455,7 +455,7 @@ const usersWithDummyData = users.map(user => ({
   } catch (err) {
     return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: err
+      message: err.message
     });
   }
 };

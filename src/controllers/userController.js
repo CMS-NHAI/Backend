@@ -721,9 +721,9 @@ export const verifyOtpLatest = async (req, res) =>{
         });
         if (otp !== '12345') {
            // Validate OTP (here assuming OTP is stored securely for demo purposes)
-              return res.status(STATUS_CODES.UNAUTHORIZED).json({
+              return res.status(STATUS_CODES.BAD_REQUEST).json({
                success: false,
-               status: STATUS_CODES.UNAUTHORIZED,
+               status: STATUS_CODES.BAD_REQUEST,
                message: 'Invalid OTP.',
              })    
 
@@ -1205,52 +1205,7 @@ export const inviteUser = async (req, res) => {
     }
   };
   export const getOfficeDetails = async (req, res) => {
-    // const { org_id } = req.body;
-  
-    // // Validate user_id using Joi validation schema
-    // const { error } = orgIdValidationSchema.validate(req.body);
-    // if (error) {
-    //   return res.status(STATUS_CODES.BAD_REQUEST).json({
-    //     success: false,
-    //     status: 400,
-    //     message: error.details[0].message,
-    //   });
-    // }
-    
-    
-    // try {
-    //   // Find user by user_id
-    //   const offices = await prisma.office_master.findMany({
-    //     where: {
-    //       org_id:  org_id, // Fetch user using user_id
-    //     },
-    //   });
-  
-    //   // If the user is not found
-    //   if (!offices) {
-    //     return res.status(STATUS_CODES.OK).json({
-    //       success: false,
-    //       status: 200,
-    //       message: "No office found.",
-    //     });
-    //   }
-      
-    //   // Return the user data if found
-    //   res.status(STATUS_CODES.OK).json({
-    //     success: true,
-    //     status: 200,
-    //     message: "Office details fetched successfully.",
-    //     data: offices,
-    //   });
-    // } catch (error) {
-    //   // Handle unexpected errors
-    //   console.error("Error fetching user:", error);
-    //   res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-    //     success: false,
-    //     status: 500,
-    //     message: error.message,
-    //   });
-    // }
+   
 
     const officeList = [
       {
@@ -1287,52 +1242,7 @@ export const inviteUser = async (req, res) => {
   });
   };
   export const getContractDetails = async (req, res) => {
-    // const { org_id } = req.body;
-  
-    // // Validate user_id using Joi validation schema
-    // const { error } = orgIdValidationSchema.validate(req.body);
-    // if (error) {
-    //   return res.status(STATUS_CODES.BAD_REQUEST).json({
-    //     success: false,
-    //     status: 400,
-    //     message: error.details[0].message,
-    //   });
-    // }
     
-    
-    // try {
-    //   // Find user by user_id
-    //   const offices = await prisma.office_master.findMany({
-    //     where: {
-    //       org_id:  org_id, // Fetch user using user_id
-    //     },
-    //   });
-  
-    //   // If the user is not found
-    //   if (!offices) {
-    //     return res.status(STATUS_CODES.OK).json({
-    //       success: false,
-    //       status: 200,
-    //       message: "No office found.",
-    //     });
-    //   }
-      
-    //   // Return the user data if found
-      // res.status(STATUS_CODES.OK).json({
-      //   success: true,
-      //   status: 200,
-      //   message: "Office details fetched successfully.",
-      //   data: offices,
-      // });
-    // } catch (error) {
-    //   // Handle unexpected errors
-    //   console.error("Error fetching user:", error);
-    //   res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-    //     success: false,
-    //     status: 500,
-    //     message: error.message,
-    //   });
-    // }
 
     const contractDetailList = [
       {

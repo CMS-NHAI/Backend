@@ -954,7 +954,7 @@ export const inviteUser = async (req, res) => {
         message: "Email already exists. Please use a different email.",
       });
     }
-    const user_role="Manager", aadhar_image="", user_image="", organization_id=1;
+    const user_role="Manager", aadhar_image="", user_image="", organization_id=83;
     try {
     //  Create the user in the database
       const user = await prisma.user_master.create({

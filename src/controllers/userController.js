@@ -997,7 +997,7 @@ export const inviteUser = async (req, res) => {
           invitation_link,
           short_url: null, // Optionally generate and store a short URL
           invitation_status: "Pending",
-          invite_to : user.user_id,
+          invite_to : user.email,
           invite_message: "You are invited to join the platform.",
           expiry_date:  new Date(new Date().setDate(new Date().getDate() + 7)),
           created_by : user.user_id,

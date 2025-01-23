@@ -1,11 +1,12 @@
 import { Router } from 'express';
-import { verifyOtp, verifyEmailOtpLatest, createInvitation, verifyOtpLatest,  signup , getUserDetails , getSapDetails, authenticateEntity, getAllUsers, createUser , updateUserStatus, updateUser , inviteUser, getUserById , updateUserById} from "../controllers/userController.js"
+import { verifyOtp, verifyEmailOtpLatest, verifyEmailOtpAgency, createInvitation, verifyOtpLatest,  signup , getUserDetails , getSapDetails, authenticateEntity, getAllUsers, createUser , updateUserStatus, updateUser , inviteUser, getUserById , updateUserById} from "../controllers/userController.js"
 import checkToken  from '../middlewares/checkToken.js';
 const router = Router();
 
 //router.post('/verify-otp', verifyOtp);
 router.post('/verify-otp', verifyOtpLatest);
 router.post('/verify-emailotp', verifyEmailOtpLatest);
+router.post('/verify-AgencyEmailOtp', verifyEmailOtpAgency);
 router.post('/signup',signup );
 router.post('/get-user-details', getUserDetails);
 router.post('/getsap', getSapDetails);

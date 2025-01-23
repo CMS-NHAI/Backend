@@ -840,6 +840,67 @@ export const verifyEmailOtpLatest = async (req, res) =>{
     }
 
 
+export const verifyEmailOtpAgency = async (req, res) =>{
+      const { email, otp } = req.body;
+
+      try {
+        const user = await prisma.organization_master.findFirst({  
+          where: { contact_email: email},  
+        });
+
+        if (!user) {
+          return res.status(STATUS_CODES.NOT_FOUND).json({
+            success: false,
+            status: STATUS_CODES.NOT_FOUND,
+            message: 'No OTP found for the User.'
+          })
+        }
+        console.log(user)
+  
+          if (otp !== '12345') {
+             // Validate OTP (here assuming OTP is stored securely for demo purposes)
+                return res.status(STATUS_CODES.UNAUTHORIZED).json({
+                 success: false,
+                 status: STATUS_CODES.UNAUTHORIZED,
+                 message: 'Invalid OTP.',
+               })    
+  
+          } 
+         
+  
+          const payload = {
+            user_id: user.org_id, // Include the user ID (or any other info)
+            email:user.contact_email,
+            name: user.name,
+          };
+      
+          // Replace 'your_secret_key' with your actual secret key for signing the token
+          const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '5d' });
+        /*  await prisma.user_master.update({
+            where: { email },
+            data: { verified_status: true },
+          });
+          */
+
+          res.status(STATUS_CODES.OK).json({
+            success: true,
+            status: STATUS_CODES.OK,
+            message: 'Email OTP verified successfully.',
+            data: {user},
+          });
+        } catch (err) {
+          console.error(err);
+          res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+            message: err.message,
+          });
+        }
+      
+    }    
+
+
+
 export const createInvitation = async (req, res) =>{
 
   const {

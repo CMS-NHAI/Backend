@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { verifyOtp, verifyEmailOtpLatest, verifyEmailOtpAgency, createInvitation, verifyOtpLatest,  signup , getUserDetails , getSapDetails, authenticateEntity, getAllUsers, createUser , updateUserStatus, updateUser , inviteUser, getUserById , updateUserById} from "../controllers/userController.js"
+import { verifyOtp, verifyEmailOtpLatest, createInvitation, verifyOtpLatest,  signup , getUserDetails , getSapDetails, authenticateEntity, getAllUsers, createUser , updateUserStatus, updateUser , inviteUser, getUserById , updateUserById , getOfficeDetails, getContractDetails} from "../controllers/userController.js"
 import checkToken  from '../middlewares/checkToken.js';
 const router = Router();
 
@@ -19,5 +19,7 @@ router.post('/users/invitationIndividual', checkToken, createInvitation);
 router.post('/users/inviteUser', checkToken, inviteUser);
 router.post('/users/getUserById', checkToken, getUserById);
 router.put('/users/updateUserById', checkToken, updateUserById);
+router.post('/org/getOffice', checkToken, getOfficeDetails);
+router.post('/org/getContracts', checkToken, getContractDetails);
 
-export default router;
+export default router;  

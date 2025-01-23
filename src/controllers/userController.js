@@ -954,7 +954,7 @@ export const inviteUser = async (req, res) => {
         message: "Email already exists. Please use a different email.",
       });
     }
-    const user_role="Manager", aadhar_image="", user_image="", organization_id=83;
+    const user_role="Manager", aadhar_image="", user_image="", organization_id=1;
     try {
     //  Create the user in the database
       const user = await prisma.user_master.create({
@@ -982,27 +982,27 @@ export const inviteUser = async (req, res) => {
       console.log(user)
 
       ///////////////////////////////////////////////////
-     /* const generateInvitationLink = (userId) => {
+     const generateInvitationLink = (userId) => {
         const uniqueToken = crypto.randomBytes(16).toString("hex");
         return `https://example.com/invite/mob/${userId}/${uniqueToken}`;
       };
 
-      const invitation_link = generateInvitationLink(user_id);
+      const invitation_link = generateInvitationLink(user.user_id);
 
       // Save the invitation in the database
-      /*const invitation = await prisma.registration_invitation.create({
+      const invitation = await prisma.registration_invitation.create({
         data: {
-          org_id:existingUser.org_id,
-          user_id:existingUser.user_id,
+          org_id:user.organization_id,
+          user_id:user.user_id,
           invitation_link,
           short_url: null, // Optionally generate and store a short URL
           invitation_status: "Pending",
-          invite_to,
-          invite_message,
-          expiry_date: expiry_date ? new Date(expiry_date) : null,
-          created_by,
+          invite_to : user.user_id,
+          invite_message: "You are invited to join the platform.",
+          expiry_date:  new Date(new Date().setDate(new Date().getDate() + 7)),
+          created_by : user.user_id,
         },
-      }) */
+      }) 
 
 
 

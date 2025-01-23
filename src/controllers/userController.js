@@ -415,7 +415,7 @@ export const getAllUsers = async (req, res) => {
 
             const totalUsers = await prisma.$queryRaw`
             SELECT COUNT(*) AS count
-            FROM tenant_nhai.registration_invitation`;
+            FROM "tenant_nhai"."registration_invitation"`;
       
           const totalUsersCount = totalUsers[0].count;
 

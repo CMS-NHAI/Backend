@@ -1043,7 +1043,7 @@ export const inviteUser = async (req, res) => {
       console.log(user)
 
 ///////////////////////////////////////////////////
-     const generateInvitationLink = `http://localhost:3000/signup/agency?${uniqueUsername2}`
+     const generateInvitationLink = `http://localhost:3000/signup?inviteid=${uniqueUsername2}`
         //const uniqueToken = crypto.randomBytes(16).toString("hex");
         //return `http://localhost:3000/signup/agency?${uniqueToken}`;
       
@@ -1062,7 +1062,7 @@ export const inviteUser = async (req, res) => {
           invite_message: "You are invited to join the platform.",
           expiry_date:  new Date(new Date().setDate(new Date().getDate() + 7)),
           created_by : user.user_id,
-          unique_invitation_id : uniqueUsername2
+          //unique_invitation_id : uniqueUsername2
         },
       }) 
 

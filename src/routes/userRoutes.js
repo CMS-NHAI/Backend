@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { verifyOtp, verifyEmailOtpLatest, createInvitation, verifyOtpLatest,  signup , getUserDetails , getSapDetails, authenticateEntity, getAllUsers, createUser , updateUserStatus, updateUser , inviteUser, getUserById , updateUserById , getOfficeDetails, getContractDetails} from "../controllers/userController.js"
+import { verifyOtp, verifyEmailOtpLatest, createInvitation, verifyEmailOtpAgency, verifyOtpLatest,  signup , getUserDetails , getSapDetails, authenticateEntity, getAllUsers, createUser , updateUserStatus, updateUser , inviteUser, getUserById , updateUserById , getOfficeDetails, getContractDetails} from "../controllers/userController.js"
 import checkToken  from '../middlewares/checkToken.js';
 const router = Router();
 

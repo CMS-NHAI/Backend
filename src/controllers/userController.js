@@ -413,11 +413,11 @@ export const getAllUsers = async (req, res) => {
               ON um.user_id = ri.user_id
             LIMIT ${take} OFFSET ${skip}`;
 
-            const totalUsers = await prisma.$queryRaw`
-            SELECT COUNT(*) AS count
-            FROM "tenant_nhai"."registration_invitation"`;
+            // const totalUsers = await prisma.$queryRaw`
+            // SELECT COUNT(*) AS count
+            // FROM "tenant_nhai"."registration_invitation"`;
       
-          const totalUsersCount = totalUsers[0].count;
+          const totalUsersCount = await prisma.registration_invitation.count();
 
 const usersWithDummyData = users.map(user => ({
   ...user,

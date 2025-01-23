@@ -13,6 +13,7 @@ import { updateUserValidationSchema } from '../validations/updateUserValidation.
 import { inviteUserValidationSchema } from '../validations/inviteUserValidation.js';
 import { userIdValidation } from '../validations/getUserValidation.js';
 import { editUserValidationSchema } from '../validations/editUserValidation.js';
+import { orgIdValidationSchema }   from '../validations/getOfficeValidation.js';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from "crypto";
 
@@ -412,7 +413,11 @@ export const getAllUsers = async (req, res) => {
               ON um.user_id = ri.user_id
             LIMIT ${take} OFFSET ${skip}`;
 
-const totalUsers = 20
+            const totalUsers = await prisma.$queryRaw`
+            SELECT COUNT(*) AS count
+            FROM tenant_nhai.registration_invitation`;
+      
+          const totalUsersCount = totalUsers[0].count;
 
 const usersWithDummyData = users.map(user => ({
   ...user,
@@ -443,8 +448,8 @@ const usersWithDummyData = users.map(user => ({
       pagination: {
         page,
         pageSize,
-        total: totalUsers,
-        totalPages: Math.ceil(totalUsers / pageSize),
+        total: totalUsersCount,
+        totalPages: Math.ceil(totalUsersCount / pageSize),
       },
     });
   } catch (err) {
@@ -1070,7 +1075,8 @@ export const inviteUser = async (req, res) => {
       res.status(STATUS_CODES.CREATED).json({
         success: true,
         status: STATUS_CODES.CREATED,
-        message: "User invited successfully."
+        message: "User invited successfully.",
+        user : user
       });
     } catch (error) {
       console.error("Error inviting user:", error);
@@ -1198,8 +1204,166 @@ export const inviteUser = async (req, res) => {
       });
     }
   };
+  export const getOfficeDetails = async (req, res) => {
+    // const { org_id } = req.body;
   
+    // // Validate user_id using Joi validation schema
+    // const { error } = orgIdValidationSchema.validate(req.body);
+    // if (error) {
+    //   return res.status(STATUS_CODES.BAD_REQUEST).json({
+    //     success: false,
+    //     status: 400,
+    //     message: error.details[0].message,
+    //   });
+    // }
+    
+    
+    // try {
+    //   // Find user by user_id
+    //   const offices = await prisma.office_master.findMany({
+    //     where: {
+    //       org_id:  org_id, // Fetch user using user_id
+    //     },
+    //   });
   
+    //   // If the user is not found
+    //   if (!offices) {
+    //     return res.status(STATUS_CODES.OK).json({
+    //       success: false,
+    //       status: 200,
+    //       message: "No office found.",
+    //     });
+    //   }
+      
+    //   // Return the user data if found
+    //   res.status(STATUS_CODES.OK).json({
+    //     success: true,
+    //     status: 200,
+    //     message: "Office details fetched successfully.",
+    //     data: offices,
+    //   });
+    // } catch (error) {
+    //   // Handle unexpected errors
+    //   console.error("Error fetching user:", error);
+    //   res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+    //     success: false,
+    //     status: 500,
+    //     message: error.message,
+    //   });
+    // }
+
+    const officeList = [
+      {
+         id: "1",
+         office_name: "Head Office ",
+         office_address: "Electronics Niketan Annexe, 6 CGO Complex, Lodhi Road, New Delhi-110003",
+         phone_number: "+91-11-24360199",
+         mobile_number: "+91 9694543455",
+         office_email: "webmaster@digitalindia.gov.in"
+      },
+      {
+          id: "2",
+          office_name: "Regional Office (Mumbai)",
+          office_address: "6th Floor, Samruddhi vVenture Park 3, MIDC Central Rd, Andheri East, Mumbai, Maharashtra",
+          phone_number: "+91 82729 81709",
+          mobile_number: "+91 9694543455",
+          office_email: "webmaster@digitalindia.gov.in"
+       },
+       {
+          id: "3",
+          office_name: "Regional Office (Ahmedabad)",
+          office_address: "7th Floor, ABZ Park 3, Ahmedabad, Gujarat",
+          phone_number: "+91 9695453455",
+          mobile_number: "+91 9694543455",
+          office_email: "webmaster@digitalindia.gov.in"
+       },
+  ]
+
+  res.status(STATUS_CODES.OK).json({
+    success: true,
+    status: 200,
+    message: "Office details fetched successfully.",
+    data: officeList,
+  });
+  };
+  export const getContractDetails = async (req, res) => {
+    // const { org_id } = req.body;
+  
+    // // Validate user_id using Joi validation schema
+    // const { error } = orgIdValidationSchema.validate(req.body);
+    // if (error) {
+    //   return res.status(STATUS_CODES.BAD_REQUEST).json({
+    //     success: false,
+    //     status: 400,
+    //     message: error.details[0].message,
+    //   });
+    // }
+    
+    
+    // try {
+    //   // Find user by user_id
+    //   const offices = await prisma.office_master.findMany({
+    //     where: {
+    //       org_id:  org_id, // Fetch user using user_id
+    //     },
+    //   });
+  
+    //   // If the user is not found
+    //   if (!offices) {
+    //     return res.status(STATUS_CODES.OK).json({
+    //       success: false,
+    //       status: 200,
+    //       message: "No office found.",
+    //     });
+    //   }
+      
+    //   // Return the user data if found
+      // res.status(STATUS_CODES.OK).json({
+      //   success: true,
+      //   status: 200,
+      //   message: "Office details fetched successfully.",
+      //   data: offices,
+      // });
+    // } catch (error) {
+    //   // Handle unexpected errors
+    //   console.error("Error fetching user:", error);
+    //   res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+    //     success: false,
+    //     status: 500,
+    //     message: error.message,
+    //   });
+    // }
+
+    const contractDetailList = [
+      {
+         contract_id: "1",
+         contract_name: "N/04035/04002/KL",
+         contract_disc: "Construction of western ring road around Indore city-DPR"
+      },
+      {
+         contract_id: "2",
+         contract_name: "N/04035/04001/ML",
+         contract_disc: "Construction of western ring road around Indore city-DPR"
+      },
+      {
+         contract_id: "3",
+         contract_name: "N/04035/04045/CD",
+         contract_disc: "Construction of western ring road around Indore city-DPR"
+      },
+      {
+          contract_id: "4",
+          contract_name: "N/04035/04056/AB",
+          contract_disc: "Construction of western ring road around Indore city-DPR"
+       },
+  ]
+  res.status(STATUS_CODES.OK).json({
+    success: true,
+    status: 200,
+    message: "Contract details fetched successfully.",
+    data: contractDetailList,
+  });
+
+  };
 
     
     

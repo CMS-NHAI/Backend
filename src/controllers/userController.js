@@ -1043,12 +1043,12 @@ export const inviteUser = async (req, res) => {
       console.log(user)
 
 ///////////////////////////////////////////////////
-     const generateInvitationLink = (userId) => {
-        const uniqueToken = crypto.randomBytes(16).toString("hex");
-        return `https://example.com/invite/mob/${userId}/${uniqueToken}`;
-      };
+     const generateInvitationLink = `http://localhost:3000/signup/agency?${uniqueUsername2}`
+        //const uniqueToken = crypto.randomBytes(16).toString("hex");
+        //return `http://localhost:3000/signup/agency?${uniqueToken}`;
+      
 
-      const invitation_link = generateInvitationLink(user.user_id);
+      const invitation_link = generateInvitationLink;
 
       // Save the invitation in the database
       const invitation = await prisma.registration_invitation.create({
@@ -1062,7 +1062,7 @@ export const inviteUser = async (req, res) => {
           invite_message: "You are invited to join the platform.",
           expiry_date:  new Date(new Date().setDate(new Date().getDate() + 7)),
           created_by : user.user_id,
-          unique_invitation_id : uniqueToken
+          unique_invitation_id : uniqueUsername2
         },
       }) 
 

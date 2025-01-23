@@ -19,7 +19,7 @@ router.post('/users/invitationIndividual', checkToken, createInvitation);
 router.post('/users/inviteUser', checkToken, inviteUser);
 router.post('/users/getUserById', checkToken, getUserById);
 router.put('/users/updateUserById', checkToken, updateUserById);
-router.post('/org/getOffice', checkToken, getOfficeDetails);
-router.post('/org/getContracts', checkToken, getContractDetails);
+router.get('/org/getOffice', checkToken, getOfficeDetails);
+router.get('/org/getContracts', checkToken, getContractDetails);
 
 export default router;  

@@ -393,24 +393,25 @@ export const getAllUsers = async (req, res) => {
     
     const users = await prisma.$queryRaw`
             SELECT 
-                um.sap_id,
-                um.user_id,
-                um.name,
-                um.mobile_number,
-                um.email,
-                um.designation,
-                um.office_location,
-                um.is_digilocker_verified,
-                um.date_of_birth,
-                um.user_type,
-                um.created_at,
-                um.status,
-                um.created_by,
-                um.user_role,
-                um.office_mobile_number
-            FROM tenant_nhai.user_master AS um
-            INNER JOIN tenant_nhai.registration_invitation AS ri
-              ON um.user_id = ri.user_id
+    um.sap_id,
+    um.user_id,
+    um.name,
+    um.mobile_number,
+    um.email,
+    um.designation,
+    um.office_location,
+    um.is_digilocker_verified,
+    um.date_of_birth,
+    um.user_type,
+    um.created_at,
+    um.status,
+    um.created_by,
+    um.user_role,
+    um.office_mobile_number
+FROM tenant_nhai.user_master AS um
+INNER JOIN tenant_nhai.registration_invitation AS ri
+    ON um.user_id = ri.user_id
+ORDER BY um.user_id DESC
             LIMIT ${take} OFFSET ${skip}`;
 
             // const totalUsers = await prisma.$queryRaw`

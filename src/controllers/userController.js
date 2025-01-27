@@ -391,11 +391,10 @@ export const getAllUsers = async (req, res) => {
     const skip = (page - 1) * pageSize;
     const take = pageSize;
        // org_id = 157
-       const {org_id} = req.user || {};
-       const condition = org_id !== 157 
-       ? `INNER JOIN tenant_nhai.registration_invitation AS ri ON um.user_id = ri.user_id` 
-       : '';
-
+      //  const {org_id} = req.user || {};
+      //  const condition = org_id !== 157 
+      //  ? `INNER JOIN tenant_nhai.registration_invitation AS ri ON um.user_id = ri.user_id` 
+      //  : '';
     const users = await prisma.$queryRaw`
             SELECT 
     um.sap_id,
@@ -414,7 +413,8 @@ export const getAllUsers = async (req, res) => {
     um.user_role,
     um.office_mobile_number
 FROM tenant_nhai.user_master AS um
-${condition}
+INNER JOIN tenant_nhai.registration_invitation AS ri
+    ON um.user_id = ri.user_id
 ORDER BY um.user_id DESC
             LIMIT ${take} OFFSET ${skip}`;
 

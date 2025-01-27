@@ -861,9 +861,9 @@ export const verifyEmailOtpAgency = async (req, res) => {
     });
 
     if (!user) {
-      return res.status(STATUS_CODES.NOT_FOUND).json({
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
         success: false,
-        status: STATUS_CODES.NOT_FOUND,
+        status: STATUS_CODES.BAD_REQUEST,
         message: 'No OTP found for the User.'
       })
     }

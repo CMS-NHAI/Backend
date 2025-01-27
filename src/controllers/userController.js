@@ -27,6 +27,7 @@ const getEmployeeBySAPID = async (sapId) => {
         sap_id: sapId,  // Search by sap_id
       },
       select: {
+        user_id : true,
         sap_id: true,
         mobile_number: true,
         date_of_birth: true,

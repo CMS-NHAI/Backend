@@ -10,7 +10,6 @@ import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
 import { STATUS_CODES } from "../constants/statusCodesConstant.js";
 
-
 const uniqueUsername = uuidv4();
 
 export const sendOtpToUser = async (req, res) => {
@@ -259,6 +258,38 @@ export const sendOtpToUserLatest = async (req, res) =>{
       status: STATUS_CODES.INTERNAL_SERVER_ERROR,
       message: "Mobile Number is not Registered." });
   }
+}
+
+
+
+export const sendOtpToUserViaEmailLatest = async (req, res) =>{
+ 
+ const {email} = req.body;
+ const generateOtp = () => crypto.randomInt(10000, 99999).toString();
+
+ if (!email) {
+  return res.status(400).json({ 
+    success : true,
+    status : 200,
+    message: 'Email is required' 
+  });
+}
+
+// Generate a 6-digit OTP
+const otp = crypto.randomInt(100000, 999999).toString();
+
+// Store OTP with an expiration time (5 minutes)
+
+
+//console.log('Email sent:', info.response);
+res.status(200).json({ 
+  success : true,
+  status : 200,
+  message: 'OTP sent successfully' 
+
+});
+
+
 }
 
 

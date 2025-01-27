@@ -7,8 +7,8 @@ export const createAgency = async (req, res) => {
   try {
     const data = req.body
     data['date_of_incorporation']  = new Date(data['date_of_incorporation']).toISOString();
-    data['empanelment_start_date']  = new Date(data['empanelment_start_date']).toISOString();
-    data['empanelment_end_date']  = new Date(data['empanelment_end_date']).toISOString();
+    data['empanelment_start_date'] = new Date(data['empanelment_start_date']).toISOString();
+    data['empanelment_end_date']   = new Date(data['empanelment_end_date']).toISOString();
     const newAgency = await prisma.organization_master.create({ data: data });
     res.status(201).json(newAgency);
   } catch (error) {
@@ -20,13 +20,19 @@ export const createAgency = async (req, res) => {
 export const getAllAgencies = async (req, res) => {
   try {
     const agencies = await prisma.organization_master.findMany({
-      where: {
-        deletedAt: null // Only include rows where `deletedAt` is null
+      orderBy: {
+        org_id: 'desc', 
       }
+     // where: {
+       // deletedAt: null // Only include rows where `deletedAt` is null
+     // }
     });
     res.status(STATUS_CODES.OK).json(agencies);
   } catch (error) {
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ status:STATUS_CODES.INTERNAL_SERVER_ERROR,error: "Error fetching agencies." });
+    console.log(error)
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ 
+      status:STATUS_CODES.INTERNAL_SERVER_ERROR,
+      error: "Error fetching agencies.", error });
   }
 };
 
@@ -43,6 +49,22 @@ export const getAgencyById = async (req, res) => {
     res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ status:STATUS_CODES.INTERNAL_SERVER_ERROR,error: "Error fetching agency." });
   }
 };
+
+export const getAgencyByInviteId = async(req, res) =>{
+  const{id}= req.params;
+  try{
+      const agency = await prisma.registration_invitation.findFirst({
+        where :{unique_invitation_id: id}
+      });
+      if (!agency) {
+        return res.status(STATUS_CODES.NOT_FOUND).json({status:STATUS_CODES.NOT_FOUND, error: "agency not found." });
+      }  
+      res.status(STATUS_CODES.OK).json(agency);
+  }catch(error){
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ status:STATUS_CODES.INTERNAL_SERVER_ERROR,error: "Error fetching agency." });
+
+  }
+}
 
 // Update a agency
 export const updateAgency = async (req, res) => {

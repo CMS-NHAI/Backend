@@ -1,6 +1,7 @@
 import { getAccessTokenFromDigiLocker } from "../helper/getAccessTokenFromDigiLocker.js";
 import { parseXmlToJson } from "../helper/parseXmlToJson.js";
-// import prisma  from "../config/prismaClient.js";
+import prisma  from "../config/prismaClient.js";
+import jwt from "jsonwebtoken";
 
 /**
  *
@@ -50,21 +51,24 @@ export const digiLockerUserDetail = async (req, res) => {
     const eAdharJson = await parseXmlToJson(eAdharXml); // Parse XML to JSON
 
     // Get the the user email from the access token
-    const decodedToken = jwt.decode(token);
-
-  if (!decodedToken) {
-    return res.status(400).json({ msg: "Invalid token" });
-  }
   // Extract user ID and email from the token payload
-  const userEmail = decodedToken.email;  // Adjust based on how the token is structured
+  const userEmail = req.user.email;  
     // Add digilocker detail into database start (address field is missing)
     const userInfo = {
-      user_email : userEmail,
+      email : userEmail,
       userDetail: userDetail,
       eAdharDetail: eAdharJson,
     }
+
+    const updatedUser = await prisma.user_master.update({
+      where: { email: userEmail },
+      data: {
+        user_data: userInfo, // Adjust the field name based on your schema
+      },
+    });
+
     //   const data = await prisma.user_master.update({
-    //     where: { mobile_number: userDetail.mobile },
+    //     where: { email: userEmail },
     //     user_data: userInfo,
     // })
     // Add digilocker detail into database end
@@ -102,23 +106,128 @@ export const digiLockerFinalRegistration = async(req, res)=>{
   }
 
   // Decode the token (without verifying) to get the payload
-  const decodedToken = jwt.decode(token);
-
-  if (!decodedToken) {
-    return res.status(400).json({ msg: "Invalid token" });
-  }
-
+  const userEmail = req.user.email;  
   // Extract user ID and email from the token payload
-  const userId = decodedToken.userId;  // Adjust based on how the token is structured
+  // const data = await prisma.user_master.update({
+  //       where: { email: userEmail },
+  //       is_digilocker_verified: true,
+  //   })
 
-  const data = await prisma.user_master.update({
-        where: { user_id: userId },
+    const data = await prisma.user_master.update({
+      where: { email: userEmail },
+      data: {
         is_digilocker_verified: true,
-    })
+      },
+    });
 
     res.status(200).json({
       success: true,
       msg: "User verified successfully.",
+    });
+
+  }catch(error){
+
+    res.status().json({ success:false, msg:error.message})
+
+  }
+
+}
+
+export const authenticateEntity = async (req, res) => {
+  {
+    const { code } = req.body;
+
+    if (!code) {
+      return res.status(400).json({
+        success: false,
+        status: 400,
+        message: 'invalid credentials',
+      });
+    }
+
+     try {
+
+          const query = {
+            code: code,
+            grant_type: "authorization_code",
+            redirect_uri: "http://localhost:3000/myauth",
+            client_id: "RF6AE19E50",
+            client_secret: "8d1da0745546e8118507",
+            code_verifier: "YglEu2eLv_kB8tbSiKOyZnpKRPCDFgW2uigiAn_D-DkO6-JRcchJx8k7x2x-vXXJG.3"
+          }
+
+      const resAccessToken = await fetch('https://entity.digilocker.gov.in/public/oauth2/1/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(query) // Convert your data to a JSON string
+      });
+
+      if (resAccessToken.ok) {
+        // Parse the JSON response
+        const jsonResponse = await resAccessToken.json();
+
+        // Log the response to inspect the content
+        res.status(STATUS_CODES.OK).json({
+          success: true,
+          message: 'Success',
+          // data: employee,
+        });
+        console.log('JSON Response:', jsonResponse);
+      } else {
+        // Handle unsuccessful response (non-200 status codes)
+        console.log('Error:', resAccessToken.status, resAccessToken.statusText);
+        const errorData = await resAccessToken.json();
+        console.log('Error details:', errorData);
+        res.status(resAccessToken.status).json({
+          status: false,
+          ...errorData
+        });
+      }
+
+      
+    } catch (err) {
+      res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: err.message,
+      });
+    }
+  };
+}
+
+export const entityLockerFinalRegistration = async(req, res)=>{
+
+  try{
+    const authorizationHeader =
+    req.headers.Authorization || req.headers.authorization;
+
+  if (!authorizationHeader) {
+    return res.status(400).json({ msg: "Authorization header is missing" });
+  }
+
+  const token = authorizationHeader.split(" ")[1];
+
+  if (!token) {
+    return res.status(400).json({ msg: "Token is missing or invalid" });
+  }
+
+  // Decode the token (without verifying) to get the payload
+  const userEmail = req.user.email;  
+  // Extract user ID and email from the token payload
+  // const data = await prisma.user_master.update({
+  //       where: { email: userEmail },
+  //       is_digilocker_verified: true,
+  //   })
+
+    const data = await prisma.organization_master.update({
+      where: { contact_email: userEmail },
+      data: {
+        is_entity_locker_verified: true,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      msg: "Agency/Orgnaigation verified successfully.",
     });
 
   }catch(error){

@@ -27,6 +27,7 @@ const getEmployeeBySAPID = async (sapId) => {
         sap_id: sapId,  // Search by sap_id
       },
       select: {
+        user_id : true,
         sap_id: true,
         mobile_number: true,
         date_of_birth: true,
@@ -95,7 +96,7 @@ export const verifyOtp = async (req, res) => {
     };
 
     // Replace 'your_secret_key' with your actual secret key for signing the token
-    const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '2d' });
+    const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '30d' });
     await prisma.user_master.update({
       where: { mobile_number },
       data: { verified_status: true },
@@ -393,24 +394,25 @@ export const getAllUsers = async (req, res) => {
     
     const users = await prisma.$queryRaw`
             SELECT 
-                um.sap_id,
-                um.user_id,
-                um.name,
-                um.mobile_number,
-                um.email,
-                um.designation,
-                um.office_location,
-                um.is_digilocker_verified,
-                um.date_of_birth,
-                um.user_type,
-                um.created_at,
-                um.status,
-                um.created_by,
-                um.user_role,
-                um.office_mobile_number
-            FROM tenant_nhai.user_master AS um
-            INNER JOIN tenant_nhai.registration_invitation AS ri
-              ON um.user_id = ri.user_id
+    um.sap_id,
+    um.user_id,
+    um.name,
+    um.mobile_number,
+    um.email,
+    um.designation,
+    um.office_location,
+    um.is_digilocker_verified,
+    um.date_of_birth,
+    um.user_type,
+    um.created_at,
+    um.status,
+    um.created_by,
+    um.user_role,
+    um.office_mobile_number
+FROM tenant_nhai.user_master AS um
+INNER JOIN tenant_nhai.registration_invitation AS ri
+    ON um.user_id = ri.user_id
+ORDER BY um.user_id DESC
             LIMIT ${take} OFFSET ${skip}`;
 
             // const totalUsers = await prisma.$queryRaw`
@@ -741,7 +743,7 @@ export const verifyOtpLatest = async (req, res) =>{
         };
     
         // Replace 'your_secret_key' with your actual secret key for signing the token
-        const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '2d' });
+        const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '30d' });
         await prisma.user_master.update({
           where: { mobile_number },
           data: { verified_status: true },
@@ -1048,7 +1050,7 @@ export const inviteUser = async (req, res) => {
       console.log(user)
 
 ///////////////////////////////////////////////////
-     const generateInvitationLink = `http://localhost:3000/signup/agency?${uniqueUsername2}`
+     const generateInvitationLink = `http://localhost:3000/signup?inviteid=${uniqueUsername2}`
         //const uniqueToken = crypto.randomBytes(16).toString("hex");
         //return `http://localhost:3000/signup/agency?${uniqueToken}`;
       
@@ -1067,7 +1069,7 @@ export const inviteUser = async (req, res) => {
           invite_message: "You are invited to join the platform.",
           expiry_date:  new Date(new Date().setDate(new Date().getDate() + 7)),
           created_by : user.user_id,
-          unique_invitation_id : uniqueUsername2
+          //unique_invitation_id : uniqueUsername2
         },
       }) 
 

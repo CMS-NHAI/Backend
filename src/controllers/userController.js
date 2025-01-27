@@ -337,10 +337,10 @@ export const authenticateEntity = async (req, res) => {
       const query = {
         code: code,
         grant_type: "authorization_code",
-        redirect_uri: "http://localhost:3000/myauth",
-        client_id: "RF6AE19E50",
-        client_secret: "8d1da0745546e8118507",
-        code_verifier: "YglEu2eLv_kB8tbSiKOyZnpKRPCDFgW2uigiAn_D-DkO6-JRcchJx8k7x2x-vXXJG.3"
+        redirect_uri: process.env.ENTITY_REDIRECT_URI,//"http://localhost:3000/myauth",
+        client_id: process.env.ENTITY_CLIENT_ID,
+        client_secret: process.env.ENTITY_CLIENT_SECRET, //"8d1da0745546e8118507",
+        code_verifier: process.env.ENTITY_CODE_VERIFIER //"YglEu2eLv_kB8tbSiKOyZnpKRPCDFgW2uigiAn_D-DkO6-JRcchJx8k7x2x-vXXJG.3"
       }
 
       const resAccessToken = await fetch('https://entity.digilocker.gov.in/public/oauth2/1/token', {
@@ -352,6 +352,21 @@ export const authenticateEntity = async (req, res) => {
       if (resAccessToken.ok) {
         // Parse the JSON response
         const jsonResponse = await resAccessToken.json();
+
+        const userEmail = req.user.email;  
+        // Add Entitylocker detail into database start (address field is missing)
+        const userInfo = {
+          email : userEmail,
+          userDetail: resAccessToken,
+          eEntityDetail: jsonResponse,
+        }
+
+    const updatedUser = await prisma.organization_master.update({
+      where: { contact_email : userEmail },
+      data: {
+        user_data: userInfo, // Adjust the field name based on your schema
+      },
+    });
 
         // Log the response to inspect the content
         res.status(STATUS_CODES.OK).json({

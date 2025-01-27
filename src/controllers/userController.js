@@ -101,7 +101,7 @@ export const verifyOtp = async (req, res) => {
       where: { mobile_number },
       data: { verified_status: true },
     });
-
+    console.log("test");
     res.status(STATUS_CODES.OK).json({
       success: true,
       status: STATUS_CODES.OK,

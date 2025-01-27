@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import validatePhoneNumber from "../utils/validation.js";
 import fetch from 'node-fetch';
 import { STATUS_CODES } from "../constants/statusCodesConstant.js";
-import { otpmobileValidationSchema } from "../validations/userValidation.js";  
+import { otpmobileValidationSchema } from "../validations/userValidation.js";
 import { sapValidationSchema } from "../validations/sapValidation.js";
 import { phoneValidationSchema } from "../validations/otpValidation.js";
 import { createUserValidationSchema } from "../validations/createUserValidation.js";
@@ -13,21 +13,21 @@ import { updateUserValidationSchema } from '../validations/updateUserValidation.
 import { inviteUserValidationSchema } from '../validations/inviteUserValidation.js';
 import { userIdValidation } from '../validations/getUserValidation.js';
 import { editUserValidationSchema } from '../validations/editUserValidation.js';
-import { orgIdValidationSchema }   from '../validations/getOfficeValidation.js';
+import { orgIdValidationSchema } from '../validations/getOfficeValidation.js';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from "crypto";
 
 const uniqueUsername = uuidv4();
 const getEmployeeBySAPID = async (sapId) => {
   try {
-    
+
     // Query the user_master table using Prisma to get the employee information
     const employee = await prisma.user_master.findUnique({
       where: {
         sap_id: sapId,  // Search by sap_id
       },
       select: {
-        user_id : true,
+        user_id: true,
         sap_id: true,
         mobile_number: true,
         date_of_birth: true,
@@ -36,7 +36,7 @@ const getEmployeeBySAPID = async (sapId) => {
         office_location: true,
         is_digilocker_verified: true,
         name: true,
-        user_type : true
+        user_type: true
       },
     });
 
@@ -115,7 +115,7 @@ export const verifyOtp = async (req, res) => {
         designation: user.designation,
         is_digilocker_verified: user.is_digilocker_verified,
         office_location: user.office_location,
-        user_type : user.user_type
+        user_type: user.user_type
       },
     });
   } catch (err) {
@@ -189,7 +189,7 @@ export const getUserDetails = async (req, res) => {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY); 
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
     console.log('Decoded token:', decoded);
     const user = await getUserByPhoneNo(mobile_number);
@@ -214,7 +214,7 @@ export const getUserDetails = async (req, res) => {
         email_id: user.email,
         designation: user.designation,
         office_location: user.office_location,
-        user_type : user.user_type
+        user_type: user.user_type
       },
     });
   } catch (err) {
@@ -228,7 +228,7 @@ export const getUserDetails = async (req, res) => {
 };
 export const getUserByPhoneNo = async (mobile_number) => {
   try {
-    
+
     // Query the user_master table to get user details by mobile_number
     const user = await prisma.user_master.findUnique({
       where: {
@@ -242,7 +242,7 @@ export const getUserByPhoneNo = async (mobile_number) => {
         email: true,
         designation: true,
         office_location: true,
-        user_type : true
+        user_type: true
       },
     });
     console.log('user', user);
@@ -268,7 +268,7 @@ export const getSapDetails = async (req, res) => {
       message: 'Authorization token is required.',
     });
   }
- 
+
   const { error } = sapValidationSchema.validate({ sap_id });
 
   if (error) {
@@ -326,16 +326,16 @@ export const authenticateEntity = async (req, res) => {
       });
     }
 
-     try {
+    try {
 
-          const query = {
-            code: code,
-            grant_type: "authorization_code",
-            redirect_uri: "http://localhost:3000/myauth",
-            client_id: "RF6AE19E50",
-            client_secret: "8d1da0745546e8118507",
-            code_verifier: "YglEu2eLv_kB8tbSiKOyZnpKRPCDFgW2uigiAn_D-DkO6-JRcchJx8k7x2x-vXXJG.3"
-          }
+      const query = {
+        code: code,
+        grant_type: "authorization_code",
+        redirect_uri: "http://localhost:3000/myauth",
+        client_id: "RF6AE19E50",
+        client_secret: "8d1da0745546e8118507",
+        code_verifier: "YglEu2eLv_kB8tbSiKOyZnpKRPCDFgW2uigiAn_D-DkO6-JRcchJx8k7x2x-vXXJG.3"
+      }
 
       const resAccessToken = await fetch('https://entity.digilocker.gov.in/public/oauth2/1/token', {
         method: 'POST',
@@ -365,7 +365,7 @@ export const authenticateEntity = async (req, res) => {
         });
       }
 
-      
+
     } catch (err) {
       res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
         success: false,
@@ -377,10 +377,9 @@ export const authenticateEntity = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
-    
-    const pageSize = parseInt(req.query.pageSize) || 10;  
-    const page = parseInt(req.query.page) || 1;  
-
+    const pageSize = parseInt(req.query.pageSize) || 10;
+    const page = parseInt(req.query.page) || 1;
+    console.log('user ', req.user);
     if (pageSize <= 0 || page <= 0) {
       return res.status(STATUS_CODES.BAD_REQUEST).json({
         success: false,
@@ -391,7 +390,12 @@ export const getAllUsers = async (req, res) => {
     // Calculate skip and take based on pageSize and page
     const skip = (page - 1) * pageSize;
     const take = pageSize;
-    
+       // org_id = 157
+       const {org_id} = req.user || {};
+       const condition = org_id !== 157 
+       ? `INNER JOIN tenant_nhai.registration_invitation AS ri ON um.user_id = ri.user_id` 
+       : '';
+
     const users = await prisma.$queryRaw`
             SELECT 
     um.sap_id,
@@ -410,23 +414,22 @@ export const getAllUsers = async (req, res) => {
     um.user_role,
     um.office_mobile_number
 FROM tenant_nhai.user_master AS um
-INNER JOIN tenant_nhai.registration_invitation AS ri
-    ON um.user_id = ri.user_id
+${condition}
 ORDER BY um.user_id DESC
             LIMIT ${take} OFFSET ${skip}`;
 
-            // const totalUsers = await prisma.$queryRaw`
-            // SELECT COUNT(*) AS count
-            // FROM "tenant_nhai"."registration_invitation"`;
-      
-          const totalUsersCount = await prisma.registration_invitation.count();
+    // const totalUsers = await prisma.$queryRaw`
+    // SELECT COUNT(*) AS count
+    // FROM "tenant_nhai"."registration_invitation"`;
 
-const usersWithDummyData = users.map(user => ({
-  ...user,
-  user_company_name: 'Company 1',  
-  contract_details: 'Contract 1', 
-}));
-   // console.log(user)
+    const totalUsersCount = await prisma.registration_invitation.count();
+
+    const usersWithDummyData = users.map(user => ({
+      ...user,
+      user_company_name: 'Company 1',
+      contract_details: 'Contract 1',
+    }));
+    // console.log(user)
     // If no users are found, return a message
     if (!users) {
       return res.status(STATUS_CODES.BAD_REQUEST).json({
@@ -438,7 +441,7 @@ const usersWithDummyData = users.map(user => ({
 
     // Get the total count of users that have a registration invitation
     // If no users are found, return a message
-    
+
 
     // Get the total count of users for pagination info
     // const totalUsers = await prisma.user_master.count();
@@ -474,7 +477,7 @@ export const createUser = async (req, res) => {
     });
   }
 
-  const { sap_id, name, email, mobile_number, user_type, designation, date_of_birth, user_role, aadhar_image, user_image, organization_id} = req.body;
+  const { sap_id, name, email, mobile_number, user_type, designation, date_of_birth, user_role, aadhar_image, user_image, organization_id } = req.body;
 
   try {
     // Check if the user already exists by SAP ID or mobile_number
@@ -495,7 +498,7 @@ export const createUser = async (req, res) => {
         message: 'User with this SAP ID, email, or mobile number already exists.',
       });
     }
-    const formattedDate = new Date(date_of_birth).toISOString(); 
+    const formattedDate = new Date(date_of_birth).toISOString();
     // Create the user in the database
     const newUser = await prisma.user_master.create({
       data: {
@@ -505,9 +508,9 @@ export const createUser = async (req, res) => {
         mobile_number,
         user_type,
         designation,
-        date_of_birth : formattedDate,
-        office_location: 'PIU',  
-        unique_username : uniqueUsername,
+        date_of_birth: formattedDate,
+        office_location: 'PIU',
+        unique_username: uniqueUsername,
         user_role,
         aadhar_image,
         user_image,
@@ -527,8 +530,8 @@ export const createUser = async (req, res) => {
         email_id: newUser.email,
         designation: newUser.designation,
         office_location: newUser.office_location,
-        unique_username : newUser.unique_username,
-       
+        unique_username: newUser.unique_username,
+
       },
     });
   } catch (err) {
@@ -675,240 +678,242 @@ export const updateUser = async (req, res) => {
   }
 };
 
-export const verifyOtpLatest = async (req, res) =>{
-     const { mobile_number, otp } = req.body;
-     const { error } = otpmobileValidationSchema.validate({ mobile_number, otp });
-      if (error) {
-          return res.status(STATUS_CODES.BAD_REQUEST).json({
-          success: false,
-          status: STATUS_CODES.BAD_REQUEST,
-          message: error.details[0].message,
-         });
-      }
+export const verifyOtpLatest = async (req, res) => {
+  const { mobile_number, otp } = req.body;
+  const { error } = otpmobileValidationSchema.validate({ mobile_number, otp });
+  if (error) {
+    return res.status(STATUS_CODES.BAD_REQUEST).json({
+      success: false,
+      status: STATUS_CODES.BAD_REQUEST,
+      message: error.details[0].message,
+    });
+  }
   try {
-      const user = await prisma.user_master.findUnique({  
-        where: { mobile_number: mobile_number},  
-      });
+    const user = await prisma.user_master.findUnique({
+      where: { mobile_number: mobile_number },
+    });
 
-      const record = await prisma.otp_verification.findFirst({
-        where: {
-          user_id: user.user_id,
-          is_deleted: false,
-        },
-        orderBy: {
-          otp_sent_timestamp: 'desc', 
-        },
-      });
+    const record = await prisma.otp_verification.findFirst({
+      where: {
+        user_id: user.user_id,
+        is_deleted: false,
+      },
+      orderBy: {
+        otp_sent_timestamp: 'desc',
+      },
+    });
 
-      if (!record) {
-        return res.status(STATUS_CODES.NOT_FOUND).json({
-          success: false,
-          status: STATUS_CODES.NOT_FOUND,
-          message: 'No OTP found for the user.',
-        })
-      }
-      if (record.otp_expiration < new Date()) {
-        // Check expiration
-        return res.status(STATUS_CODES.GONE).json({
-          success: false,
-          status: STATUS_CODES.GONE,
-          message: 'OTP has expired.',
-        })
-      }
+    if (!record) {
+      return res.status(STATUS_CODES.NOT_FOUND).json({
+        success: false,
+        status: STATUS_CODES.NOT_FOUND,
+        message: 'No OTP found for the user.',
+      })
+    }
+    if (record.otp_expiration < new Date()) {
+      // Check expiration
+      return res.status(STATUS_CODES.GONE).json({
+        success: false,
+        status: STATUS_CODES.GONE,
+        message: 'OTP has expired.',
+      })
+    }
 
-       await prisma.otp_verification.update({
-          // Increment attempt count
-          where: { otp_id: record.otp_id },
-          data: { otp_attempt_count: record.otp_attempt_count + 1 },
-        });
-        if (otp !== '12345') {
-           // Validate OTP (here assuming OTP is stored securely for demo purposes)
-              return res.status(STATUS_CODES.BAD_REQUEST).json({
-               success: false,
-               status: STATUS_CODES.BAD_REQUEST,
-               message: 'Invalid OTP.',
-             })    
+    await prisma.otp_verification.update({
+      // Increment attempt count
+      where: { otp_id: record.otp_id },
+      data: { otp_attempt_count: record.otp_attempt_count + 1 },
+    });
+    if (otp !== '12345') {
+      // Validate OTP (here assuming OTP is stored securely for demo purposes)
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
+        success: false,
+        status: STATUS_CODES.BAD_REQUEST,
+        message: 'Invalid OTP.',
+      })
 
-        } 
-        const updatedRecord = await prisma.otp_verification.update({
-          //Mark as verified
-          where: { otp_id: record.otp_id },
-          data: { otp_verification_status: 'VERIFIED' },
-        });
+    }
+    const updatedRecord = await prisma.otp_verification.update({
+      //Mark as verified
+      where: { otp_id: record.otp_id },
+      data: { otp_verification_status: 'VERIFIED' },
+    });
 
-        const payload = {
-          user_id: user.id, // Include the user ID (or any other info)
-          email:user.email,
-          phone_number: user.mobile_number,
-        };
-    
-        // Replace 'your_secret_key' with your actual secret key for signing the token
-        const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '30d' });
-        await prisma.user_master.update({
-          where: { mobile_number },
-          data: { verified_status: true },
-        });
-    
-        res.status(STATUS_CODES.OK).json({
-          success: true,
-          status: STATUS_CODES.OK,
-          message: 'OTP verified successfully.',
-          data: {
-            access_token: access_token,
-            //name: user.first_name + ' ' + user.last_name,
-            name: user.name,
-            mobile_number: user.mobile_number,
-            email: user.email,
-            designation: user.designation,
-            is_digilocker_verified: user.is_digilocker_verified,
-            office_location: user.office_location,
-            user_type : user.user_type
-          },
-        });
-      } catch (err) {
-        console.error(err);
-        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-          success: false,
-          status: STATUS_CODES.INTERNAL_SERVER_ERROR,
-          message: err.message,
-        });
-      }
+    const payload = {
+      org_id: user.organization_id,
+      user_id: user.id, // Include the user ID (or any other info)
+      email: user.email,
+      phone_number: user.mobile_number,
 
+    };
+
+    // Replace 'your_secret_key' with your actual secret key for signing the token
+    const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '30d' });
+    await prisma.user_master.update({
+      where: { mobile_number },
+      data: { verified_status: true },
+    });
+
+    res.status(STATUS_CODES.OK).json({
+      success: true,
+      status: STATUS_CODES.OK,
+      message: 'OTP verified successfully.',
+      data: {
+        access_token: access_token,
+        //name: user.first_name + ' ' + user.last_name,
+        name: user.name,
+        mobile_number: user.mobile_number,
+        email: user.email,
+        designation: user.designation,
+        is_digilocker_verified: user.is_digilocker_verified,
+        office_location: user.office_location,
+        user_type: user.user_type
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+      message: err.message,
+    });
+  }
+
+
+}
+
+export const verifyEmailOtpLatest = async (req, res) => {
+  const { email, otp } = req.body;
+
+  try {
+    const user = await prisma.user_master.findUnique({
+      where: { email: email },
+    });
+    if (!user) {
+      return res.status(STATUS_CODES.NOT_FOUND).json({
+        success: false,
+        status: STATUS_CODES.NOT_FOUND,
+        message: 'No OTP found for the User.'
+      })
+    }
+    console.log(user)
+
+    if (otp !== '12345') {
+      // Validate OTP (here assuming OTP is stored securely for demo purposes)
+      return res.status(STATUS_CODES.UNAUTHORIZED).json({
+        success: false,
+        status: STATUS_CODES.UNAUTHORIZED,
+        message: 'Invalid OTP.',
+      })
 
     }
 
-export const verifyEmailOtpLatest = async (req, res) =>{
-      const { email, otp } = req.body;
 
-      try {
-        const user = await prisma.user_master.findUnique({  
-          where: { email: email},  
-        });
-        if (!user) {
-          return res.status(STATUS_CODES.NOT_FOUND).json({
-            success: false,
-            status: STATUS_CODES.NOT_FOUND,
-            message: 'No OTP found for the User.'
-          })
-        }
-        console.log(user)
-  
-          if (otp !== '12345') {
-             // Validate OTP (here assuming OTP is stored securely for demo purposes)
-                return res.status(STATUS_CODES.UNAUTHORIZED).json({
-                 success: false,
-                 status: STATUS_CODES.UNAUTHORIZED,
-                 message: 'Invalid OTP.',
-               })    
-  
-          } 
-         
-  
-          const payload = {
-            user_id: user.id, // Include the user ID (or any other info)
-            email:user.email,
-            email: user.email,
-          };
-      
-          // Replace 'your_secret_key' with your actual secret key for signing the token
-          const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '2d' });
-          await prisma.user_master.update({
-            where: { email },
-            data: { verified_status: true },
-          });
-      
-          res.status(STATUS_CODES.OK).json({
-            success: true,
-            status: STATUS_CODES.OK,
-            message: 'Email OTP verified successfully.',
-            data: {
-              access_token: access_token,
-              //name: user.first_name + ' ' + user.last_name,
-              name: user.name,
-              mobile_number: user.mobile_number,
-              email: user.email,
-              designation: user.designation,
-              is_digilocker_verified: user.is_digilocker_verified,
-              office_location: user.office_location,
-              user_type : user.user_type,
-              user_role : user.user_role
+    const payload = {
+      user_id: user.id, // Include the user ID (or any other info)
+      email: user.email,
+      email: user.email,
+    };
 
-            },
-          });
-        } catch (err) {
-          console.error(err);
-          res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-            success: false,
-            status: STATUS_CODES.INTERNAL_SERVER_ERROR,
-            message: err.message,
-          });
-        }
-      
+    // Replace 'your_secret_key' with your actual secret key for signing the token
+    const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '2d' });
+    await prisma.user_master.update({
+      where: { email },
+      data: { verified_status: true },
+    });
+
+    res.status(STATUS_CODES.OK).json({
+      success: true,
+      status: STATUS_CODES.OK,
+      message: 'Email OTP verified successfully.',
+      data: {
+        access_token: access_token,
+        //name: user.first_name + ' ' + user.last_name,
+        name: user.name,
+        mobile_number: user.mobile_number,
+        email: user.email,
+        designation: user.designation,
+        is_digilocker_verified: user.is_digilocker_verified,
+        office_location: user.office_location,
+        user_type: user.user_type,
+        user_role: user.user_role
+
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+      message: err.message,
+    });
+  }
+
+}
+
+
+export const verifyEmailOtpAgency = async (req, res) => {
+  const { email, otp } = req.body;
+
+  try {
+    const user = await prisma.organization_master.findFirst({
+      where: { contact_email: email },
+    });
+
+    if (!user) {
+      return res.status(STATUS_CODES.NOT_FOUND).json({
+        success: false,
+        status: STATUS_CODES.NOT_FOUND,
+        message: 'No OTP found for the User.'
+      })
+    }
+    console.log(user)
+
+    if (otp !== '12345') {
+      // Validate OTP (here assuming OTP is stored securely for demo purposes)
+      return res.status(STATUS_CODES.UNAUTHORIZED).json({
+        success: false,
+        status: STATUS_CODES.UNAUTHORIZED,
+        message: 'Invalid OTP.',
+      })
+
     }
 
 
-export const verifyEmailOtpAgency = async (req, res) =>{
-      const { email, otp } = req.body;
+    const payload = {
+      user_id: user.org_id, // Include the user ID (or any other info)
+      email: user.contact_email,
+      name: user.name,
+    };
 
-      try {
-        const user = await prisma.organization_master.findFirst({  
-          where: { contact_email: email},  
-        });
+    // Replace 'your_secret_key' with your actual secret key for signing the token
+    const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '5d' });
+    /*  await prisma.user_master.update({
+        where: { email },
+        data: { verified_status: true },
+      });
+      */
 
-        if (!user) {
-          return res.status(STATUS_CODES.NOT_FOUND).json({
-            success: false,
-            status: STATUS_CODES.NOT_FOUND,
-            message: 'No OTP found for the User.'
-          })
-        }
-        console.log(user)
-  
-          if (otp !== '12345') {
-             // Validate OTP (here assuming OTP is stored securely for demo purposes)
-                return res.status(STATUS_CODES.UNAUTHORIZED).json({
-                 success: false,
-                 status: STATUS_CODES.UNAUTHORIZED,
-                 message: 'Invalid OTP.',
-               })    
-  
-          } 
-         
-  
-          const payload = {
-            user_id: user.org_id, // Include the user ID (or any other info)
-            email:user.contact_email,
-            name: user.name,
-          };
-      
-          // Replace 'your_secret_key' with your actual secret key for signing the token
-          const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '5d' });
-        /*  await prisma.user_master.update({
-            where: { email },
-            data: { verified_status: true },
-          });
-          */
+    res.status(STATUS_CODES.OK).json({
+      success: true,
+      status: STATUS_CODES.OK,
+      message: 'Email OTP verified successfully.',
+      data: { user },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+      message: err.message,
+    });
+  }
 
-          res.status(STATUS_CODES.OK).json({
-            success: true,
-            status: STATUS_CODES.OK,
-            message: 'Email OTP verified successfully.',
-            data: {user},
-          });
-        } catch (err) {
-          console.error(err);
-          res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-            success: false,
-            status: STATUS_CODES.INTERNAL_SERVER_ERROR,
-            message: err.message,
-          });
-        }
-      
-    }    
+}
 
 
 
-export const createInvitation = async (req, res) =>{
+export const createInvitation = async (req, res) => {
 
   const {
     org_id,
@@ -928,9 +933,9 @@ export const createInvitation = async (req, res) =>{
   if (!org_id || !user_id || !invite_to || !created_by) {
     return res.status(STATUS_CODES.NOT_FOUND).json({
       success: false,
-      status:STATUS_CODES.NOT_FOUND,
-       error: "Missing required fields." 
-      });
+      status: STATUS_CODES.NOT_FOUND,
+      error: "Missing required fields."
+    });
   }
 
 
@@ -942,7 +947,7 @@ export const createInvitation = async (req, res) =>{
     const invitation = await prisma.registration_invitation.create({
       data: {
         org_id,
-        user_id:user_id,
+        user_id: user_id,
         invitation_link,
         short_url: null, // Optionally generate and store a short URL
         invitation_status: "Pending",
@@ -955,285 +960,285 @@ export const createInvitation = async (req, res) =>{
 
     res.status(STATUS_CODES.CREATED).json({
       success: true,
-      status:STATUS_CODES.CREATED,
+      status: STATUS_CODES.CREATED,
       message: "Invitation link created successfully.",
       invitation,
     });
   } catch (error) {
     console.error("Error creating invitation:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      status:STATUS_CODES.INTERNAL_SERVER_ERROR,
-      error: "An error occurred while creating the invitation." 
+      status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+      error: "An error occurred while creating the invitation."
     });
   }
 
 
 
-}   
-      
+}
+
 export const inviteUser = async (req, res) => {
 
-    const {
-      name,
-      email,
-      mobile_number,
-      office_mobile_number,
-      designation,
-      user_type,
-      status,
-      office,
-      contracts,
-      roles_permission
-      } = req.body;
-      const uniqueUsername2 = uuidv4();
-    const { error } = inviteUserValidationSchema.validate(req.body);
+  const {
+    name,
+    email,
+    mobile_number,
+    office_mobile_number,
+    designation,
+    user_type,
+    status,
+    office,
+    contracts,
+    roles_permission
+  } = req.body;
+  const uniqueUsername2 = uuidv4();
+  const { error } = inviteUserValidationSchema.validate(req.body);
 
-    if (error) {
-      return res.status(STATUS_CODES.BAD_REQUEST).json({
-        success: false,
-        status: 400,
-        message: error.details[0].message,
-      });
-    }
-   const existingUser = await prisma.user_master.findUnique({
-      where: {
-        mobile_number: mobile_number, // Check if the mobile_number is already in use
-      },
+  if (error) {
+    return res.status(STATUS_CODES.BAD_REQUEST).json({
+      success: false,
+      status: 400,
+      message: error.details[0].message,
     });
+  }
+  const existingUser = await prisma.user_master.findUnique({
+    where: {
+      mobile_number: mobile_number, // Check if the mobile_number is already in use
+    },
+  });
 
-    if (existingUser) {
-      return res.status(STATUS_CODES.BAD_REQUEST).json({
-        success: false,
-        status: 400,
-        message: "Mobile number already exists. Please use a different number.",
-      });
-    }
-    const existingUserByEmail = await prisma.user_master.findUnique({
-      where: {
-        email: email, // Check if the email is already in use
-      },
+  if (existingUser) {
+    return res.status(STATUS_CODES.BAD_REQUEST).json({
+      success: false,
+      status: 400,
+      message: "Mobile number already exists. Please use a different number.",
     });
+  }
+  const existingUserByEmail = await prisma.user_master.findUnique({
+    where: {
+      email: email, // Check if the email is already in use
+    },
+  });
 
-    if (existingUserByEmail) {
-      return res.status(STATUS_CODES.BAD_REQUEST).json({
-        success: false,
-        status: 400,
-        message: "Email already exists. Please use a different email.",
-      });
-    }
-    const user_role="Manager", aadhar_image="", user_image="", organization_id=83;
-    try {
+  if (existingUserByEmail) {
+    return res.status(STATUS_CODES.BAD_REQUEST).json({
+      success: false,
+      status: 400,
+      message: "Email already exists. Please use a different email.",
+    });
+  }
+  const user_role = "Manager", aadhar_image = "", user_image = "", organization_id = 83;
+  try {
     //  Create the user in the database
-      const user = await prisma.user_master.create({
-        data: {
-          name,
-          email,
-          mobile_number,
-          office_mobile_number,
-          designation,
-          user_type,
-          status,
-          created_at: new Date(), 
-          unique_username : uniqueUsername2,
-          user_role,
-          aadhar_image,
-          user_image,
-          organization_id,
-          user_data: {
-            office: office || [], 
-            contracts: contracts || [], 
-            roles_permission: roles_permission || [], 
-          },
+    const user = await prisma.user_master.create({
+      data: {
+        name,
+        email,
+        mobile_number,
+        office_mobile_number,
+        designation,
+        user_type,
+        status,
+        created_at: new Date(),
+        unique_username: uniqueUsername2,
+        user_role,
+        aadhar_image,
+        user_image,
+        organization_id,
+        user_data: {
+          office: office || [],
+          contracts: contracts || [],
+          roles_permission: roles_permission || [],
         },
-      });
-      console.log(user)
+      },
+    });
+    console.log(user)
 
-///////////////////////////////////////////////////
-     const generateInvitationLink = `http://localhost:3000/signup?inviteid=${uniqueUsername2}`
-        //const uniqueToken = crypto.randomBytes(16).toString("hex");
-        //return `http://localhost:3000/signup/agency?${uniqueToken}`;
-      
+    ///////////////////////////////////////////////////
+    const generateInvitationLink = `http://localhost:3000/signup?inviteid=${uniqueUsername2}`
+    //const uniqueToken = crypto.randomBytes(16).toString("hex");
+    //return `http://localhost:3000/signup/agency?${uniqueToken}`;
 
-      const invitation_link = generateInvitationLink;
 
-      // Save the invitation in the database
-      const invitation = await prisma.registration_invitation.create({
-        data: {
-          org_id:user.organization_id,
-          user_id:user.user_id,
-          invitation_link,
-          short_url: null, // Optionally generate and store a short URL
-          invitation_status: "Pending",
-          invite_to : user.email,
-          invite_message: "You are invited to join the platform.",
-          expiry_date:  new Date(new Date().setDate(new Date().getDate() + 7)),
-          created_by : user.user_id,
-          //unique_invitation_id : uniqueUsername2
-        },
-      }) 
+    const invitation_link = generateInvitationLink;
 
-//////////////////////////////////////////////
-      res.status(STATUS_CODES.CREATED).json({
-        success: true,
-        status: STATUS_CODES.CREATED,
-        message: "User invited successfully.",
-        user : user
-      });
-    } catch (error) {
-      console.error("Error inviting user:", error);
-      res.status(500).json({
-        success: false,
-        status: STATUS_CODES.INTERNAL_SERVER_ERROR,
-        message: error.message,
-      });
-    }
+    // Save the invitation in the database
+    const invitation = await prisma.registration_invitation.create({
+      data: {
+        org_id: user.organization_id,
+        user_id: user.user_id,
+        invitation_link,
+        short_url: null, // Optionally generate and store a short URL
+        invitation_status: "Pending",
+        invite_to: user.email,
+        invite_message: "You are invited to join the platform.",
+        expiry_date: new Date(new Date().setDate(new Date().getDate() + 7)),
+        created_by: user.user_id,
+        //unique_invitation_id : uniqueUsername2
+      },
+    })
+
+    //////////////////////////////////////////////
+    res.status(STATUS_CODES.CREATED).json({
+      success: true,
+      status: STATUS_CODES.CREATED,
+      message: "User invited successfully.",
+      user: user
+    });
+  } catch (error) {
+    console.error("Error inviting user:", error);
+    res.status(500).json({
+      success: false,
+      status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+      message: error.message,
+    });
+  }
+}
+
+export const getUserById = async (req, res) => {
+  const { user_id } = req.body;
+
+  // Validate user_id using Joi validation schema
+  const { error } = userIdValidation.validate(req.body);
+
+  if (error) {
+    return res.status(STATUS_CODES.BAD_REQUEST).json({
+      success: false,
+      status: 400,
+      message: error.details[0].message,
+    });
   }
 
-  export const getUserById = async (req, res) => {
-    const { user_id } = req.body;
-  
-    // Validate user_id using Joi validation schema
-    const { error } = userIdValidation.validate(req.body);
-  
-    if (error) {
-      return res.status(STATUS_CODES.BAD_REQUEST).json({
+  try {
+    // Find user by user_id
+    const user = await prisma.user_master.findUnique({
+      where: {
+        user_id: user_id, // Fetch user using user_id
+      },
+    });
+
+    // If the user is not found
+    if (!user) {
+      return res.status(STATUS_CODES.OK).json({
         success: false,
-        status: 400,
-        message: error.details[0].message,
-      });
-    }
-  
-    try {
-      // Find user by user_id
-      const user = await prisma.user_master.findUnique({
-        where: {
-          user_id: user_id, // Fetch user using user_id
-        },
-      });
-  
-      // If the user is not found
-      if (!user) {
-        return res.status(STATUS_CODES.OK).json({
-          success: false,
-          status: 200,
-          message: "User not found.",
-        });
-      }
-  
-      // Return the user data if found
-      res.status(STATUS_CODES.OK).json({
-        success: true,
         status: 200,
-        message: "User fetched successfully.",
-        data: user,
-      });
-    } catch (error) {
-      // Handle unexpected errors
-      console.error("Error fetching user:", error);
-      res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        status: 500,
-        message: error.message,
+        message: "User not found.",
       });
     }
-  };
-  export const updateUserById = async (req, res) => {
-    const { user_id , name , email , mobile_number , office_mobile_number , designation, user_type , status , office, contracts, roles_permission } = req.body;
-  
-    // Validate user_id using Joi validation schema
-    const { error } = editUserValidationSchema.validate(req.body);
-  
-    if (error) {
-      return res.status(STATUS_CODES.BAD_REQUEST).json({
+
+    // Return the user data if found
+    res.status(STATUS_CODES.OK).json({
+      success: true,
+      status: 200,
+      message: "User fetched successfully.",
+      data: user,
+    });
+  } catch (error) {
+    // Handle unexpected errors
+    console.error("Error fetching user:", error);
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      status: 500,
+      message: error.message,
+    });
+  }
+};
+export const updateUserById = async (req, res) => {
+  const { user_id, name, email, mobile_number, office_mobile_number, designation, user_type, status, office, contracts, roles_permission } = req.body;
+
+  // Validate user_id using Joi validation schema
+  const { error } = editUserValidationSchema.validate(req.body);
+
+  if (error) {
+    return res.status(STATUS_CODES.BAD_REQUEST).json({
+      success: false,
+      status: 400,
+      message: error.details[0].message,
+    });
+  }
+
+  try {
+    // Find user by user_id
+    const user = await prisma.user_master.findUnique({
+      where: {
+        user_id: user_id, // Fetch user using user_id
+      },
+    });
+
+    // If the user is not found
+    if (!user) {
+      return res.status(STATUS_CODES.OK).json({
         success: false,
-        status: 400,
-        message: error.details[0].message,
+        status: 200,
+        message: "User not found.",
       });
     }
-  
-    try {
-      // Find user by user_id
-      const user = await prisma.user_master.findUnique({
-        where: {
-          user_id: user_id, // Fetch user using user_id
-        },
-      });
-  
-      // If the user is not found
-      if (!user) {
-        return res.status(STATUS_CODES.OK).json({
-          success: false,
-          status: 200,
-          message: "User not found.",
-        });
-      }
-      const updatedUser = await prisma.user_master.update({
-        where: {
-          user_id: user_id, // Find user by user_id
-        },
-        data: {
-          name,
-          email,
-          mobile_number,
-          office_mobile_number,
-          designation,
-          user_type,
-          status,
-          user_data: {
-            update: {
-              office: office || [], 
-              contracts: contracts || [], 
-              roles_permission: roles_permission || [], 
-            },
+    const updatedUser = await prisma.user_master.update({
+      where: {
+        user_id: user_id, // Find user by user_id
+      },
+      data: {
+        name,
+        email,
+        mobile_number,
+        office_mobile_number,
+        designation,
+        user_type,
+        status,
+        user_data: {
+          update: {
+            office: office || [],
+            contracts: contracts || [],
+            roles_permission: roles_permission || [],
           },
         },
-      });
-      // Return the user data if found
-      res.status(STATUS_CODES.OK).json({
-        success: true,
-        status: 200,
-        message: "User updated successfully.",
-        data: updatedUser,
-      });
-    } catch (error) {
-      // Handle unexpected errors
-      console.error("Error fetching user:", error);
-      res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        status: 500,
-        message: error.message,
-      });
-    }
-  };
-  export const getOfficeDetails = async (req, res) => {
-   
-
-    const officeList = [
-      {
-         id: "1",
-         office_name: "Head Office ",
-         office_address: "Electronics Niketan Annexe, 6 CGO Complex, Lodhi Road, New Delhi-110003",
-         phone_number: "+91-11-24360199",
-         mobile_number: "+91 9694543455",
-         office_email: "webmaster@digitalindia.gov.in"
       },
-      {
-          id: "2",
-          office_name: "Regional Office (Mumbai)",
-          office_address: "6th Floor, Samruddhi vVenture Park 3, MIDC Central Rd, Andheri East, Mumbai, Maharashtra",
-          phone_number: "+91 82729 81709",
-          mobile_number: "+91 9694543455",
-          office_email: "webmaster@digitalindia.gov.in"
-       },
-       {
-          id: "3",
-          office_name: "Regional Office (Ahmedabad)",
-          office_address: "7th Floor, ABZ Park 3, Ahmedabad, Gujarat",
-          phone_number: "+91 9695453455",
-          mobile_number: "+91 9694543455",
-          office_email: "webmaster@digitalindia.gov.in"
-       },
+    });
+    // Return the user data if found
+    res.status(STATUS_CODES.OK).json({
+      success: true,
+      status: 200,
+      message: "User updated successfully.",
+      data: updatedUser,
+    });
+  } catch (error) {
+    // Handle unexpected errors
+    console.error("Error fetching user:", error);
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      status: 500,
+      message: error.message,
+    });
+  }
+};
+export const getOfficeDetails = async (req, res) => {
+
+
+  const officeList = [
+    {
+      id: "1",
+      office_name: "Head Office ",
+      office_address: "Electronics Niketan Annexe, 6 CGO Complex, Lodhi Road, New Delhi-110003",
+      phone_number: "+91-11-24360199",
+      mobile_number: "+91 9694543455",
+      office_email: "webmaster@digitalindia.gov.in"
+    },
+    {
+      id: "2",
+      office_name: "Regional Office (Mumbai)",
+      office_address: "6th Floor, Samruddhi vVenture Park 3, MIDC Central Rd, Andheri East, Mumbai, Maharashtra",
+      phone_number: "+91 82729 81709",
+      mobile_number: "+91 9694543455",
+      office_email: "webmaster@digitalindia.gov.in"
+    },
+    {
+      id: "3",
+      office_name: "Regional Office (Ahmedabad)",
+      office_address: "7th Floor, ABZ Park 3, Ahmedabad, Gujarat",
+      phone_number: "+91 9695453455",
+      mobile_number: "+91 9694543455",
+      office_email: "webmaster@digitalindia.gov.in"
+    },
   ]
 
   res.status(STATUS_CODES.OK).json({
@@ -1242,31 +1247,31 @@ export const inviteUser = async (req, res) => {
     message: "Office details fetched successfully.",
     data: officeList,
   });
-  };
-  export const getContractDetails = async (req, res) => {
-    
+};
+export const getContractDetails = async (req, res) => {
 
-    const contractDetailList = [
-      {
-         contract_id: "1",
-         contract_name: "N/04035/04002/KL",
-         contract_disc: "Construction of western ring road around Indore city-DPR"
-      },
-      {
-         contract_id: "2",
-         contract_name: "N/04035/04001/ML",
-         contract_disc: "Construction of western ring road around Indore city-DPR"
-      },
-      {
-         contract_id: "3",
-         contract_name: "N/04035/04045/CD",
-         contract_disc: "Construction of western ring road around Indore city-DPR"
-      },
-      {
-          contract_id: "4",
-          contract_name: "N/04035/04056/AB",
-          contract_disc: "Construction of western ring road around Indore city-DPR"
-       },
+
+  const contractDetailList = [
+    {
+      contract_id: "1",
+      contract_name: "N/04035/04002/KL",
+      contract_disc: "Construction of western ring road around Indore city-DPR"
+    },
+    {
+      contract_id: "2",
+      contract_name: "N/04035/04001/ML",
+      contract_disc: "Construction of western ring road around Indore city-DPR"
+    },
+    {
+      contract_id: "3",
+      contract_name: "N/04035/04045/CD",
+      contract_disc: "Construction of western ring road around Indore city-DPR"
+    },
+    {
+      contract_id: "4",
+      contract_name: "N/04035/04056/AB",
+      contract_disc: "Construction of western ring road around Indore city-DPR"
+    },
   ]
   res.status(STATUS_CODES.OK).json({
     success: true,
@@ -1275,12 +1280,12 @@ export const inviteUser = async (req, res) => {
     data: contractDetailList,
   });
 
-  };
+};
 
-    
-    
-    
-  
+
+
+
+
 
 
 

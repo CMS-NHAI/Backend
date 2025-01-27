@@ -108,6 +108,9 @@ export const verifyOtp = async (req, res) => {
       message: 'OTP verified successfully.',
       data: {
         access_token: access_token,
+        user_id : user.user_id,
+        sap_id : user.sap_id,
+        is_active : user.is_active,
         //name: user.first_name + ' ' + user.last_name,
         name: user.name,
         mobile_number: user.mobile_number,
@@ -115,7 +118,10 @@ export const verifyOtp = async (req, res) => {
         designation: user.designation,
         is_digilocker_verified: user.is_digilocker_verified,
         office_location: user.office_location,
-        user_type: user.user_type
+        user_type: user.user_type,
+        user_role : user.user_role,
+        organization_id : user.organization_id
+       
       },
     });
   } catch (err) {

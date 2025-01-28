@@ -460,13 +460,7 @@ ORDER BY um.user_id DESC
       });
     }
 
-    // Get the total count of users that have a registration invitation
-    // If no users are found, return a message
-
-
-    // Get the total count of users for pagination info
-    // const totalUsers = await prisma.user_master.count();
-    // Return the paginated list of users
+    
     return res.status(STATUS_CODES.OK).json({
       success: true,
       message: 'Users retrieved successfully.',

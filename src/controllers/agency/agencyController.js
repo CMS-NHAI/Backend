@@ -69,12 +69,12 @@ export const getAgencyByInviteId = async(req, res) =>{
 // Update a agency
 export const updateAgency = async (req, res) => {
   const { id } = req.params;
-  const { name } = req.body;
+  //const { name } = req.body;
   
   try {
     const updatedagency = await prisma.organization_master.update({
       where: { org_id: parseInt(id, 10) },
-      data: { name },
+      data:  req.body ,
     });
     res.status(STATUS_CODES.OK).json(updatedagency);
   } catch (error) {

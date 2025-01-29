@@ -756,7 +756,7 @@ export const verifyOtpLatest = async (req, res) => {
 
     const payload = {
       org_id: user.organization_id,
-      user_id: user.id, // Include the user ID (or any other info)
+      user_id: user.user_id, // Include the user ID (or any other info)
       email: user.email,
       phone_number: user.mobile_number,
 

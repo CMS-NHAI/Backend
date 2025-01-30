@@ -1207,13 +1207,11 @@ export const updateUserById = async (req, res) => {
         user_type,
         status,
         user_data: {
-          update: {
             office: office || [],
             contracts: contracts || [],
             roles_permission: roles_permission || [],
           },
         },
-      },
     });
     // Return the user data if found
     res.status(STATUS_CODES.OK).json({

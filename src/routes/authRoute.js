@@ -4,7 +4,7 @@ import checkToken  from '../middlewares/checkToken.js';
 // import validate from '~/middlewares/validate';
 // import authenticate from '~/middlewares/authenticate';
 // import authValidation from '~/validations/authValidation';   
-import { digiLockerUserDetail, digiLockerFinalRegistration, entityLockerFinalRegistration } from '../controllers/authController.js';
+import { digiLockerUserDetail, digiLockerCheckUrl, digiLockerFinalRegistration, entityLockerFinalRegistration } from '../controllers/authController.js';
 
 const router = Router();
 
@@ -22,5 +22,7 @@ const router = Router();
 router.post('/digilocker-user-detail', checkToken, digiLockerUserDetail);
 router.post('/digilocker-registration', checkToken, digiLockerFinalRegistration);  
 router.post('/entitylocker-registration', checkToken, entityLockerFinalRegistration);
+
+router.get('/digilocker', digiLockerCheckUrl);
 
 export default router;

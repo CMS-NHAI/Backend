@@ -1,4 +1,5 @@
-import { getAccessTokenFromDigiLocker } from "../helper/getAccessTokenFromDigiLocker.js";
+import { getAccessTokenFromDigiLocker, getAccessTokenFromDigiLockerMobile} from "../helper/getAccessTokenFromDigiLocker.js";
+//import { getAccessTokenFromDigiLockerMobile } from "../helper/getAccessTokenFromDigiLocker.js";
 import { parseXmlToJson } from "../helper/parseXmlToJson.js";
 import prisma  from "../config/prismaClient.js";
 import jwt from "jsonwebtoken";
@@ -245,6 +246,7 @@ export const  digiLockerCheckUrl = async(req, res)=>{
 
 
 export const digiLockerUserDetailMobile = async (req, res) => {
+
   try {
     const { code } = req.body;
 

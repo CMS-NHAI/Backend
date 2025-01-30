@@ -228,8 +228,9 @@ export const sendOtpToUserLatest = async (req, res) =>{
 
     // Generate OTP
     const otp = generateOtp();
+    const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
     const expirationTime = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
-    
+    await sendOTP(serviceSid, mobile_number, otp);
     //   
     await prisma.otp_verification.create({
       data: {

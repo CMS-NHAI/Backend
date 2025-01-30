@@ -432,6 +432,7 @@ export const getAllUsers = async (req, res) => {
     um.status,
     um.created_by,
     um.user_role,
+    um.user_data,
     um.office_mobile_number
 FROM tenant_nhai.user_master AS um
 INNER JOIN tenant_nhai.registration_invitation AS ri
@@ -460,13 +461,7 @@ ORDER BY um.user_id DESC
       });
     }
 
-    // Get the total count of users that have a registration invitation
-    // If no users are found, return a message
-
-
-    // Get the total count of users for pagination info
-    // const totalUsers = await prisma.user_master.count();
-    // Return the paginated list of users
+    
     return res.status(STATUS_CODES.OK).json({
       success: true,
       message: 'Users retrieved successfully.',
@@ -762,7 +757,7 @@ export const verifyOtpLatest = async (req, res) => {
 
     const payload = {
       org_id: user.organization_id,
-      user_id: user.id, // Include the user ID (or any other info)
+      user_id: user.user_id, // Include the user ID (or any other info)
       email: user.email,
       phone_number: user.mobile_number,
 
@@ -1213,13 +1208,11 @@ export const updateUserById = async (req, res) => {
         user_type,
         status,
         user_data: {
-          update: {
             office: office || [],
             contracts: contracts || [],
             roles_permission: roles_permission || [],
           },
         },
-      },
     });
     // Return the user data if found
     res.status(STATUS_CODES.OK).json({

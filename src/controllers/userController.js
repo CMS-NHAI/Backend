@@ -813,19 +813,19 @@ export const verifyEmailOtpLatest = async (req, res) => {
       where: { email: email },
     });
     if (!user) {
-      return res.status(STATUS_CODES.NOT_FOUND).json({
+      return res.status(STATUS_CODES.OK).json({
         success: false,
-        status: STATUS_CODES.NOT_FOUND,
-        message: 'No OTP found for the User.'
+        status: STATUS_CODES.OK,
+        message: 'Email not registered.'
       })
     }
     console.log(user)
 
     if (otp !== '12345') {
       // Validate OTP (here assuming OTP is stored securely for demo purposes)
-      return res.status(STATUS_CODES.UNAUTHORIZED).json({
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
         success: false,
-        status: STATUS_CODES.UNAUTHORIZED,
+        status: STATUS_CODES.BAD_REQUEST,
         message: 'Invalid OTP.',
       })
 

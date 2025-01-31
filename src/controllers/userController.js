@@ -1052,7 +1052,7 @@ export const inviteUser = async (req, res) => {
   const user_role = "Manager", aadhar_image = "", user_image = "", organization_id = 83;
   try {
     //  Create the user in the database
-    const user = await prisma.user_master.create({
+    const user = await prisma.user_master.create({  
       data: {
         name,
         email,
@@ -1074,7 +1074,20 @@ export const inviteUser = async (req, res) => {
         },
       },
     });
-    console.log(user)
+    console.log(user,"usersData>>>>>>>>>>>>")
+
+    const keycloakData = await axios.post(`${process.env.KEYCLOAK_URL}/api/v1/keycloak/user/create`,{
+      username:user.name,
+      email:user.email,
+      firstName:user.name,
+      lastName:user.name,
+      mobile:user.mobile_number,
+      division:"",
+      designation:user.designation,
+    })
+
+    console.log(keycloakData,"keycloakData");
+
 
     ///////////////////////////////////////////////////
     const generateInvitationLink = `http://localhost:3000/signup?inviteid=${uniqueUsername2}`

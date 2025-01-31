@@ -823,9 +823,9 @@ export const verifyEmailOtpLatest = async (req, res) => {
 
     if (otp !== '12345') {
       // Validate OTP (here assuming OTP is stored securely for demo purposes)
-      return res.status(STATUS_CODES.UNAUTHORIZED).json({
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
         success: false,
-        status: STATUS_CODES.UNAUTHORIZED,
+        status: STATUS_CODES.BAD_REQUEST,
         message: 'Invalid OTP.',
       })
 
@@ -833,9 +833,8 @@ export const verifyEmailOtpLatest = async (req, res) => {
 
 
     const payload = {
-      user_id: user.id, // Include the user ID (or any other info)
-      email: user.email,
-      email: user.email,
+      user_id: user.user_id, // Include the user ID (or any other info)
+      email: user.email
     };
 
     // Replace 'your_secret_key' with your actual secret key for signing the token
@@ -851,7 +850,7 @@ export const verifyEmailOtpLatest = async (req, res) => {
       message: 'Email OTP verified successfully.',
       data: {
         access_token: access_token,
-        //name: user.first_name + ' ' + user.last_name,
+        user_id : user.user_id,
         name: user.name,
         mobile_number: user.mobile_number,
         email: user.email,

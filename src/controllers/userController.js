@@ -1075,19 +1075,17 @@ export const inviteUser = async (req, res) => {
         },
       },
     });
-    console.log(user,"usersData>>>>>>>>>>>>")
 
-    // const keycloakData = await axios.post(`${process.env.KEYCLOAK_URL}/api/v1/keycloak/user/create`,{
-    //   username:user.name,
-    //   email:user.email,
-    //   firstName:user.name,
-    //   lastName:user.name,
-    //   mobile:user.mobile_number,
-    //   division:"",
-    //   designation:user.designation,
-    // })
-
-    // console.log(keycloakData,"keycloakData");
+    const keycloakData = await axios.post(`${process.env.KEYCLOAK_URL}/api/v1/keycloak/user/create`,{
+      username:user.name,
+      email:user.email,
+      firstName:user.name,
+      lastName:user.name,
+      mobile:user.mobile_number,
+      division:"",
+      designation:user.designation,
+    })
+    
 
 
     ///////////////////////////////////////////////////

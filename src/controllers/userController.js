@@ -813,10 +813,10 @@ export const verifyEmailOtpLatest = async (req, res) => {
       where: { email: email },
     });
     if (!user) {
-      return res.status(STATUS_CODES.OK).json({
+      return res.status(STATUS_CODES.NOT_FOUND).json({
         success: false,
-        status: STATUS_CODES.OK,
-        message: 'Email not registered.'
+        status: STATUS_CODES.NOT_FOUND,
+        message: 'No OTP found for the User.'
       })
     }
     console.log(user)

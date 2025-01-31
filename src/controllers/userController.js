@@ -833,9 +833,8 @@ export const verifyEmailOtpLatest = async (req, res) => {
 
 
     const payload = {
-      user_id: user.id, // Include the user ID (or any other info)
-      email: user.email,
-      email: user.email,
+      user_id: user.user_id, // Include the user ID (or any other info)
+      email: user.email
     };
 
     // Replace 'your_secret_key' with your actual secret key for signing the token

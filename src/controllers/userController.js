@@ -850,7 +850,7 @@ export const verifyEmailOtpLatest = async (req, res) => {
       message: 'Email OTP verified successfully.',
       data: {
         access_token: access_token,
-        //name: user.first_name + ' ' + user.last_name,
+        user_id : user.user_id,
         name: user.name,
         mobile_number: user.mobile_number,
         email: user.email,

@@ -203,7 +203,7 @@ export const keycloakAddUser = async (req, res) => {
     mobile,
     division,
     designation,
-  } = req.user;
+  } = req.body;
 
   const userPayload = {
     username: username,

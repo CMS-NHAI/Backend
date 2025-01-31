@@ -1075,7 +1075,6 @@ export const inviteUser = async (req, res) => {
         },
       },
     });
-    console.log(user,"usersData>>>>>>>>>>>>")
 
     const keycloakData = await axios.post(`${process.env.KEYCLOAK_URL}/api/v1/keycloak/user/create`,{
       username:user.name,
@@ -1086,8 +1085,7 @@ export const inviteUser = async (req, res) => {
       division:"",
       designation:user.designation,
     })
-
-    console.log(keycloakData,"keycloakData");
+    
 
 
     ///////////////////////////////////////////////////

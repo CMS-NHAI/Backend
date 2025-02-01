@@ -432,7 +432,7 @@ export const getSapDetails = async (req, res) => {
         return res.status(accessTokenResponse.status).json({
           success: false,
           status: 400,
-          message:"Failed to fetch user entity details",
+          message:"Failed to fetch user Entity details",
           ...errorData,
         });
       }

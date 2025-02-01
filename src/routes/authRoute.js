@@ -25,6 +25,8 @@ router.post('/digilocker-registration', checkToken, digiLockerFinalRegistration)
 //######For Mobile plateform ##########//
 router.post('/digilocker-user-detail-mobile', checkToken, digiLockerUserDetailMobile);
 router.post('/digilocker-registration-mobile', checkToken, digiLockerFinalRegistrationMobile);  
+
+//########## FOR Entity Locker Agencies #######/////
 router.post('/entitylocker-registration', checkToken, entityLockerFinalRegistration);
 
 

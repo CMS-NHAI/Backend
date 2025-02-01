@@ -839,7 +839,7 @@ export const verifyEmailOtpLatest = async (req, res) => {
     };
 
     // Replace 'your_secret_key' with your actual secret key for signing the token
-    const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '2d' });
+    const access_token = jwt.sign(payload, 'NHAI', { expiresIn: '5d' });
     await prisma.user_master.update({
       where: { email },
       data: { verified_status: true },
@@ -904,9 +904,11 @@ export const verifyEmailOtpAgency = async (req, res) => {
 
 
     const payload = {
-      user_id: user.org_id, // Include the user ID (or any other info)
-      email: user.contact_email,
-      name: user.name,
+      org_id: user.org_id, // Include the user ID (or any other info)
+      name:user.name,
+      org_type:user.org_type,
+      contact_email:user.contact_email,
+      contact_number: user.contact_number
     };
 
     // Replace 'your_secret_key' with your actual secret key for signing the token
@@ -921,7 +923,7 @@ export const verifyEmailOtpAgency = async (req, res) => {
       success: true,
       status: STATUS_CODES.OK,
       message: 'Email OTP verified successfully.',
-      data: { user },
+      data: { access_token: access_token, ...user },
     });
   } catch (err) {
     console.error(err);

@@ -321,81 +321,6 @@ export const getSapDetails = async (req, res) => {
   }
 };
 
-/* export const authenticateEntity = async (req, res) => {
-  {
-    const { code } = req.body;
-
-    if (!code) {
-      return res.status(400).json({
-        success: false,
-        status: 400,
-        message: 'invalid credentials',
-      });
-    }
-
-    try {
-
-      const query = {
-        code: code,
-        grant_type: "authorization_code",
-        redirect_uri: process.env.ENTITY_REDIRECT_URI,//"http://localhost:3000/myauth",
-        client_id: process.env.ENTITY_CLIENT_ID,
-        client_secret: process.env.ENTITY_CLIENT_SECRET, //"8d1da0745546e8118507",
-        code_verifier: process.env.ENTITY_CODE_VERIFIER //"YglEu2eLv_kB8tbSiKOyZnpKRPCDFgW2uigiAn_D-DkO6-JRcchJx8k7x2x-vXXJG.3"
-      }
-
-      const resAccessToken = await fetch('https://entity.digilocker.gov.in/public/oauth2/1/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(query) // Convert your data to a JSON string
-      });
-
-      if (resAccessToken.ok) {
-        // Parse the JSON response
-        const jsonResponse = await resAccessToken.json();
-
-        const userEmail = req.user.email;  
-        // Add Entitylocker detail into database start (address field is missing)
-        const userInfo = {
-          email : userEmail,
-          userDetail: resAccessToken,
-          eEntityDetail: jsonResponse,
-        }
-
-    const updatedUser = await prisma.organization_master.update({
-      where: { contact_email : userEmail },
-      data: {
-        entity_data: userInfo, // Adjust the field name based on your schema
-      },
-    });
-
-        // Log the response to inspect the content
-        res.status(STATUS_CODES.OK).json({
-          success: true,
-          message: 'Success',
-          data: userInfo,
-        });
-        console.log('JSON Response:', jsonResponse);
-      } else {
-        // Handle unsuccessful response (non-200 status codes)
-        console.log('Error:', resAccessToken.status, resAccessToken.statusText);
-        const errorData = await resAccessToken.json();
-        console.log('Error details:', errorData);
-        res.status(resAccessToken.status).json({
-          status: false,
-          ...errorData
-        });
-      }
-
-
-    } catch (err) {
-      res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        message: err.message,
-      });
-    }
-  };
-} */
 
   async function generateEntityAccessToken(code,req,res) {
     try {
@@ -465,7 +390,7 @@ export const authenticateEntity = async(req,res) => {
                 message: 'Agency Contact email not found',
               });
             }
-            
+
     const accessToken = await generateEntityAccessToken(code,req,res);
     const apiResponse = await fetch('https://entity.digilocker.gov.in/public/oauth2/1/entity', {
       method: 'GET',
@@ -508,91 +433,6 @@ export const authenticateEntity = async(req,res) => {
     }); 
   }
 }
-
-
-// export const authenticateEntity123 = async (req, res) => {
-//     try {
-//       const { code } = req.body;
-//       if (!code) {
-//         return res.status(400).json({
-//           success: false,
-//           status: 400,
-//           message: 'Invalid credentials',
-//         });
-//       }
-  
-//       const query = {
-//         code,
-//         grant_type: "authorization_code",
-//         redirect_uri: process.env.ENTITY_REDIRECT_URI,
-//         client_id: process.env.ENTITY_CLIENT_ID,
-//         client_secret: process.env.ENTITY_CLIENT_SECRET,
-//         code_verifier: process.env.ENTITY_CODE_VERIFIER,
-//       };
-  
-//       const accessTokenResponse = await fetch(
-//         'https://entity.digilocker.gov.in/public/oauth2/1/token',
-//         {
-//           method: 'POST',
-//           headers: { 'Content-Type': 'application/json' },
-//           body: JSON.stringify(query),
-//         }
-//       );
-//       console.log(accessTokenResponse)
-//       if (!accessTokenResponse.ok) {
-//        const errorData = await accessTokenResponse.json();
-//         console.error('Error:', accessTokenResponse.status, accessTokenResponse.statusText, errorData);
-//         return res.status(accessTokenResponse.status).json({
-//           success: false,
-//           status: 400,
-//           message:"Failed to fetch user Entity details",
-//           ...errorData,
-//         }); 
-//       }
-  
-//       const jsonResponse = await accessTokenResponse.json();
-//       const userEmail = "bhawesh_bhanu@cms.co.in" //req.user?.contact_email;
-  
-//       if (!userEmail) {
-//         return res.status(400).json({
-//           success: false,
-//           status: 400,
-//           message: 'User email not found',
-//         });
-//       }
-      
-//        // Updating database with entity details
-//       const organization = await prisma.organization_master.findFirst({
-//         where: { contact_email: userEmail }
-//       });
-      
-//       if (organization) {
-//         const updatedOrganization = await prisma.organization_master.update({
-//           where: { org_id: organization.org_id }, // Use the unique ID
-//           data: { entity_data: {jsonResponse} }
-//         });
-//       }
-     
-  
-//       res.status(200).json({
-//         success: true,
-//         status: 200,
-//         message: 'User details from Entitylocker retrieved successfully.',
-//         data: jsonResponse,
-//       });
-  
-//       //console.log('JSON Response:', jsonResponse);
-//     } catch (err) {
-//       console.error('Error:', err);
-//       res.status(500).json({
-//         success: false,
-//         status: 500,
-//         message: err.message || 'Internal Server Error',
-//       });
-//     }
-//   };
-  
-
 
 
 export const getAllUsers = async (req, res) => {

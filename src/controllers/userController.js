@@ -983,12 +983,12 @@ export const verifyEmailOtpAgency = async (req, res) => {
     }
 
 
-    const payload = {
-      org_id: user.org_id, // Include the user ID (or any other info)
-      name:user.name,
-      org_type:user.org_type,
-      contact_email:user.contact_email,
-      contact_number: user.contact_number
+    const payload = {user
+      // org_id: user.org_id, // Include the user ID (or any other info)
+      // name:user.name,
+      // org_type:user.org_type,
+      // contact_email:user.contact_email,
+      // contact_number: user.contact_number
     };
 
     // Replace 'your_secret_key' with your actual secret key for signing the token

@@ -17,6 +17,8 @@ import resourcerouter from './routes/keycloak/resourceRoute.js';
 import policyrouter from './routes/keycloak/policyRoute.js'
 import keycloakUserRouter from './routes/keycloak/userRoute.js'
 import authrouter from "./routes/authRoute.js"
+import path from "path";
+import { fileURLToPath } from 'url';
 
 
 const app = express();
@@ -54,6 +56,15 @@ app.use('/api/v1/policy', policyrouter);
 app.use('/api/v1/keycloak/user', keycloakUserRouter);
 app.use('/api/v1/auth', authrouter);
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve static files from "public" directory
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.get("/.well-known/assetlinks.json", (req, res) => {
+  res.sendFile(path.join(__dirname, "public/.well-known/assetlinks.json"));
+});
 
 //app.use('/api/user', userRoutes);
 //app.use("/api/v1/article", ArticleRouter);

@@ -10,7 +10,12 @@ export const createAgency = async (req, res) => {
     data['empanelment_start_date'] = new Date(data['empanelment_start_date']).toISOString();
     data['empanelment_end_date']   = new Date(data['empanelment_end_date']).toISOString();
     const newAgency = await prisma.organization_master.create({ data: data });
-    res.status(201).json(newAgency);
+    res.status(201).json({
+      success: true,
+      status: STATUS_CODES.CREATED,
+      message: 'Agency or Organization Created successfully.',
+      data: { newAgency },
+    } );
   } catch (error) {
     res.status(STATUS_CODES.BAD_REQUEST).json({ status:STATUS_CODES.BAD_REQUEST,error: "Error creating agency." });
   }
@@ -69,12 +74,12 @@ export const getAgencyByInviteId = async(req, res) =>{
 // Update a agency
 export const updateAgency = async (req, res) => {
   const { id } = req.params;
-  const { name } = req.body;
+  //const { name } = req.body;
   
   try {
     const updatedagency = await prisma.organization_master.update({
       where: { org_id: parseInt(id, 10) },
-      data: { name },
+      data:  req.body ,
     });
     res.status(STATUS_CODES.OK).json(updatedagency);
   } catch (error) {

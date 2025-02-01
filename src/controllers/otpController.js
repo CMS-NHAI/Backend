@@ -16,7 +16,6 @@ export const sendOtpToUser = async (req, res) => {
   const { mobile_number , count } = req.body;
   const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
 
-
   const { error } = phoneValidationSchema.validate({ mobile_number });
 
   if (error) {
@@ -37,7 +36,7 @@ export const sendOtpToUser = async (req, res) => {
   try {
       prisma.otp
     const user = await prisma.user_master.findUnique({  // Use correct model name
-        where: { mobile_number: mobile_number},  // Assuming `mobile_number` is the field to search
+        where: { mobile_number: mobile_number },  // Assuming `mobile_number` is the field to search
       });
     console.log(user);
     if (!user) {
@@ -229,8 +228,9 @@ export const sendOtpToUserLatest = async (req, res) =>{
 
     // Generate OTP
     const otp = generateOtp();
+    const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
     const expirationTime = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
-    
+    await sendOTP(serviceSid, mobile_number, otp);
     //   
     await prisma.otp_verification.create({
       data: {

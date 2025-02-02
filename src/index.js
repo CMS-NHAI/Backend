@@ -17,6 +17,7 @@ import resourcerouter from './routes/keycloak/resourceRoute.js';
 import policyrouter from './routes/keycloak/policyRoute.js'
 import keycloakUserRouter from './routes/keycloak/userRoute.js'
 import authrouter from "./routes/authRoute.js"
+import keycloakAuthRoute from './routes/keycloak/keycloakAuthRoute.js'
 import path from "path";
 import { fileURLToPath } from 'url';
 
@@ -55,6 +56,7 @@ app.use('/api/v1/resource', resourcerouter);
 app.use('/api/v1/policy', policyrouter);
 app.use('/api/v1/keycloak/user', keycloakUserRouter);
 app.use('/api/v1/auth', authrouter);
+app.use('/api/v1/keycloak/auth', keycloakAuthRoute)
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

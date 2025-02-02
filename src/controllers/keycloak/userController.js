@@ -62,24 +62,41 @@ export const keycloakUserList = async (req, res) => {
   if (!token) {
     return res.status(400).json({ msg: "Token is missing or invalid" });
   }
+
   const keycloakUrl = `${serverUrl}/admin/realms/${realm}/users`;
+
+  // Get pagination parameters from query (default to page 1 and page size of 10)
+  const { page = 1, size = 10 } = req.query;
+  
+  // Calculate first based on page and size
+  const first = (page - 1) * size;
+
   try {
     const response = await axios.get(keycloakUrl, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
+      params: {
+        first, // start index (first)
+        max: size, // number of users per page (max)
+      },
     });
 
     res.status(200).json({
       success: true,
-      message: "List of user retrive successfuly.",
+      message: "List of users retrieved successfully.",
       data: response.data,
+      pagination: {
+        page: parseInt(page),
+        size: parseInt(size),
+      },
     });
   } catch (error) {
     res.status(500).json({ success: false, msg: error.message });
   }
 };
+
 
 export const keycloakUserDetail = async (req, res) => {
   const token = await keycloakAccessToken();

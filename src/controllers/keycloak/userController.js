@@ -332,7 +332,6 @@ export const keycloakUserPermissionDetail = async (req, res) => {
         u.attributes.mobile.includes(mobileNumber)
     );
     
-
     if (user) {
       // Fetch user roles
       const rolesResponse = await axios.get(`${url}/${user.id}/role-mappings`, {
@@ -347,8 +346,6 @@ export const keycloakUserPermissionDetail = async (req, res) => {
         realmRoles: rolesResponse.data.realmMappings || [],
         clientRoles: rolesResponse.data.clientMappings || {},
       };
-
-      console.log("userRoles ===>>>", userRoles)
 
       // Extract client roles correctly, considering mappings structure
       const clientRolesWithPermissions = Object.entries(
@@ -376,7 +373,9 @@ export const keycloakUserPermissionDetail = async (req, res) => {
       const response = await axios.post(
         apiUrl,
         {
+
           userId: user.id,
+          roleIds:["b6201b75-17cc-4d6d-99b5-610a18c1aa25"],
         },
         {
           headers: {
@@ -411,18 +410,65 @@ export const keycloakUserPermissionDetail = async (req, res) => {
    
       // == user detail end
       // Send response with user data and roles
+
+    // filtering data as per the requirement start
+    const roleList = userWithRoles?.roles?.realmRoles
+    const authorization = response?.data?.results
+     console.log("userWithRoles?.roles?.realmRoles =====>>>",  userWithRoles?.roles?.realmRoles)
+     console.log("response?.data?.results =====>>>",  response?.data?.results)
+     const finalOutput =[]
+
+     // Function to filter policy names based on role list
+     const groupedPolicies = authorization.map(resource => {
+
+      const matchingPolicies = resource.policies.filter(policyObj => {
+
+          const policyName = policyObj.policy.name;
+          const lastWord = policyName.split(' '); // Extract the last word from policy name
+          lastWord.pop();  
+          let lastWords = lastWord.join(' '); 
+          return roleList.includes(lastWords); // Check if last word matches any role in the roleList
+      })
+      // return finalOutput
+      return {
+          // resource: resource.resource.name,
+        
+          policies: matchingPolicies
+      };
+  }).filter(group => group.policies.length > 0); // Remove any groups with no matching policies
+
+// ========================================
+
+const groupedData = groupedPolicies.reduce((acc, obj) => {
+  obj.policies.forEach(policyWrapper => {
+      const { resources, scopes } = policyWrapper.policy;
+
+      resources.forEach(resource => {
+          const existingResource = acc.find(item => item.resource === resource);
+          if (existingResource) {
+              // If resource already exists, merge scopes
+              existingResource.scope = [...new Set([...existingResource.scope, ...scopes])];
+          } else {
+              // If resource doesn't exist, create new entry
+              acc.push({ resource, scope: [...scopes] });
+          }
+      });
+  });
+  return acc;
+}, []);
+
+     // filtering data as per the requirement end
       res.status(200).json({
         success: true,
         message: "User detail retrived successfully!",
         userDetail:userDetails,
         userRole: userWithRoles?.roles?.realmRoles,
-        userAuthorization: response?.data?.rpt?.authorization,
+        userAuthorization: groupedData
+        // userAuthorization: response?.data?.results
+       // userAuthorization: response?.data?.rpt?.authorization,
       });
     } else {
-      // console.log("No user found with the given mobile number.");
-      res
-        .status(404)
-        .json({ msg: "No user found with the given mobile number." });
+      res.status(404).json({ msg: "No user found with the given mobile number." });
     }
   } catch (error) {
     // console.error('Error:', error.message || (error.response ? error.response.data : error));

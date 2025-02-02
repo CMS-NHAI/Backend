@@ -1,15 +1,14 @@
 {
     
-    "realm": "nhai-realm", 
-    "serverUrl": "http://10.3.0.19:8081/",
-    "ssl-required": "external",
-    "clientId": "nhai",
-    "client_name_id":"66c94899-064c-4f21-8f3c-1cf762a6c384",
-    "credentials": {
-      "clientSecret":"4J5EVVI4su43ay7W9pnX1gQFYg5dbwZE"
-    },
-    "use-resource-role-mappings": true,
-    "confidential-port": 0,
-    "public-client": false
+  "realm": "nhai-realm", 
+  "serverUrl": "http://10.3.0.19:8081/",
+  "ssl-required": "external",
+  "clientId": "nhai",
+  "client_name_id":"66c94899-064c-4f21-8f3c-1cf762a6c384",
+  "credentials": {
+    "clientSecret":"4J5EVVI4su43ay7W9pnX1gQFYg5dbwZE"
+  },
+  "use-resource-role-mappings": true,
+  "confidential-port": 0,
+  "public-client": false
 }
-  

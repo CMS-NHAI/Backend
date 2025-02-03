@@ -9,6 +9,7 @@ import { OTP_CONSTANT, SEND_RESEND_OTP_CONSTANT } from '../constants/constant.js
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
 import { STATUS_CODES } from "../constants/statusCodesConstant.js";
+import {sendEmail} from '../services/emailService.js';
 
 const uniqueUsername = uuidv4();
 
@@ -280,14 +281,31 @@ const otp = crypto.randomInt(100000, 999999).toString();
 
 // Store OTP with an expiration time (5 minutes)
 
+    const subject = 'OTP FOR AGENCY REGISTRATION: DATALAKE';
+    const text = `Your requested OTP is ${otp}`;
+ 
+  sendEmail(email, subject, text)
+    .then(info => {
+      console.log('Email sent: ' + info.response);
+      res.status(200).json({ 
+        success : true,
+        status : 200,
+        message: 'OTP sent successfully'     
+      });
+      
+    })
+    .catch(error => {
+      console.log(error);
+      res.status(500).send('Error sending email');
+    });
 
 //console.log('Email sent:', info.response);
-res.status(200).json({ 
-  success : true,
-  status : 200,
-  message: 'OTP sent successfully' 
+// res.status(200).json({ 
+//   success : true,
+//   status : 200,
+//   message: 'OTP sent successfully' 
 
-});
+// });
 
 
 }

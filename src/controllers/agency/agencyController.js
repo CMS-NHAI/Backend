@@ -48,17 +48,9 @@ export const createAgency = async (req, res) => {
         const emailtosent = newAgency.contact_email;
         
       sendEmail(emailtosent, subject, text)
-        //.then(info => {
-          console.log('Email sent: ' + info.response);
-          // res.status(200).json({ 
-          //   success : true,
-          //   status : 200,
-          //   message: 'OTP sent successfully'     
-           //});
-          
       
 
-    res.status(STATUS_CODES.CREATED).json({
+      res.status(STATUS_CODES.CREATED).json({
       success: true,
       status: STATUS_CODES.CREATED,
       message: 'Agency or Organization Created successfully.',

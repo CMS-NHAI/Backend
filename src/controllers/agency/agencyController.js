@@ -17,7 +17,7 @@ export const createAgency = async (req, res) => {
 
     ///////////////////////////////////////////////////
     const uniqueUsername2 = uuidv4();
-    const generateInvitationLink = `http://10.3.0.19:3000/signup?inviteid=${uniqueUsername2}`
+    const generateInvitationLink = `http://10.3.0.19:3000/signup?invite=${uniqueUsername2}`
     //const uniqueToken = crypto.randomBytes(16).toString("hex");
     //return `http://localhost:3000/signup/agency?${uniqueToken}`;
 
@@ -43,8 +43,11 @@ export const createAgency = async (req, res) => {
      //////////////////////Send Email /////////////
     
         const otp = crypto.randomInt(10000, 99999).toString();
-        const subject = 'OTP FOR AGENCY REGISTRATION: DATALAKE';
-        const text = `Your requested OTP is ${otp}`;
+        const subject = 'Invitations Link For Agency Registration: DATALAKE 3.0';
+        const text = `Dear Sir/Ma'am, 
+                          You have been invited to join Datalake 3.0. Please click the link
+                           ${invitation_link}
+                           Thanks & Regards,`;
         const emailtosent = newAgency.contact_email;
         
       sendEmail(emailtosent, subject, text)
@@ -53,7 +56,7 @@ export const createAgency = async (req, res) => {
       res.status(STATUS_CODES.CREATED).json({
       success: true,
       status: STATUS_CODES.CREATED,
-      message: 'Agency or Organization Created successfully.',
+      message: 'Agency or Organization created successfully and an email sent.',
       data:  newAgency,
     } );
   } catch (error) {

@@ -1,6 +1,7 @@
 import prisma from "../../config/prismaClient.js";
 import jwt from "jsonwebtoken";
 import { STATUS_CODES } from "../../constants/statusCodesConstant.js";
+//import { Message } from "twilio/lib/twiml/MessagingResponse.js";
 
 // Create a new agency
 export const createAgency = async (req, res) => {
@@ -10,14 +11,19 @@ export const createAgency = async (req, res) => {
     data['empanelment_start_date'] = new Date(data['empanelment_start_date']).toISOString();
     data['empanelment_end_date']   = new Date(data['empanelment_end_date']).toISOString();
     const newAgency = await prisma.organization_master.create({ data: data });
-    res.status(201).json({
+    res.status(STATUS_CODES.CREATED).json({
       success: true,
       status: STATUS_CODES.CREATED,
       message: 'Agency or Organization Created successfully.',
-      data: { newAgency },
+      data:  newAgency,
     } );
   } catch (error) {
-    res.status(STATUS_CODES.BAD_REQUEST).json({ status:STATUS_CODES.BAD_REQUEST,error: "Error creating agency." });
+    console.log(error)
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ 
+      success:false, 
+      status:STATUS_CODES.INTERNAL_SERVER_ERROR,
+      message: "Error Creating Agency." 
+    });
   }
 };
 
@@ -32,10 +38,17 @@ export const getAllAgencies = async (req, res) => {
        // deletedAt: null // Only include rows where `deletedAt` is null
      // }
     });
-    res.status(STATUS_CODES.OK).json(agencies);
+    res.status(STATUS_CODES.OK).json({
+      
+      success: true,
+      status: STATUS_CODES.OK,
+      message: 'Agency List Retrived Successfully.',
+      data: { agencies },
+      });
   } catch (error) {
     console.log(error)
     res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ 
+      success: true,
       status:STATUS_CODES.INTERNAL_SERVER_ERROR,
       error: "Error fetching agencies.", error });
   }
@@ -47,26 +60,34 @@ export const getAgencyById = async (req, res) => {
   try {
     const agency = await prisma.organization_master.findUnique({ where: { org_id: parseInt(id, 10) } });
     if (!agency) {
-      return res.status(STATUS_CODES.NOT_FOUND).json({status:STATUS_CODES.NOT_FOUND, error: "agency not found." });
+      return res.status(STATUS_CODES.NOT_FOUND).json({success: false, status:STATUS_CODES.NOT_FOUND, message: "Agency not found." });
     }
-    res.status(STATUS_CODES.OK).json(agency);
+    res.status(STATUS_CODES.OK).json({success: true, status:STATUS_CODES.OK, message:"Agency Information Fatched Successfully", data:agency});
   } catch (error) {
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ status:STATUS_CODES.INTERNAL_SERVER_ERROR,error: "Error fetching agency." });
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false,status:STATUS_CODES.INTERNAL_SERVER_ERROR,message: "Error fetching agency." });
   }
 };
 
 export const getAgencyByInviteId = async(req, res) =>{
   const{id}= req.params;
   try{
-      const agency = await prisma.registration_invitation.findFirst({
-        where :{unique_invitation_id: id}
+        const agency = await prisma.registration_invitation.findFirst({
+          where :{unique_invitation_id: id}
+        });
+        if (!agency) {
+          return res.status(STATUS_CODES.NOT_FOUND).json({success: false,status:STATUS_CODES.NOT_FOUND, message: "agency not found." });
+        }  
+        res.status(STATUS_CODES.OK).json({
+          success: true,
+          status:STATUS_CODES.OK,
+          data: agency
+        });
+      }catch(error){
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ 
+        success: false,
+        status:STATUS_CODES.INTERNAL_SERVER_ERROR,
+        Message: "Error fetching agency."
       });
-      if (!agency) {
-        return res.status(STATUS_CODES.NOT_FOUND).json({status:STATUS_CODES.NOT_FOUND, error: "agency not found." });
-      }  
-      res.status(STATUS_CODES.OK).json(agency);
-  }catch(error){
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ status:STATUS_CODES.INTERNAL_SERVER_ERROR,error: "Error fetching agency." });
 
   }
 }
@@ -81,9 +102,16 @@ export const updateAgency = async (req, res) => {
       where: { org_id: parseInt(id, 10) },
       data:  req.body ,
     });
-    res.status(STATUS_CODES.OK).json(updatedagency);
+    res.status(STATUS_CODES.OK).json({
+      success: true,
+      status:STATUS_CODES.OK,
+      data:updatedagency
+    });
   } catch (error) {
-    res.status(STATUS_CODES.BAD_REQUEST).json({ status:STATUS_CODES.BAD_REQUEST,error: "Error updating agency." });
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ 
+      success: false,
+      status:STATUS_CODES.INTERNAL_SERVER_ERROR,
+      Message: "Error updating agency." });
   }
 };
 
@@ -96,9 +124,18 @@ export const deleteAgency = async (req, res) => {
       where: { org_id: parseInt(id, 10) },
       data: { deletedAt: new Date() },
     });
-    res.status(200).json({ message: "Agency soft deleted successfully.", agency });
+    res.status(STATUS_CODES.OK).json({ 
+      success: true,
+      status:STATUS_CODES.OK,
+      message: "Agency soft deleted successfully.", agency 
+    });
   } catch (error) {
-    res.status(STATUS_CODES.BAD_REQUEST).json({ STATUS:STATUS_CODES.BAD_REQUEST,error: "Error deleting agency." });
+    return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ 
+       success: false,
+       status:STATUS_CODES.INTERNAL_SERVER_ERROR,
+       message: 'An unexpected error occurred.',
+      
+    });
   }
 };
 

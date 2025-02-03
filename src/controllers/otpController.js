@@ -281,7 +281,7 @@ const otp = crypto.randomInt(100000, 999999).toString();
 
 // Store OTP with an expiration time (5 minutes)
 
-    const subject = 'Send OTP';
+    const subject = 'OTP FOR AGENCY REGISTRATION: DATALAKE';
     const text = `Your requested OTP is ${otp}`;
  
   sendEmail(email, subject, text)
@@ -300,12 +300,12 @@ const otp = crypto.randomInt(100000, 999999).toString();
     });
 
 //console.log('Email sent:', info.response);
-res.status(200).json({ 
-  success : true,
-  status : 200,
-  message: 'OTP sent successfully' 
+// res.status(200).json({ 
+//   success : true,
+//   status : 200,
+//   message: 'OTP sent successfully' 
 
-});
+// });
 
 
 }

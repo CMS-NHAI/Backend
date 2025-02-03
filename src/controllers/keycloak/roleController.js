@@ -119,6 +119,7 @@ export async function updateRoleAndScopes(req, res) {
           headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
         }
       );
+      
       count++;
     }
     

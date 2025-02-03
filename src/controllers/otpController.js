@@ -277,7 +277,7 @@ export const sendOtpToUserViaEmailLatest = async (req, res) =>{
 }
 
 // Generate a 6-digit OTP
-const otp = crypto.randomInt(100000, 999999).toString();
+const otp = crypto.randomInt(10000, 99999).toString();
 
 // Store OTP with an expiration time (5 minutes)
 

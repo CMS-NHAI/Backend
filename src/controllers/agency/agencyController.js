@@ -1,6 +1,9 @@
 import prisma from "../../config/prismaClient.js";
 import jwt from "jsonwebtoken";
 import { STATUS_CODES } from "../../constants/statusCodesConstant.js";
+import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
+import {sendEmail} from '../../services/emailService.js';
 //import { Message } from "twilio/lib/twiml/MessagingResponse.js";
 
 // Create a new agency
@@ -11,6 +14,50 @@ export const createAgency = async (req, res) => {
     data['empanelment_start_date'] = new Date(data['empanelment_start_date']).toISOString();
     data['empanelment_end_date']   = new Date(data['empanelment_end_date']).toISOString();
     const newAgency = await prisma.organization_master.create({ data: data });
+
+    ///////////////////////////////////////////////////
+    const uniqueUsername2 = uuidv4();
+    const generateInvitationLink = `http://10.3.0.19:3000/signup?inviteid=${uniqueUsername2}`
+    //const uniqueToken = crypto.randomBytes(16).toString("hex");
+    //return `http://localhost:3000/signup/agency?${uniqueToken}`;
+
+
+    const invitation_link = generateInvitationLink;
+
+    // Save the invitation in the database
+    const invitation = await prisma.registration_invitation.create({
+      data: {
+        org_id: newAgency.org_id,
+        user_id: 5,//newAgency.user_id,
+        invitation_link,
+        short_url: null, // Optionally generate and store a short URL
+        invitation_status: "Pending",
+        invite_to: newAgency.contact_email,
+        invite_message: "You are invited to join the platform NHAI Datalake 3.0.",
+        expiry_date: new Date(new Date().setDate(new Date().getDate() + 7)),
+        created_by: 15//newAgency.user_id,
+        //unique_invitation_id : uniqueUsername2
+      },
+    })
+
+     //////////////////////Send Email /////////////
+    
+        const otp = crypto.randomInt(10000, 99999).toString();
+        const subject = 'OTP FOR AGENCY REGISTRATION: DATALAKE';
+        const text = `Your requested OTP is ${otp}`;
+        const emailtosent = newAgency.contact_email;
+        
+      sendEmail(emailtosent, subject, text)
+        //.then(info => {
+          console.log('Email sent: ' + info.response);
+          // res.status(200).json({ 
+          //   success : true,
+          //   status : 200,
+          //   message: 'OTP sent successfully'     
+           //});
+          
+      
+
     res.status(STATUS_CODES.CREATED).json({
       success: true,
       status: STATUS_CODES.CREATED,

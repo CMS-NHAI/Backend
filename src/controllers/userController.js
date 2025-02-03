@@ -17,6 +17,7 @@ import { orgIdValidationSchema } from '../validations/getOfficeValidation.js';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from "crypto";
 import axios from "axios";
+import {sendEmail} from '../services/emailService.js';
 
 const uniqueUsername = uuidv4();
 const getEmployeeBySAPID = async (sapId) => {
@@ -1128,7 +1129,7 @@ export const inviteUser = async (req, res) => {
 
 
     ///////////////////////////////////////////////////
-    const generateInvitationLink = `http://localhost:3000/signup?inviteid=${uniqueUsername2}`
+    const generateInvitationLink = `http://10.3.0.19:3000/signup?inviteid=${uniqueUsername2}`
     //const uniqueToken = crypto.randomBytes(16).toString("hex");
     //return `http://localhost:3000/signup/agency?${uniqueToken}`;
 
@@ -1150,6 +1151,25 @@ export const inviteUser = async (req, res) => {
         //unique_invitation_id : uniqueUsername2
       },
     })
+
+    //////////////////////Send Email /////////////
+
+    const otp = crypto.randomInt(10000, 99999).toString();
+    const subject = 'OTP FOR AGENCY REGISTRATION: DATALAKE';
+    const text = `Your requested OTP is ${otp}`;
+    let emailtosent = user.email;
+    
+  sendEmail(emailtosent, subject, text)
+    .then(info => {
+      console.log('Email sent: ' + info.response);
+      res.status(200).json({ 
+        success : true,
+        status : 200,
+        message: 'OTP sent successfully'     
+      });
+      
+    })
+   
 
     //////////////////////////////////////////////
     res.status(STATUS_CODES.CREATED).json({

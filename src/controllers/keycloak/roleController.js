@@ -2,7 +2,6 @@ import { keycloakAccessToken } from "../../helper/keycloak/keycloakAccessToken.j
 import { createResourceAndScopes } from "../../helper/keycloak/createResourceAndScopes.js";
 import { createPermission } from "../../helper/keycloak/createPermission.js";
 import { createPolicy } from "../../helper/keycloak/createPolicy.js";
-import { updatePolicy } from "../../helper/keycloak/updatePolicy.js";
 import { createRole } from "../../helper/keycloak/createRole.js";
 import { createScope } from "../../helper/keycloak/createScope.js";
 import { permissionBasedResourceScope } from "../../helper/keycloak/permissionBasedResourceScope.js";
@@ -99,7 +98,7 @@ export async function updateRoleAndScopes(req, res) {
     // === update role end =====
 
     // === update Policy start =
-   // const policyDetail = await updatePolicy(roleName, token);
+   
     // === update polciy end ===
     let count = 0;
     for (const permission of rolePermission) {

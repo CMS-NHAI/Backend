@@ -41,5 +41,9 @@ export const inviteUserValidationSchema = Joi.object({
       contract_disc: Joi.string().required(),
     })
   ).optional(),
-  roles_permission: Joi.array().items(Joi.string()).allow(null).optional(), 
+  roles_permission: Joi.array().items(
+    Joi.object({
+      name: Joi.string().required()  // Ensures 'name' is a non-empty string
+    })
+  ).min(1).required()
 });

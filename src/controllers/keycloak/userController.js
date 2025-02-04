@@ -325,7 +325,7 @@ export const keycloakUserPermissionDetail = async (req, res) => {
   // const mobileNumber = req.body.mobile;
   const mobileNumber = req.body.mobile; // Mobile number with country code
  
-
+console.log(mobileNumber,"mobileNumber>>>")
   if (!mobileNumber) {
     return res.status(400).json({ msg: "Mobile number is required" });
   }

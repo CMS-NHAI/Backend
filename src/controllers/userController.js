@@ -201,7 +201,8 @@ export const getUserDetails = async (req, res) => {
 
     console.log('Decoded token:', decoded);
     const user = await getUserByPhoneNo(mobile_number);
-
+    const keyCloakDetails = await axios.post(`${process.env.KEYCLOAK_URL}/api/v1/keycloak/user/permission-detail`,{mobile:mobile_number})
+    console.log(JSON.stringify(keyCloakDetails.data),"keyCloakDetails>>>>>>>")
     if (!user) {
       return res.status(STATUS_CODES.OK).json({
         success: "false",
@@ -222,7 +223,9 @@ export const getUserDetails = async (req, res) => {
         email_id: user.email,
         designation: user.designation,
         office_location: user.office_location,
-        user_type: user.user_type
+        user_type: user.user_type,
+        user_role:keyCloakDetails.data.userRole,
+        userAuthroization:keyCloakDetails.data.userAuthorization
       },
     });
   } catch (err) {
@@ -1052,7 +1055,7 @@ export const inviteUser = async (req, res) => {
     status,
     office,
     contracts,
-    roles_permission
+    roles_permission,
   } = req.body;
   const uniqueUsername2 = uuidv4();
   const { error } = inviteUserValidationSchema.validate(req.body);
@@ -1116,17 +1119,29 @@ export const inviteUser = async (req, res) => {
       },
     });
 
-    // const keycloakData = await axios.post(`${process.env.KEYCLOAK_URL}/api/v1/keycloak/user/create`,{
-    //   username:user.name,
-    //   email:user.email,
-    //   firstName:user.name,
-    //   lastName:user.name,
-    //   mobile:user.mobile_number,
-    //   division:"",
-    //   designation:user.designation,
-    // })
-    
+    const createkeycloakData = await axios.post(`${process.env.KEYCLOAK_URL}/api/v1/keycloak/user/create`,{
+      username:user.name,
+      email:user.email,
+      firstName:user.name,
+      lastName:user.name,
+      mobile:user.mobile_number,
+      division:"",
+      designation:user.designation,
+    })
 
+    console.log('%csrc\controllers\.js:1132 createkeycloakData', 'color: #007acc;', createkeycloakData);
+
+    
+    const getKeyCloakDataforUser = await axios.post(`${process.env.KEYCLOAK_URL}/api/v1/keycloak/user/permission-detail`,{mobile:user.mobile_number})
+    console.log(getKeyCloakDataforUser,"getKeyCloakDataforUser>>>>>>>>>")
+    const assignRoles =await axios.post(`${process.env.KEYCLOAK_URL}/api/v1/keycloak/user/permission-detail`,
+      {
+        userId:getKeyCloakDataforUser.data.userDetail.id,
+        roleName:roles_permission
+    }
+    )
+
+    console.log(assignRoles,"assignRoles>>>>>")
 
     ///////////////////////////////////////////////////
     const generateInvitationLink = `http://10.3.0.19:3000/signup?inviteid=${uniqueUsername2}`

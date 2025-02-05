@@ -4,7 +4,7 @@ import checkToken  from '../middlewares/checkToken.js';
 // import validate from '~/middlewares/validate';
 // import authenticate from '~/middlewares/authenticate';
 // import authValidation from '~/validations/authValidation';   
-import { digiLockerUserDetail, digiLockerFinalRegistration, entityLockerFinalRegistration } from '../controllers/authController.js';
+import { digiLockerUserDetail, digiLockerCheckUrl, digiLockerFinalRegistration, entityLockerFinalRegistration, digiLockerUserDetailMobile, digiLockerFinalRegistrationMobile } from '../controllers/authController.js';
 
 const router = Router();
 
@@ -21,6 +21,16 @@ const router = Router();
 // router.post('/reset-password', validate(authValidation.resetPassword), catchAsync(authController.resetPassword));
 router.post('/digilocker-user-detail', checkToken, digiLockerUserDetail);
 router.post('/digilocker-registration', checkToken, digiLockerFinalRegistration);  
+
+//######For Mobile plateform ##########//
+router.post('/digilocker-user-detail-mobile', checkToken, digiLockerUserDetailMobile);
+router.post('/digilocker-registration-mobile', checkToken, digiLockerFinalRegistrationMobile);  
+
+//########## FOR Entity Locker Agencies #######/////
 router.post('/entitylocker-registration', checkToken, entityLockerFinalRegistration);
+
+
+//added by himanshu
+router.get('/digilocker', digiLockerCheckUrl);
 
 export default router;

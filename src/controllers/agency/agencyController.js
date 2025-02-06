@@ -35,8 +35,8 @@ export const createAgency = async (req, res) => {
         invite_to: newAgency.contact_email,
         invite_message: "You are invited to join the platform NHAI Datalake 3.0.",
         expiry_date: new Date(new Date().setDate(new Date().getDate() + 7)),
-        created_by: 15//newAgency.user_id,
-        //unique_invitation_id : uniqueUsername2
+        created_by: 15, //newAgency.user_id,
+        unique_invitation_id : uniqueUsername2
       },
     })
 

@@ -1129,19 +1129,16 @@ export const inviteUser = async (req, res) => {
       designation:user.designation,
     })
 
-    console.log('%csrc\controllers\.js:1132 createkeycloakData', 'color: #007acc;', createkeycloakData);
 
     
     const getKeyCloakDataforUser = await axios.post(`${process.env.KEYCLOAK_URL}/api/v1/keycloak/user/permission-detail`,{mobile:user.mobile_number})
-    console.log(getKeyCloakDataforUser,"getKeyCloakDataforUser>>>>>>>>>")
-    const assignRoles =await axios.post(`${process.env.KEYCLOAK_URL}/api/v1/keycloak/user/permission-detail`,
+    const assignRoles =await axios.post(`${process.env.KEYCLOAK_URL}/api/v1/keycloak/user/assign-role`,
       {
         userId:getKeyCloakDataforUser.data.userDetail.id,
         roleName:roles_permission
     }
     )
 
-    console.log(assignRoles,"assignRoles>>>>>")
 
     ///////////////////////////////////////////////////
     const generateInvitationLink = `http://10.3.0.19:3000/signup?inviteid=${uniqueUsername2}`

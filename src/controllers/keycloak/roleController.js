@@ -14,7 +14,7 @@ const { realm, serverUrl, client_name_id } = keycloakConfig;
 
 /**
  * Method @POST
- * Des : Create role along with resources, scopes, policy, permission
+ * Description : Create role along with resources, scopes, policy, permission
 */
 export const keycloakaddRoleResourceScopePolicyPermission = async (req, res) => {
   const token = await keycloakAccessToken();
@@ -69,7 +69,10 @@ export const keycloakaddRoleResourceScopePolicyPermission = async (req, res) => 
   }
 };
 
-// update resource scope
+/**
+ * Method @PUT
+ * Description : update role, scopes, policy, permission
+*/
 export async function updateRoleAndScopes(req, res) {
 
   const token = await keycloakAccessToken();
@@ -78,15 +81,15 @@ export async function updateRoleAndScopes(req, res) {
     return res.status(400).json({ msg: "Token is missing or invalid" });
   }
 
-  const {roleId, roleName, rolePermission } = req.body
+  const { roleId, roleName, rolePermission } = req.body
 
   try {
 
     // === update role start ===
     const baseRoleUrl = `${serverUrl}/admin/realms/nhai-realm/roles-by-id`;
     const data = {
-        "name":roleName
-      }
+      "name": roleName
+    }
     const updateRole = await axios.put(
       `${baseRoleUrl}/${roleId}`,
       data,
@@ -98,8 +101,68 @@ export async function updateRoleAndScopes(req, res) {
     // === update role end =====
 
     // === update Policy start =
+    // **** get role start ****
+    const keycloakRoleUrl = `${serverUrl}/admin/realms/${realm}/roles/${roleName}`;
+    const checkRoleResponse = await axios.get(keycloakRoleUrl, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
    
-    // === update polciy end ===
+    // **** get role end ****
+    // **** get policy start ***
+    const keycloakPolicyListUrl = `${serverUrl}/admin/realms/${realm}/clients/${client_name_id}/authz/resource-server/policy/role`;
+    const checkPolicyResponse = await axios.get(keycloakPolicyListUrl, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    // **** get policy end *****
+    // **** get filtered policy on the basis of role id start ****
+    const roleBasedPoliciesList = checkPolicyResponse.data.filter(policy =>
+      policy.roles.some(role => role.id === checkRoleResponse.data.id)
+    );
+
+    console.log("roleBasedPoliciesList ==>>>", roleBasedPoliciesList)
+    // **** get filtered policy on the basis of role id end ******
+    // **** update policy name on the basis of policy id start
+    const policyUpdatePromises = roleBasedPoliciesList.map(async (policy) => {
+      console.log("policy.id ========>>>>", policy.id)
+      try {
+        const policyName = `${roleName} Policy`;
+       // const policyData = { name: policyName };
+       const policyData ={ 
+        "id" : policy.id,
+        "name" : policyName,
+        "type" : "role",
+        "roles" : [{ "id": "c3c82beb-af00-495f-99fe-e753d6c7a2d6" }]  
+    }
+        const policyDatas = {
+          name: policyName,
+          type: "role",
+          roles: [{ id: checkRoleResponse.data.id }],
+        };
+
+        // Log the URL to confirm correctness
+        console.log(`Attempting to update policy at URL===>>>>: ${serverUrl}/admin/realms/${realm}/clients/${client_name_id}/authz/resource-server/policy/${policy.id}`);
+
+        // Make the PUT request to update the policy
+        const response = await axios.put(
+          `${serverUrl}/admin/realms/${realm}/clients/${client_name_id}/authz/resource-server/policy/role/${policy.id}`,
+          policyData,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+        return response.data;
+      } catch (error) {
+        throw new Error(`Error updating policy ${policy.id}`);
+      }
+    });
+
+    // Await all policy update promises
+    const policyUpdateResults = await Promise.all(policyUpdatePromises);
+    // **** update policy name on the basis of policy id end
+
     let count = 0;
     for (const permission of rolePermission) {
       const permissionName = `${roleName} Permission${count + 1}`;
@@ -118,18 +181,22 @@ export async function updateRoleAndScopes(req, res) {
           headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
         }
       );
-      
+
       count++;
     }
-    
 
-    res.status(200).json({ success: true, message: "Permission updated successfully!"});
+
+    res.status(200).json({ success: true, message: "Permission updated successfully!" });
 
   } catch (error) {
     res.status(500).json({ success: false, message: 'An error occurred while updating the resource.' });
   }
 }
 
+/**
+ * Method @POST
+ * Description : List of role, scopes, policy, permission
+*/
 export const keycloakRoleResourecScopeList = async (req, res) => {
 
   const token = await keycloakAccessToken();
@@ -254,79 +321,6 @@ export const keycloakRoleResourecScopeList = async (req, res) => {
   }
 };
 //===========================================
-
-// update single resource and scope
-export async function updateSingleResourceScopes(req, res) {
-  const token = await keycloakAccessToken();
-
-  if (!token) {
-    return res.status(400).json({ message: "Token is missing or invalid" });
-  }
-
-  const data = req.body;
-  const scopes = req.body?.scopes;
-
-  try {
-    const baseUrl = `${serverUrl}/admin/realms/${realm}/clients/${client_name_id}/authz/resource-server/resource`;
-
-    // Fetch all resources
-    const response = await axios.get(baseUrl, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-
-    // Find resource by name
-    const resource = response.data.find(r => r.name === req.body?.name);
-
-    if (resource) {
-      const updateResponse = await axios.put(
-        `${baseUrl}/${resource._id}`,
-        {
-          name: resource.name,
-          scopes: scopes
-        },
-        {
-          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
-        }
-      );
-      res.status(200).json({ success: true, message: "Permission updated successfully!" });
-    } else {
-      res.status(404).json({ success: false, message: `Resource with name "${req.body?.name}" not found.` });
-    }
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'An error occurred while updating the resource.' });
-  }
-}
-
-export const keycloakResourceDetail = async (req, res) => {
-
-  const token = await keycloakAccessToken();
-  const { resourceId } = req.body
-
-  if (!token) {
-    return res.status(400).json({ msg: "Token is missing or invalid" });
-  }
-  const keycloakResourceUrl = `${serverUrl}/admin/realms/${realm}/clients/${client_name_id}/authz/resource-server/resource/${resourceId}`;
-
-  try {
-    const response = await axios.get(keycloakResourceUrl, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-    res.status(200).json({
-      success: true,
-      msg: "Resource detail retive successfuly.",
-      data: response.data,
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, msg: error.message });
-  }
-};
-
-// =========================================
 
 export const keycloakaddRole = async (req, res) => {
 
@@ -479,6 +473,80 @@ export const keycloakRoleList = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// update single resource and scope
+export async function updateSingleResourceScopes(req, res) {
+  const token = await keycloakAccessToken();
+
+  if (!token) {
+    return res.status(400).json({ message: "Token is missing or invalid" });
+  }
+
+  const data = req.body;
+  const scopes = req.body?.scopes;
+
+  try {
+    const baseUrl = `${serverUrl}/admin/realms/${realm}/clients/${client_name_id}/authz/resource-server/resource`;
+
+    // Fetch all resources
+    const response = await axios.get(baseUrl, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    // Find resource by name
+    const resource = response.data.find(r => r.name === req.body?.name);
+
+    if (resource) {
+      const updateResponse = await axios.put(
+        `${baseUrl}/${resource._id}`,
+        {
+          name: resource.name,
+          scopes: scopes
+        },
+        {
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        }
+      );
+      res.status(200).json({ success: true, message: "Permission updated successfully!" });
+    } else {
+      res.status(404).json({ success: false, message: `Resource with name "${req.body?.name}" not found.` });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'An error occurred while updating the resource.' });
+  }
+}
+
+export const keycloakResourceDetail = async (req, res) => {
+
+  const token = await keycloakAccessToken();
+  const { resourceId } = req.body
+
+  if (!token) {
+    return res.status(400).json({ msg: "Token is missing or invalid" });
+  }
+  const keycloakResourceUrl = `${serverUrl}/admin/realms/${realm}/clients/${client_name_id}/authz/resource-server/resource/${resourceId}`;
+
+  try {
+    const response = await axios.get(keycloakResourceUrl, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    res.status(200).json({
+      success: true,
+      msg: "Resource detail retive successfuly.",
+      data: response.data,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, msg: error.message });
+  }
+};
+
+// =========================================
+
 
 
 

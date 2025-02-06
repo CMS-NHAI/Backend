@@ -3,6 +3,7 @@ import {
     createAgency,
     getAllAgencies,
     getAgencyById,
+    getAgencyByInviteId,
     updateAgency,
     deleteAgency} from "../controllers/agency/agencyController.js";
 import checkToken  from '../middlewares/checkToken.js';
@@ -13,6 +14,7 @@ const agencyRoutes = Router();
 agencyRoutes.post("/",checkToken, createAgency);
 agencyRoutes.get("/",checkToken, getAllAgencies);
 agencyRoutes.get("/:id",checkToken, getAgencyById);
+agencyRoutes.get("/invite/:id", getAgencyByInviteId);
 agencyRoutes.put("/:id",checkToken, updateAgency);
 agencyRoutes.delete("/:id",checkToken, deleteAgency);
 

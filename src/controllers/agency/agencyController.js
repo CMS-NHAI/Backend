@@ -17,7 +17,7 @@ export const createAgency = async (req, res) => {
 
     ///////////////////////////////////////////////////
     const uniqueUsername2 = uuidv4();
-    const generateInvitationLink = `http://10.3.0.19:3000/signup?invite=${uniqueUsername2}`
+    const generateInvitationLink = `http://10.3.0.19:3000/signup/agency/${uniqueUsername2}`
     //const uniqueToken = crypto.randomBytes(16).toString("hex");
     //return `http://localhost:3000/signup/agency?${uniqueToken}`;
 
@@ -47,7 +47,8 @@ export const createAgency = async (req, res) => {
         const text = `Dear Sir/Ma'am, 
                           You have been invited to join Datalake 3.0. Please click the link
                            ${invitation_link}
-                           Thanks & Regards,`;
+                           Thanks & Regards,
+                           NHAI Group`;
         const emailtosent = newAgency.contact_email;
         
       sendEmail(emailtosent, subject, text)
@@ -117,14 +118,37 @@ export const getAgencyByInviteId = async(req, res) =>{
           where :{unique_invitation_id: id}
         });
         if (!agency) {
-          return res.status(STATUS_CODES.NOT_FOUND).json({success: false,status:STATUS_CODES.NOT_FOUND, message: "agency not found." });
-        }  
+          return res.status(STATUS_CODES.NOT_FOUND).json({
+            success: false,
+            status:STATUS_CODES.NOT_FOUND,
+            message: "Agency Link Invalid or expired invitation" });
+        }
+        
+          // Check if invitation has expired
+        if (new Date() > agency.expiry_date) {
+          return res.status(400).json({ 
+            success:false,
+            status:STATUS_CODES.BAD_REQUEST,
+            message: 'Invitation has expired' });
+        }
+        const inviteagency = await prisma.organization_master.findUnique({ 
+          where: { org_id: agency.org_id } 
+        });
+
+
+        await prisma.registration_invitation.update({
+          where: { invitation_id: agency.invitation_id},
+          data: { is_active: false, last_updated_date: new Date() },
+        });
+          //invitation_status: '"Pending"', 
         res.status(STATUS_CODES.OK).json({
           success: true,
           status:STATUS_CODES.OK,
-          data: agency
+          data: {inviteagency,
+            ...agency}
         });
       }catch(error){
+        console.log(error)
         res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ 
         success: false,
         status:STATUS_CODES.INTERNAL_SERVER_ERROR,

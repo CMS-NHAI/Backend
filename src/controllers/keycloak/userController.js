@@ -1,6 +1,7 @@
-import {keycloakAccessToken} from "../../helper/keycloak/keycloakAccessToken.js";
+import { keycloakAccessToken } from "../../helper/keycloak/keycloakAccessToken.js";
 import axios from 'axios';
-import keycloakConfig from '../../constants/keycloak.json' with {type: "json"}; 
+import keycloakConfig from '../../constants/keycloak.json' with {type: "json"};
+import { getUserByEmailOrMobile } from "../../helper/keycloak/getUserByEmailOrMobile.js";
 
 const { realm, serverUrl, client_name_id } = keycloakConfig;
 
@@ -53,7 +54,7 @@ export const keycloakAddUser = async (req, res) => {
     });
   }
 
-  
+
 };
 
 export const keycloakUserList = async (req, res) => {
@@ -67,7 +68,7 @@ export const keycloakUserList = async (req, res) => {
 
   // Get pagination parameters from query (default to page 1 and page size of 10)
   const { page = 1, size = 10 } = req.query;
-  
+
   // Calculate first based on page and size
   const first = (page - 1) * size;
 
@@ -100,7 +101,7 @@ export const keycloakUserList = async (req, res) => {
 
 export const keycloakUserDetail = async (req, res) => {
   const token = await keycloakAccessToken();
- 
+
   if (!token) {
     return res.status(400).json({ msg: "Token is missing or invalid" });
   }
@@ -246,7 +247,7 @@ export const assignRoleToKeycloakUser = async (req, res) => {
 
     res
       .status(200)
-      .json({ success:true, message: `Roles ${roleName.map((r) => r.name).join(", ")} assigned to user successfully.` });
+      .json({ success: true, message: `Roles ${roleName.map((r) => r.name).join(", ")} assigned to user successfully.` });
   } catch (error) {
     res.status(500).json({ success: false, msg: error.message });
   }
@@ -315,40 +316,31 @@ export const unassignRolesToKeycloakUser = async (req, res) => {
 };
 
 
+/**
+ * Method @POST
+ * Description : @keycloakUserPermissionDetail method use to get user detail along with role & permission
+*/
 export const keycloakUserPermissionDetail = async (req, res) => {
   const token = await keycloakAccessToken();
- 
+
   if (!token) {
     return res.status(400).json({ msg: "Token is missing or invalid" });
   }
 
-  // const mobileNumber = req.body.mobile;
-  const mobileNumber = req.body.mobile; // Mobile number with country code
- 
+  const mobileNumber = req.body?.mobile;
+  const userEmail = req.body?.email;
 
-  if (!mobileNumber) {
-    return res.status(400).json({ msg: "Mobile number is required" });
+  if (!mobileNumber && !userEmail) {
+    return res.status(400).json({ msg: "Mobile number or email is required" });
   }
 
   const url = `${serverUrl}/admin/realms/${realm}/users`;
 
-  try {
-    // Fetch all users and filter by mobile number manually
-    const response = await axios.get(`${url}?first=0&max=1000`, {
-      // Adjust pagination parameters if needed
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
 
-    // Filter users based on the provided mobile number
-    const user = response.data.find(
-      (u) =>
-        u.attributes &&
-        u.attributes.mobile &&
-        u.attributes.mobile.includes(mobileNumber)
-    );
-    
+  try {
+
+    const user = await getUserByEmailOrMobile(userEmail, mobileNumber, token);
+
     if (user) {
       // Fetch user roles
       const rolesResponse = await axios.get(`${url}/${user.id}/role-mappings`, {
@@ -356,7 +348,6 @@ export const keycloakUserPermissionDetail = async (req, res) => {
           Authorization: `Bearer ${token}`,
         },
       });
-      
 
       // Extract roles from the response
       const userRoles = {
@@ -368,7 +359,6 @@ export const keycloakUserPermissionDetail = async (req, res) => {
       const clientRolesWithPermissions = Object.entries(
         userRoles.clientRoles
       ).map(([clientId, roles]) => {
-        // console.log(`Client ID: ${clientId}`, roles);
 
         // Ensure `roles` is an array and contains roles
         if (Array.isArray(roles.mappings)) {
@@ -392,7 +382,7 @@ export const keycloakUserPermissionDetail = async (req, res) => {
         {
 
           userId: user.id,
-          roleIds:["b6201b75-17cc-4d6d-99b5-610a18c1aa25"],
+
         },
         {
           headers: {
@@ -412,77 +402,74 @@ export const keycloakUserPermissionDetail = async (req, res) => {
       };
 
       // == user detail start
-      const userDetails= {
+      const userDetails = {
         "id": user.id,
         "username": user.username,
         "firstName": user.firstName,
         "email": user.email,
         "emailVerified": true,
         "attributes": {
-            "mobile": [
-              user.attributes.mobile
-            ]
+          "mobile": [
+            user.attributes.mobile
+          ]
         },
-    }
-   
+      }
+
       // == user detail end
       // Send response with user data and roles
 
-    // filtering data as per the requirement start
-    const roleList = userWithRoles?.roles?.realmRoles
-    const authorization = response?.data?.results
-     console.log("userWithRoles?.roles?.realmRoles =====>>>",  userWithRoles?.roles?.realmRoles)
-     console.log("response?.data?.results =====>>>",  response?.data?.results)
-     const finalOutput =[]
+      // filtering data as per the requirement start
+      const roleList = userWithRoles?.roles?.realmRoles
+      const authorization = response?.data?.results
 
-     // Function to filter policy names based on role list
-     const groupedPolicies = authorization.map(resource => {
+      const finalOutput = []
 
-      const matchingPolicies = resource.policies.filter(policyObj => {
+      // Function to filter policy names based on role list
+      const groupedPolicies = authorization.map(resource => {
+
+        const matchingPolicies = resource.policies.filter(policyObj => {
 
           const policyName = policyObj.policy.name;
           const lastWord = policyName.split(' '); // Extract the last word from policy name
-          lastWord.pop();  
-          let lastWords = lastWord.join(' '); 
+          lastWord.pop();
+          let lastWords = lastWord.join(' ');
           return roleList.includes(lastWords); // Check if last word matches any role in the roleList
-      })
-      // return finalOutput
-      return {
+        })
+        // return finalOutput
+        return {
           // resource: resource.resource.name,
-        
+
           policies: matchingPolicies
-      };
-  }).filter(group => group.policies.length > 0); // Remove any groups with no matching policies
+        };
+      }).filter(group => group.policies.length > 0);
 
-// ========================================
+      const groupedData = groupedPolicies.reduce((acc, obj) => {
+        obj.policies.forEach(policyWrapper => {
+          const { resources, scopes } = policyWrapper.policy;
 
-const groupedData = groupedPolicies.reduce((acc, obj) => {
-  obj.policies.forEach(policyWrapper => {
-      const { resources, scopes } = policyWrapper.policy;
-
-      resources.forEach(resource => {
-          const existingResource = acc.find(item => item.resource === resource);
-          if (existingResource) {
+          resources.forEach(resource => {
+            const existingResource = acc.find(item => item.resource === resource);
+            if (existingResource) {
               // If resource already exists, merge scopes
               existingResource.scope = [...new Set([...existingResource.scope, ...scopes])];
-          } else {
+            } else {
               // If resource doesn't exist, create new entry
               acc.push({ resource, scope: [...scopes] });
-          }
-      });
-  });
-  return acc;
-}, []);
+            }
+          });
+        });
+        return acc;
+      }, []);
 
-     // filtering data as per the requirement end
+      // filtering data as per the requirement end
       res.status(200).json({
         success: true,
         message: "User detail retrived successfully!",
-        userDetail:userDetails,
+        userDetail: userDetails,
         userRole: userWithRoles?.roles?.realmRoles,
         userAuthorization: groupedData
         // userAuthorization: response?.data?.results
-       // userAuthorization: response?.data?.rpt?.authorization,
+        // userAuthorization: response?.data?.rpt?.authorization,
       });
     } else {
       res.status(404).json({ msg: "No user found with the given mobile number." });

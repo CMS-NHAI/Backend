@@ -17,7 +17,7 @@ router.post('/users/status',checkToken, updateUserStatus );
 router.put('/users',checkToken,  updateUser);
 router.post('/users/invitationIndividual', checkToken, createInvitation);
 router.post('/users/inviteUser', checkToken, inviteUser);
-router.post('/users/invite/:id', getUserByInviteId);
+router.get('/users/invite/:id', getUserByInviteId);
 router.post('/users/getUserById', checkToken, getUserById);
 router.put('/users/updateUserById', checkToken, updateUserById);
 router.get('/org/getOffice', checkToken, getOfficeDetails);

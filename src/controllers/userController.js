@@ -1198,6 +1198,55 @@ export const inviteUser = async (req, res) => {
   }
 }
 
+export const getUserByInviteId = async(req, res) =>{
+  const{id}= req.params;
+  try{
+        const agency = await prisma.registration_invitation.findFirst({
+          where :{unique_invitation_id: id}
+        });
+        if (!agency) {
+          return res.status(STATUS_CODES.NOT_FOUND).json({
+            success: false,
+            status:STATUS_CODES.NOT_FOUND,
+            message: "User Link Invalid or expired invitation" });
+        }
+        
+          // Check if invitation has expired
+        if (new Date() > agency.expiry_date) {
+          return res.status(400).json({ 
+            success:false,
+            status:STATUS_CODES.BAD_REQUEST,
+            message: 'Invitation has expired' });
+        }
+        const inviteagency = await prisma.user_master.findUnique({ 
+          where: { user_id: agency.user_id } 
+        });
+
+
+        await prisma.registration_invitation.update({
+          where: { invitation_id: agency.invitation_id},
+          data: { is_active: false, last_updated_date: new Date() },
+        });
+          //invitation_status: '"Pending"', 
+        res.status(STATUS_CODES.OK).json({
+          success: true,
+          status:STATUS_CODES.OK,
+          data: {inviteagency,
+            ...agency}
+        });
+      }catch(error){
+        console.log(error)
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ 
+        success: false,
+        status:STATUS_CODES.INTERNAL_SERVER_ERROR,
+        Message: "Error fetching User."
+      });
+
+  }
+}
+
+
+
 export const getUserById = async (req, res) => {
   const { user_id } = req.body;
 

@@ -1,9 +1,12 @@
 import { keycloakAccessToken } from "../../helper/keycloak/keycloakAccessToken.js";
 import { createResourceAndScopes } from "../../helper/keycloak/createResourceAndScopes.js";
+import { createUpdateResourceAndScopes } from "../../helper/keycloak/createUpdateResourceAndScopes.js";
 import { createPermission } from "../../helper/keycloak/createPermission.js";
+import { createUpdatePermission } from "../../helper/keycloak/createUpdatePermission.js";
 import { createPolicy } from "../../helper/keycloak/createPolicy.js";
 import { createRole } from "../../helper/keycloak/createRole.js";
 import { createScope } from "../../helper/keycloak/createScope.js";
+import { createUpdateScope } from "./createUpdateScope.js";
 import { permissionBasedResourceScope } from "../../helper/keycloak/permissionBasedResourceScope.js";
 import { removeLastWord } from "../../helper/keycloak/removeLastWord.js";
 import { validateRoleAndAuthorization } from "../../helper/keycloak/validateRoleAndAuthorization.js";
@@ -119,28 +122,19 @@ export async function updateRoleAndScopes(req, res) {
       policy.roles.some(role => role.id === checkRoleResponse.data.id)
     );
 
-    console.log("roleBasedPoliciesList ==>>>", roleBasedPoliciesList)
     // **** get filtered policy on the basis of role id end ******
     // **** update policy name on the basis of policy id start
     const policyUpdatePromises = roleBasedPoliciesList.map(async (policy) => {
-      console.log("policy.id ========>>>>", policy.id)
+    
       try {
         const policyName = `${roleName} Policy`;
-       // const policyData = { name: policyName };
-       const policyData ={ 
-        "id" : policy.id,
-        "name" : policyName,
-        "type" : "role",
-        "roles" : [{ "id": "c3c82beb-af00-495f-99fe-e753d6c7a2d6" }]  
-    }
-        const policyDatas = {
+        const policyData = {
           name: policyName,
           type: "role",
           roles: [{ id: checkRoleResponse.data.id }],
         };
 
         // Log the URL to confirm correctness
-        console.log(`Attempting to update policy at URL===>>>>: ${serverUrl}/admin/realms/${realm}/clients/${client_name_id}/authz/resource-server/policy/${policy.id}`);
 
         // Make the PUT request to update the policy
         const response = await axios.put(
@@ -322,6 +316,10 @@ export const keycloakRoleResourecScopeList = async (req, res) => {
 };
 //===========================================
 
+/**
+ * Method @POST
+ * Description : @keycloakaddRole method use to add role. 
+*/
 export const keycloakaddRole = async (req, res) => {
 
   // Get the access token to access other APIs
@@ -393,6 +391,10 @@ export const keycloakaddRole = async (req, res) => {
   }
 };
 
+/**
+ * Method @GET
+ * Description : @keycloakRoleList method use to list out the role. 
+*/
 export const keycloakRoleList = async (req, res) => {
   const token = await keycloakAccessToken();
 
@@ -546,7 +548,4 @@ export const keycloakResourceDetail = async (req, res) => {
 };
 
 // =========================================
-
-
-
 

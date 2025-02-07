@@ -1,12 +1,9 @@
 import { keycloakAccessToken } from "../../helper/keycloak/keycloakAccessToken.js";
 import { createResourceAndScopes } from "../../helper/keycloak/createResourceAndScopes.js";
-import { createUpdateResourceAndScopes } from "../../helper/keycloak/createUpdateResourceAndScopes.js";
 import { createPermission } from "../../helper/keycloak/createPermission.js";
-import { createUpdatePermission } from "../../helper/keycloak/createUpdatePermission.js";
 import { createPolicy } from "../../helper/keycloak/createPolicy.js";
 import { createRole } from "../../helper/keycloak/createRole.js";
 import { createScope } from "../../helper/keycloak/createScope.js";
-import { createUpdateScope } from "./createUpdateScope.js";
 import { permissionBasedResourceScope } from "../../helper/keycloak/permissionBasedResourceScope.js";
 import { removeLastWord } from "../../helper/keycloak/removeLastWord.js";
 import { validateRoleAndAuthorization } from "../../helper/keycloak/validateRoleAndAuthorization.js";

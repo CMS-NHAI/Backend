@@ -932,9 +932,10 @@ export const verifyEmailOtpAgency = async (req, res) => {
 
     if (otp !== '12345') {
       // Validate OTP (here assuming OTP is stored securely for demo purposes)
-      return res.status(STATUS_CODES.UNAUTHORIZED).json({
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
+        // Forcefully added by Testing team Shalendar
         success: false,
-        status: STATUS_CODES.UNAUTHORIZED,
+        status: STATUS_CODES.BAD_REQUEST,
         message: 'Invalid OTP.',
       })
 

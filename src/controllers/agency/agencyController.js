@@ -57,7 +57,7 @@ export const createAgency = async (req, res) => {
       res.status(STATUS_CODES.CREATED).json({
       success: true,
       status: STATUS_CODES.CREATED,
-      message: 'Agency or Organization created successfully and an email sent.',
+      message: 'Agency or Organization created/Invited successfully and an email sent.',
       data:  newAgency,
     } );
   } catch (error) {

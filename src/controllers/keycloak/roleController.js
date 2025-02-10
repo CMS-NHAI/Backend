@@ -11,7 +11,8 @@ import axios from 'axios';
 import keycloakConfig from '../../constants/keycloak.json' with { type: "json" };
 import { createUpdateResourceAndScopes } from "../../helper/keycloak/createUpdateResourceAndScopes.js";
 import { createUpdatePermission } from "../../helper/keycloak/createUpdatePermission.js";
-import { createUpdateScope } from "./createUpdateScope.js";
+import { createUpdateScope } from "../../helper/keycloak/createUpdateScope.js";
+
 
 const { realm, serverUrl, client_name_id } = keycloakConfig;
 

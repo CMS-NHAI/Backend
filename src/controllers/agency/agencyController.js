@@ -4,12 +4,22 @@ import { STATUS_CODES } from "../../constants/statusCodesConstant.js";
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
 import {sendEmail} from '../../services/emailService.js';
+import organizationSchema from "../../validations/agencyValidation.js";
 //import { Message } from "twilio/lib/twiml/MessagingResponse.js";
 
 // Create a new agency
 export const createAgency = async (req, res) => {
   try {
+
     const data = req.body
+
+    const { error } = organizationSchema.validate(req.body);
+  if (error) return res.status(400).json({ 
+    success: false,
+    status:STATUS_CODES.NOT_FOUND,
+    message: error.details[0].message 
+  });
+
     data['date_of_incorporation']  = new Date(data['date_of_incorporation']).toISOString();
     data['empanelment_start_date'] = new Date(data['empanelment_start_date']).toISOString();
     data['empanelment_end_date']   = new Date(data['empanelment_end_date']).toISOString();

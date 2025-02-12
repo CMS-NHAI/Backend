@@ -1125,15 +1125,6 @@ export const inviteUser = async (req, res) => {
       },
     });
    
-    // const createkeycloakData = await axios.post(`${process.env.KEYCLOAK_URL}/api/v1/keycloak/user/create`,{
-    //   username:user.name,
-    //   email:user.email,
-    //   firstName:user.name,
-    //   lastName:user.name,
-    //   mobile:user.mobile_number,
-    //   division:"",
-    //   designation:user.designation,
-    // })
 
     keycloakAddUser({
       username:user.name,
@@ -1146,14 +1137,11 @@ export const inviteUser = async (req, res) => {
     })
 
     
-    const getKeyCloakDataforUser = await axios.post(`${process.env.KEYCLOAK_URL}/api/v1/keycloak/user/permission-detail`,{mobile:user.mobile_number})
-    console.log(getKeyCloakDataforUser,"getKeyCloakDataforUser")
-    const assignRoles =await axios.post(`${process.env.KEYCLOAK_URL}/api/v1/keycloak/user/assign-role`,
-      {
-        userId:getKeyCloakDataforUser.data.userDetail.id,
-        roleName:roles_permission
-    }
-    )
+    const getKeyCloakDataforUser = await getKeycloakUserPermission({mobileNumber:user.mobile_number})
+    const assignRoles =await keycloakUpdateUserRole({
+      userId:getKeyCloakDataforUser.userDetail.id,
+      roleName:roles_permission
+    })
     
 
     ///////////////////////////////////////////////////
@@ -1356,7 +1344,7 @@ export const updateUserById = async (req, res) => {
     if(roles_permission.length > 0){
      const keyCloakData =await getKeycloakUserPermission({mobileNumber:user.mobile_number})
      console.log(keyCloakData,"keyCloakData")
-    await keycloakUpdateUserRole({
+     await keycloakUpdateUserRole({
       userId:keyCloakData.userDetail.id,
       roleName:roles_permission
     })

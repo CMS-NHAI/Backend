@@ -18,7 +18,9 @@ import { v4 as uuidv4 } from 'uuid';
 import crypto from "crypto";
 import axios from "axios";
 import {sendEmail} from '../services/emailService.js';
-
+import { keycloakAddUser } from "../services/keycloakService/keycloakAddUser.js";
+import {getKeycloakUserPermission} from "../services/keycloakService/getUserDetailsPermission.js"
+import { keycloakUpdateUserRole } from "../helper/keycloak/keycloakUpdateUserRole.js";
 const uniqueUsername = uuidv4();
 const getEmployeeBySAPID = async (sapId) => {
   try {
@@ -201,7 +203,8 @@ export const getUserDetails = async (req, res) => {
 
     console.log('Decoded token:', decoded);
     const user = await getUserByPhoneNo(mobile_number);
-
+    const keyCloakDetails = await axios.post(`${process.env.KEYCLOAK_URL}/api/v1/keycloak/user/permission-detail`,{mobile:mobile_number})
+    console.log(JSON.stringify(keyCloakDetails.data),"keyCloakDetails>>>>>>>")
     if (!user) {
       return res.status(STATUS_CODES.OK).json({
         success: "false",
@@ -222,7 +225,9 @@ export const getUserDetails = async (req, res) => {
         email_id: user.email,
         designation: user.designation,
         office_location: user.office_location,
-        user_type: user.user_type
+        user_type: user.user_type,
+        user_role:keyCloakDetails.data.userRole,
+        userAuthroization:keyCloakDetails.data.userAuthorization
       },
     });
   } catch (err) {
@@ -855,7 +860,7 @@ export const verifyEmailOtpLatest = async (req, res) => {
       return res.status(STATUS_CODES.NOT_FOUND).json({
         success: false,
         status: STATUS_CODES.NOT_FOUND,
-        message: 'No OTP found for the User.'
+        message: 'User is not registered with provided email'
       })
     }
     console.log(user)
@@ -932,9 +937,10 @@ export const verifyEmailOtpAgency = async (req, res) => {
 
     if (otp !== '12345') {
       // Validate OTP (here assuming OTP is stored securely for demo purposes)
-      return res.status(STATUS_CODES.UNAUTHORIZED).json({
+      return res.status(STATUS_CODES.BAD_REQUEST).json({
+        // Forcefully added by Testing team Shalendar
         success: false,
-        status: STATUS_CODES.UNAUTHORIZED,
+        status: STATUS_CODES.BAD_REQUEST,
         message: 'Invalid OTP.',
       })
 
@@ -1052,7 +1058,7 @@ export const inviteUser = async (req, res) => {
     status,
     office,
     contracts,
-    roles_permission
+    roles_permission,
   } = req.body;
   const uniqueUsername2 = uuidv4();
   const { error } = inviteUserValidationSchema.validate(req.body);
@@ -1090,7 +1096,10 @@ export const inviteUser = async (req, res) => {
       message: "Email already exists. Please use a different email.",
     });
   }
-  const user_role = "Manager", aadhar_image = "", user_image = "", organization_id = 83;
+  const user_role = "Manager", aadhar_image = "", user_image = "";
+  //if(user_type==="Internal - Contractual"){
+  const organization_id = 83;
+  //}
   try {
     //  Create the user in the database
     const user = await prisma.user_master.create({  
@@ -1115,21 +1124,28 @@ export const inviteUser = async (req, res) => {
         },
       },
     });
+   
 
-    // const keycloakData = await axios.post(`${process.env.KEYCLOAK_URL}/api/v1/keycloak/user/create`,{
-    //   username:user.name,
-    //   email:user.email,
-    //   firstName:user.name,
-    //   lastName:user.name,
-    //   mobile:user.mobile_number,
-    //   division:"",
-    //   designation:user.designation,
-    // })
+   await keycloakAddUser({
+      username:user.name,
+      email:user.email,
+      firstName:user.name,
+      lastName:user.name,
+      mobile:user.mobile_number,
+      division:"",
+      designation:user.designation,
+    })
+
+    
+    const getKeyCloakDataforUser = await getKeycloakUserPermission({mobileNumber:user.mobile_number})
+    const assignRoles =await keycloakUpdateUserRole({
+      userId:getKeyCloakDataforUser.userDetail.id,
+      roleName:roles_permission
+    })
     
 
-
     ///////////////////////////////////////////////////
-    const generateInvitationLink = `http://10.3.0.19:3000/signup?inviteid=${uniqueUsername2}`
+    const generateInvitationLink = `http://10.3.0.19:3000/signup/user/${uniqueUsername2}`
     //const uniqueToken = crypto.randomBytes(16).toString("hex");
     //return `http://localhost:3000/signup/agency?${uniqueToken}`;
 
@@ -1148,34 +1164,41 @@ export const inviteUser = async (req, res) => {
         invite_message: "You are invited to join the platform.",
         expiry_date: new Date(new Date().setDate(new Date().getDate() + 7)),
         created_by: user.user_id,
-        //unique_invitation_id : uniqueUsername2
+        unique_invitation_id : uniqueUsername2
       },
     })
 
     //////////////////////Send Email /////////////
 
     const otp = crypto.randomInt(10000, 99999).toString();
-    const subject = 'OTP FOR AGENCY REGISTRATION: DATALAKE';
-    const text = `Your requested OTP is ${otp}`;
-    let emailtosent = user.email;
+    const subject = 'Invitations Link For User Registration: DATALAKE 3.0';
+        const text = `Dear Sir/Ma'am, 
+                          You have been invited to join Datalake 3.0. Please click the link
+                           ${invitation_link}
+                           Thanks & Regards,
+                           NHAI Group`;
+
+    //const subject = 'OTP FOR USER REGISTRATION: DATALAKE';
+    //const text = `Your requested OTP is ${otp}`;
+    const emailtosent = user.email;
     
   sendEmail(emailtosent, subject, text)
-    .then(info => {
-      console.log('Email sent: ' + info.response);
-      res.status(200).json({ 
-        success : true,
-        status : 200,
-        message: 'OTP sent successfully'     
-      });
+    // .then(info => {
+    //   console.log('Email sent: ' + info.response);
+    //   res.status(200).json({ 
+    //     success : true,
+    //     status : 200,
+    //     message: 'OTP sent successfully'     
+    //   });
       
-    })
+    // })
    
 
     //////////////////////////////////////////////
     res.status(STATUS_CODES.CREATED).json({
       success: true,
       status: STATUS_CODES.CREATED,
-      message: "User invited successfully.",
+      message: "User invited successfully and an email sent..",
       user: user
     });
   } catch (error) {
@@ -1187,6 +1210,55 @@ export const inviteUser = async (req, res) => {
     });
   }
 }
+
+export const getUserByInviteId = async(req, res) =>{
+  const{id}= req.params;
+  try{
+        const agency = await prisma.registration_invitation.findFirst({
+          where :{unique_invitation_id: id}
+        });
+        if (!agency) {
+          return res.status(STATUS_CODES.NOT_FOUND).json({
+            success: false,
+            status:STATUS_CODES.NOT_FOUND,
+            message: "User Link Invalid or expired invitation" });
+        }
+        
+          // Check if invitation has expired
+        if (new Date() > agency.expiry_date) {
+          return res.status(400).json({ 
+            success:false,
+            status:STATUS_CODES.BAD_REQUEST,
+            message: 'Invitation has expired' });
+        }
+        const inviteagency = await prisma.user_master.findUnique({ 
+          where: { user_id: agency.user_id } 
+        });
+
+
+        await prisma.registration_invitation.update({
+          where: { invitation_id: agency.invitation_id},
+          data: { is_active: false, last_updated_date: new Date() },
+        });
+          //invitation_status: '"Pending"', 
+        res.status(STATUS_CODES.OK).json({
+          success: true,
+          status:STATUS_CODES.OK,
+          data: {inviteagency,
+            ...agency}
+        });
+      }catch(error){
+        console.log(error)
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ 
+        success: false,
+        status:STATUS_CODES.INTERNAL_SERVER_ERROR,
+        Message: "Error fetching User."
+      });
+
+  }
+}
+
+
 
 export const getUserById = async (req, res) => {
   const { user_id } = req.body;
@@ -1239,6 +1311,7 @@ export const getUserById = async (req, res) => {
 export const updateUserById = async (req, res) => {
   const { user_id, name, email, mobile_number, office_mobile_number, designation, user_type, status, office, contracts, roles_permission } = req.body;
 
+  
   // Validate user_id using Joi validation schema
   const { error } = editUserValidationSchema.validate(req.body);
 
@@ -1257,6 +1330,7 @@ export const updateUserById = async (req, res) => {
         user_id: user_id, // Fetch user using user_id
       },
     });
+    console.log(user,"user")
 
     // If the user is not found
     if (!user) {
@@ -1266,14 +1340,23 @@ export const updateUserById = async (req, res) => {
         message: "User not found.",
       });
     }
+
+    if(roles_permission.length > 0){
+     const keyCloakData =await getKeycloakUserPermission({mobileNumber:user.mobile_number})
+     console.log(keyCloakData,"keyCloakData")
+     await keycloakUpdateUserRole({
+      userId:keyCloakData.userDetail.id,
+      roleName:roles_permission
+    })
+    }
     const updatedUser = await prisma.user_master.update({
       where: {
         user_id: user_id, // Find user by user_id
       },
       data: {
         name,
-        email,
-        mobile_number,
+        // email,
+        // mobile_number,
         office_mobile_number,
         designation,
         user_type,

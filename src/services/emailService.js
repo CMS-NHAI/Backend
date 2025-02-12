@@ -1,22 +1,25 @@
 import nodemailer from 'nodemailer'
+import { config } from 'dotenv';
+config();
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: process.env.ZOHO_HOST,
+  port: process.env.ZOHO_PORT,
+  secure: process.env.ZOHO_SECURE,
   auth: {
-    user: 'testnhai06@gmail.com',
-    pass: 'osgf xszp qxkn zzdn',
-  },
+    user: process.env.ZOHO_EMAIL,
+    pass: process.env.ZOHO_APP_PASSWORD,
+  }
 });
 
 export const sendEmail = (to, subject, text) => {
 
   const mailOptions = {
-    from: 'testnhai06@gmail.com', // Sender email
-    to: to,                       // Add recipient email
-    subject: subject,             // Add Mail Subject
-    text: text,                   // add text
+    from: process.env.ZOHO_EMAIL,
+    to: to,                       
+    subject: subject,            
+    text: text,
   };
 
   return transporter.sendMail(mailOptions);
 };
-

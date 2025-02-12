@@ -21,7 +21,6 @@ import keycloakAuthRoute from './routes/keycloak/keycloakAuthRoute.js'
 import path from "path";
 import { fileURLToPath } from 'url';
 
-
 const app = express();
 
 config();

@@ -9,12 +9,16 @@ import { removeLastWord } from "../../helper/keycloak/removeLastWord.js";
 import { validateRoleAndAuthorization } from "../../helper/keycloak/validateRoleAndAuthorization.js";
 import axios from 'axios';
 import keycloakConfig from '../../constants/keycloak.json' with { type: "json" };
+import { createUpdateResourceAndScopes } from "../../helper/keycloak/createUpdateResourceAndScopes.js";
+import { createUpdatePermission } from "../../helper/keycloak/createUpdatePermission.js";
+import { createUpdateScope } from "../../helper/keycloak/createUpdateScope.js";
+
 
 const { realm, serverUrl, client_name_id } = keycloakConfig;
 
 /**
  * Method @POST
- * Des : Create role along with resources, scopes, policy, permission
+ * Description : Create role along with resources, scopes, policy, permission
 */
 export const keycloakaddRoleResourceScopePolicyPermission = async (req, res) => {
   const token = await keycloakAccessToken();
@@ -69,7 +73,10 @@ export const keycloakaddRoleResourceScopePolicyPermission = async (req, res) => 
   }
 };
 
-// update resource scope
+/**
+ * Method @PUT
+ * Description : update role, scopes, policy, permission
+*/
 export async function updateRoleAndScopes(req, res) {
 
   const token = await keycloakAccessToken();
@@ -78,15 +85,15 @@ export async function updateRoleAndScopes(req, res) {
     return res.status(400).json({ msg: "Token is missing or invalid" });
   }
 
-  const {roleId, roleName, rolePermission } = req.body
+  const { roleId, roleName, rolePermission } = req.body
 
   try {
 
     // === update role start ===
     const baseRoleUrl = `${serverUrl}/admin/realms/nhai-realm/roles-by-id`;
     const data = {
-        "name":roleName
-      }
+      "name": roleName
+    }
     const updateRole = await axios.put(
       `${baseRoleUrl}/${roleId}`,
       data,
@@ -98,8 +105,59 @@ export async function updateRoleAndScopes(req, res) {
     // === update role end =====
 
     // === update Policy start =
-   
-    // === update polciy end ===
+    // **** get role start ****
+    const keycloakRoleUrl = `${serverUrl}/admin/realms/${realm}/roles/${roleName}`;
+    const checkRoleResponse = await axios.get(keycloakRoleUrl, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    // **** get role end ****
+    // **** get policy start ***
+    const keycloakPolicyListUrl = `${serverUrl}/admin/realms/${realm}/clients/${client_name_id}/authz/resource-server/policy/role`;
+    const checkPolicyResponse = await axios.get(keycloakPolicyListUrl, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    // **** get policy end *****
+    // **** get filtered policy on the basis of role id start ****
+    const roleBasedPoliciesList = checkPolicyResponse.data.filter(policy =>
+      policy.roles.some(role => role.id === checkRoleResponse.data.id)
+    );
+
+    // **** get filtered policy on the basis of role id end ******
+    // **** update policy name on the basis of policy id start
+    const policyUpdatePromises = roleBasedPoliciesList.map(async (policy) => {
+
+      try {
+        const policyName = `${roleName} Policy`;
+        const policyData = {
+          name: policyName,
+          type: "role",
+          roles: [{ id: checkRoleResponse.data.id }],
+        };
+
+        // Log the URL to confirm correctness
+
+        // Make the PUT request to update the policy
+        const response = await axios.put(
+          `${serverUrl}/admin/realms/${realm}/clients/${client_name_id}/authz/resource-server/policy/role/${policy.id}`,
+          policyData,
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+        return response.data;
+      } catch (error) {
+        throw new Error(`Error updating policy ${policy.id}`);
+      }
+    });
+
+    // Await all policy update promises
+    const policyUpdateResults = await Promise.all(policyUpdatePromises);
+    // **** update policy name on the basis of policy id end
+
     let count = 0;
     for (const permission of rolePermission) {
       const permissionName = `${roleName} Permission${count + 1}`;
@@ -118,18 +176,53 @@ export async function updateRoleAndScopes(req, res) {
           headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
         }
       );
-      
+
       count++;
     }
-    
 
-    res.status(200).json({ success: true, message: "Permission updated successfully!"});
+    // ========= create new resource & scope start ======================
+    const authorization = req.body?.authorization
+    if (authorization) {
+
+      // step 1: Create the scope
+      const scopeList = await createUpdateScope(authorization, token)
+      const scopeIds = scopeList.map(scope => scope.id);
+      const scopeNames = scopeList.map(scope => scope.name);
+
+      // Step 2: Create resources and scopes
+      const resourceDetails = await createUpdateResourceAndScopes(authorization, scopeNames, scopeIds, token);
+      const allResourceIds = resourceDetails.map(resource => resource._id);
+
+      // Step 3: Create permission if new resources and scopes are added
+
+      try {
+        await Promise.all(
+          roleBasedPoliciesList.map((policy) =>
+            createUpdatePermission(roleName, policy.id, authorization, token)
+              .catch((error) => {
+                console.error(`Error updating policy ${policy.id}:`, error);
+              })
+          )
+        );
+      } catch (error) {
+        console.error('Error updating one or more policies:', error);
+      }
+
+    }
+
+    // ========= create new resource & scope end ======================
+
+    res.status(200).json({ success: true, message: "Permission updated successfully!" });
 
   } catch (error) {
     res.status(500).json({ success: false, message: 'An error occurred while updating the resource.' });
   }
 }
 
+/**
+ * Method @POST
+ * Description : List of role, scopes, policy, permission
+*/
 export const keycloakRoleResourecScopeList = async (req, res) => {
 
   const token = await keycloakAccessToken();
@@ -140,7 +233,7 @@ export const keycloakRoleResourecScopeList = async (req, res) => {
 
   try {
 
-    // =========== get role start =========================
+    // === get role ========
     const keycloakRoleUrl = `${serverUrl}/admin/realms/${realm}/roles`;
     const roleResponse = await axios.get(keycloakRoleUrl, {
       headers: {
@@ -148,9 +241,8 @@ export const keycloakRoleResourecScopeList = async (req, res) => {
         "Content-Type": "application/json",
       },
     });
-    // =========== get role end ===========================
 
-    // =========== get policy start =======================
+    // === get policy start ====
     const keycloakPolicyUrl = `${serverUrl}/admin/realms/${realm}/clients/${client_name_id}/authz/resource-server/policy`;
 
     const policyResponse = await axios.get(keycloakPolicyUrl, {
@@ -160,22 +252,18 @@ export const keycloakRoleResourecScopeList = async (req, res) => {
       },
     });
 
-    // =========== get policy end ==========================
-
-    // filter policy on the basis of role start
+    // === filter policy on the basis of role start ===
     const roleBasedPolicies = policyResponse.data.filter(p => {
       if (p.config.roles) {
-        // Parse the roles in the policy's config
+
         const policyRoles = JSON.parse(p.config.roles);
 
-        // Check if any of the roles in the policy match any of the role IDs in the role array
         return policyRoles.some(policyRole =>
           roleResponse.data.some(r => r.id === policyRole.id)
         );
       }
       return false;
     });
-    // filter policy on the basis of role end
 
     //==== Get permission list start ==============
     const keycloakPermissionUrl = `${serverUrl}/admin/realms/${realm}/clients/${client_name_id}/authz/resource-server/permission`;
@@ -186,8 +274,6 @@ export const keycloakRoleResourecScopeList = async (req, res) => {
       },
     });
 
-    //==== Get permission list start ==============
-
     // ==== Filter permission on the basis of policy name start ===
     const cleanedPolicyNames = roleBasedPolicies.map(policy => removeLastWord(policy.name));
 
@@ -195,43 +281,13 @@ export const keycloakRoleResourecScopeList = async (req, res) => {
       cleanedPolicyNames.some(cleanedName => removeLastWord(permission.name).includes(cleanedName))
     );
 
-    // ==== Filter permission on the basis of policy name end ===
     const promises = policyBasedPermissions.map((permission) => permissionBasedResourceScope(permission.id, removeLastWord(permission.name), permission.name, token));
     const results = await Promise.all(promises);
 
-    // console.log("results====>>>", results)
-
-    // ====================================
-    // const mergedPermissions = results.reduce((acc, curr) => {
-    //   const existing = acc.find(p => p.permissionName === curr.permissionName);
-
-    //   if (existing) {
-    //     // Merge permissionDetails for the same permissionName
-    //     existing.mergedResult.permissionDetail = [
-    //       ...existing.mergedResult.permissionDetail,
-    //       ...curr.mergedResult.permissionDetail
-    //     ];
-    //   } else {
-    //     // If permissionName does not exist, add it
-    //     acc.push({
-    //       permissionName: curr.permissionName,
-    //       mergedResult: {
-    //         permissionDetail: [...curr.mergedResult.permissionDetail]
-    //       }
-    //     });
-    //   }
-    //   return acc;
-    // }, []);
-
-
-    // ===================================
-
-    const roleDAta = roleResponse.data
+    const roleData = roleResponse.data
       .map(role => {
-        // Find permissions that match the role's name
         const rolePermissions = results.filter(permission => permission.permissionName === role.name);
 
-        // Return the role only if it has matching permissions (non-empty data)
         if (rolePermissions.length > 0) {
           return {
             id: role.id,
@@ -239,21 +295,176 @@ export const keycloakRoleResourecScopeList = async (req, res) => {
             [`roleScopeDetail`]: rolePermissions
           };
         }
-        // Exclude roles with no matching permissions
+
         return null;
       })
       .filter(role => role !== null);
-    //====================================
+
     res.status(200).json({
       success: true,
       message: "Role list retrive successfuly.",
-      data: roleDAta,
+      data: roleData,
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-//===========================================
+
+
+/**
+ * Method @POST
+ * Description : @keycloakaddRole method use to add role. 
+*/
+export const keycloakaddRole = async (req, res) => {
+
+  // Get the access token to access other APIs
+  const token = await keycloakAccessToken();
+  if (!token) {
+    return res.status(400).json({ msg: "Token is missing or invalid" });
+  }
+
+  // Extract and validate the role data from the request body
+  const { role_name, description } = req.body;
+
+  if (!role_name || typeof role_name !== 'string' || role_name.trim() === '') {
+    return res.status(400).json({ msg: "Role name is required" });
+  }
+
+  if (description && typeof description !== 'string') {
+    return res.status(400).json({ msg: "Description should be a string if provided." });
+  }
+
+  const rolePayload = {
+    name: role_name.trim(),
+    description: description ? description.trim() : '',
+  };
+
+  const keycloakUrl = `${serverUrl}/admin/realms/${realm}/roles`;
+
+  try {
+    // Step 1: Check if the role already exists
+    const checkRoleResponse = await axios.get(keycloakUrl, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const existingRole = checkRoleResponse.data.find(role => role.name === role_name.trim());
+
+    if (existingRole) {
+      return res.status(400).json({ msg: `Role '${role_name}' already exists. Please choose a different role name.` });
+    }
+
+    // Step 2: Create the role if it doesn't exist
+    const response = await axios.post(keycloakUrl, rolePayload, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (response.status === 201) {
+      res.status(201).json({
+        success: true,
+        message: "Role added to Keycloak successfully.",
+      });
+    } else {
+      res.status(500).json({ success: false, message: "Failed to add role to Keycloak." });
+    }
+  } catch (error) {
+   
+    if (error.response) {
+      return res.status(error.response.status).json({ success: false, message: error.response.data.message });
+    } else if (error.request) {
+      return res.status(500).json({ success: false, message: "No response from Keycloak server." });
+    } else {
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
+};
+
+/**
+ * Method @GET
+ * Description : @keycloakRoleList method use to list out the role. 
+*/
+export const keycloakRoleList = async (req, res) => {
+  const token = await keycloakAccessToken();
+
+  if (!token) {
+    return res.status(400).json({ msg: "Token is missing or invalid" });
+  }
+
+  const keycloakUrl = `${serverUrl}/admin/realms/${realm}/roles`;
+
+  try {
+    // Pagination logic
+    const pageSize = parseInt(req.query.pageSize) || 10;
+    const page = parseInt(req.query.page) || 1;
+
+    if (pageSize <= 0 || page <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid page or pageSize. Both should be positive integers.',
+      });
+    }
+
+    const skip = (page - 1) * pageSize;
+    const take = pageSize;
+
+    // Fetch roles list from Keycloak with pagination
+    const response = await axios.get(keycloakUrl, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      params: {
+        first: skip,
+        max: take
+      }
+    });
+
+    // Handle cases where the data might be empty
+    if (!response.data || response.data.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "No roles found.",
+        data: [],
+        pagination: {
+          page,
+          pageSize,
+          total: 0,
+          totalPages: 0,
+        },
+      });
+    }
+
+    // Optionally, fetch total roles count (if needed)
+    const totalRolesResponse = await axios.get(keycloakUrl, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    const totalRolesCount = totalRolesResponse.data.length;
+
+    res.status(200).json({
+      success: true,
+      message: "Role list retrieved successfully.",
+      data: response.data,
+      pagination: {
+        page,
+        pageSize,
+        total: totalRolesCount,
+        totalPages: Math.ceil(totalRolesCount / pageSize),
+      },
+    });
+
+  } catch (error) {
+    console.error("Error fetching roles:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 // update single resource and scope
 export async function updateSingleResourceScopes(req, res) {
@@ -325,160 +536,4 @@ export const keycloakResourceDetail = async (req, res) => {
     res.status(500).json({ success: false, msg: error.message });
   }
 };
-
-// =========================================
-
-export const keycloakaddRole = async (req, res) => {
-
-  // Get the access token to access other APIs
-  const token = await keycloakAccessToken();
-  if (!token) {
-    return res.status(400).json({ msg: "Token is missing or invalid" });
-  }
-
-  // Extract and validate the role data from the request body
-  const { role_name, description } = req.body;
-
-  if (!role_name || typeof role_name !== 'string' || role_name.trim() === '') {
-    return res.status(400).json({ msg: "Role name is required" });
-  }
-
-  if (description && typeof description !== 'string') {
-    return res.status(400).json({ msg: "Description should be a string if provided." });
-  }
-
-  const rolePayload = {
-    name: role_name.trim(),
-    description: description ? description.trim() : '',
-  };
-
-  const keycloakUrl = `${serverUrl}/admin/realms/${realm}/roles`;
-
-  try {
-    // Step 1: Check if the role already exists
-    const checkRoleResponse = await axios.get(keycloakUrl, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const existingRole = checkRoleResponse.data.find(role => role.name === role_name.trim());
-
-    if (existingRole) {
-      return res.status(400).json({ msg: `Role '${role_name}' already exists. Please choose a different role name.` });
-    }
-
-    // Step 2: Create the role if it doesn't exist
-    const response = await axios.post(keycloakUrl, rolePayload, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (response.status === 201) {
-      res.status(201).json({
-        success: true,
-        message: "Role added to Keycloak successfully.",
-      });
-    } else {
-      res.status(500).json({ success: false, message: "Failed to add role to Keycloak." });
-    }
-  } catch (error) {
-    // Handle axios errors
-    if (error.response) {
-      // Server returned an error
-      return res.status(error.response.status).json({ success: false, message: error.response.data.message });
-    } else if (error.request) {
-      // No response from server
-      return res.status(500).json({ success: false, message: "No response from Keycloak server." });
-    } else {
-      // Other error
-      return res.status(500).json({ success: false, message: error.message });
-    }
-  }
-};
-
-export const keycloakRoleList = async (req, res) => {
-  const token = await keycloakAccessToken();
-
-  if (!token) {
-    return res.status(400).json({ msg: "Token is missing or invalid" });
-  }
-
-  const keycloakUrl = `${serverUrl}/admin/realms/${realm}/roles`;
-
-  try {
-    // Pagination logic
-    const pageSize = parseInt(req.query.pageSize) || 10;
-    const page = parseInt(req.query.page) || 1;
-
-    if (pageSize <= 0 || page <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid page or pageSize. Both should be positive integers.',
-      });
-    }
-
-    const skip = (page - 1) * pageSize;
-    const take = pageSize;
-
-    // Fetch roles list from Keycloak with pagination
-    const response = await axios.get(keycloakUrl, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      params: {
-        first: skip,
-        max: take
-      }
-    });
-
-    // Handle cases where the data might be empty
-    if (!response.data || response.data.length === 0) {
-      return res.status(200).json({
-        success: true,
-        message: "No roles found.",
-        data: [],
-        pagination: {
-          page,
-          pageSize,
-          total: 0,
-          totalPages: 0,
-        },
-      });
-    }
-
-    // Optionally, fetch total roles count (if needed)
-    const totalRolesResponse = await axios.get(keycloakUrl, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    console.log("Total roles response:", totalRolesResponse.data);
-
-    const totalRolesCount = totalRolesResponse.data.length;
-
-    res.status(200).json({
-      success: true,
-      message: "Role list retrieved successfully.",
-      data: response.data,
-      pagination: {
-        page,
-        pageSize,
-        total: totalRolesCount,
-        totalPages: Math.ceil(totalRolesCount / pageSize),
-      },
-    });
-
-  } catch (error) {
-    console.error("Error fetching roles:", error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-
 

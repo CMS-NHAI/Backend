@@ -1355,8 +1355,8 @@ export const updateUserById = async (req, res) => {
       },
       data: {
         name,
-        email,
-        mobile_number,
+        // email,
+        // mobile_number,
         office_mobile_number,
         designation,
         user_type,

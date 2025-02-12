@@ -20,7 +20,7 @@ export const keycloakAddUser = async (userData) => {
     } = userData;
   
     const userPayload = {
-      username: username,
+      username: email,
       email: email,
       firstName: firstName,
       lastName: lastName,

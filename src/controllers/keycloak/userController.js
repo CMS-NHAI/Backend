@@ -22,7 +22,7 @@ export const keycloakAddUser = async (req, res) => {
   } = req.body;
 
   const userPayload = {
-    username: username,
+    username: email,
     email: email,
     firstName: firstName,
     lastName: lastName,

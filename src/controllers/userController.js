@@ -860,7 +860,7 @@ export const verifyEmailOtpLatest = async (req, res) => {
       return res.status(STATUS_CODES.NOT_FOUND).json({
         success: false,
         status: STATUS_CODES.NOT_FOUND,
-        message: 'No OTP found for the User.'
+        message: 'User is not registered with provided email'
       })
     }
     console.log(user)

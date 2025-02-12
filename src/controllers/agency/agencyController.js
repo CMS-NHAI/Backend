@@ -13,12 +13,12 @@ export const createAgency = async (req, res) => {
 
     const data = req.body
 
-    const { error } = organizationSchema.validate(req.body);
+   /* const { error } = organizationSchema.validate(req.body);
   if (error) return res.status(400).json({ 
     success: false,
     status:STATUS_CODES.NOT_FOUND,
     message: error.details[0].message 
-  });
+  }); */
 
     data['date_of_incorporation']  = new Date(data['date_of_incorporation']).toISOString();
     data['empanelment_start_date'] = new Date(data['empanelment_start_date']).toISOString();

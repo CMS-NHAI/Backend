@@ -1,6 +1,6 @@
 import keycloakConfig from '../../constants/keycloak.json' with {type: "json"};
 const { realm, serverUrl } = keycloakConfig;
-import { keycloakAccessToken } from './keycloakAccessToken';
+import { keycloakAccessToken } from './keycloakAccessToken.js';
 import axios from 'axios';
 
 export const keycloakUpdateUserRole = async (roleData) => {
@@ -109,10 +109,9 @@ export const keycloakUpdateUserRole = async (roleData) => {
         });
 
 
-        res
-            .status(200)
-            .json({ success: true, message: `User Role updated successfully.` });
+        return({ success: true, message: `User Role updated successfully.` });
     } catch (error) {
-        res.status(500).json({ success: false, msg: error.message });
+        console.log(error,"error occured")
+        throw new Error({ success: false, msg: error.message });
     }
 };

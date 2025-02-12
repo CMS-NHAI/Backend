@@ -19,7 +19,8 @@ import crypto from "crypto";
 import axios from "axios";
 import {sendEmail} from '../services/emailService.js';
 import { keycloakAddUser } from "../services/keycloakService/keycloakAddUser.js";
-
+import {getKeycloakUserPermission} from "../services/keycloakService/getUserDetailsPermission.js"
+import { keycloakUpdateUserRole } from "../helper/keycloak/keycloakUpdateUserRole.js";
 const uniqueUsername = uuidv4();
 const getEmployeeBySAPID = async (sapId) => {
   try {
@@ -1341,6 +1342,7 @@ export const updateUserById = async (req, res) => {
         user_id: user_id, // Fetch user using user_id
       },
     });
+    console.log(user,"user")
 
     // If the user is not found
     if (!user) {
@@ -1349,6 +1351,15 @@ export const updateUserById = async (req, res) => {
         status: 200,
         message: "User not found.",
       });
+    }
+
+    if(roles_permission.length > 0){
+     const keyCloakData =await getKeycloakUserPermission({mobileNumber:user.mobile_number})
+     console.log(keyCloakData,"keyCloakData")
+    await keycloakUpdateUserRole({
+      userId:keyCloakData.userDetail.id,
+      roleName:roles_permission
+    })
     }
     const updatedUser = await prisma.user_master.update({
       where: {

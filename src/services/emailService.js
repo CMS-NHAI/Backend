@@ -1,22 +1,23 @@
 import nodemailer from 'nodemailer'
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: "smtp.zoho.in",
+  port: 465,
+  secure: true,
   auth: {
-    user: 'testnhai06@gmail.com',
-    pass: 'osgf xszp qxkn zzdn',
-  },
+    user: 'kumar_mukul@zohomail.in',
+    pass: 'eJq7tSfMNw23',
+  }
 });
 
 export const sendEmail = (to, subject, text) => {
 
   const mailOptions = {
-    from: 'testnhai06@gmail.com', // Sender email
-    to: to,                       // Add recipient email
-    subject: subject,             // Add Mail Subject
-    text: text,                   // add text
+    from: 'kumar_mukul@zohomail.in',
+    to: to,                       
+    subject: subject,            
+    text: text,
   };
 
   return transporter.sendMail(mailOptions);
 };
-

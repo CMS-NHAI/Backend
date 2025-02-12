@@ -18,6 +18,7 @@ import { v4 as uuidv4 } from 'uuid';
 import crypto from "crypto";
 import axios from "axios";
 import {sendEmail} from '../services/emailService.js';
+import { keycloakAddUser } from "../services/keycloakService/keycloakAddUser.js";
 
 const uniqueUsername = uuidv4();
 const getEmployeeBySAPID = async (sapId) => {
@@ -1123,7 +1124,17 @@ export const inviteUser = async (req, res) => {
       },
     });
    
-    const createkeycloakData = await axios.post(`${process.env.KEYCLOAK_URL}/api/v1/keycloak/user/create`,{
+    // const createkeycloakData = await axios.post(`${process.env.KEYCLOAK_URL}/api/v1/keycloak/user/create`,{
+    //   username:user.name,
+    //   email:user.email,
+    //   firstName:user.name,
+    //   lastName:user.name,
+    //   mobile:user.mobile_number,
+    //   division:"",
+    //   designation:user.designation,
+    // })
+
+    keycloakAddUser({
       username:user.name,
       email:user.email,
       firstName:user.name,
@@ -1133,7 +1144,6 @@ export const inviteUser = async (req, res) => {
       designation:user.designation,
     })
 
-console.log(createkeycloakData,"createkeycloakData>>>>>>>>>")
     
     const getKeyCloakDataforUser = await axios.post(`${process.env.KEYCLOAK_URL}/api/v1/keycloak/user/permission-detail`,{mobile:user.mobile_number})
     console.log(getKeyCloakDataforUser,"getKeyCloakDataforUser")
@@ -1312,6 +1322,7 @@ export const getUserById = async (req, res) => {
 export const updateUserById = async (req, res) => {
   const { user_id, name, email, mobile_number, office_mobile_number, designation, user_type, status, office, contracts, roles_permission } = req.body;
 
+  
   // Validate user_id using Joi validation schema
   const { error } = editUserValidationSchema.validate(req.body);
 

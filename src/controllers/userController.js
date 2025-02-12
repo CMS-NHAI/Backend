@@ -1126,7 +1126,7 @@ export const inviteUser = async (req, res) => {
     });
    
 
-    keycloakAddUser({
+   await keycloakAddUser({
       username:user.name,
       email:user.email,
       firstName:user.name,

@@ -32,5 +32,5 @@ export const editUserValidationSchema = Joi.object({
         contract_disc: Joi.string().required(),
       })
     ).optional(),  
-  roles_permission: Joi.array().items(Joi.string()).allow(null).optional(),  
+  roles_permission: Joi.array().optional(),  
 });

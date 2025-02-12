@@ -18,7 +18,9 @@ import { v4 as uuidv4 } from 'uuid';
 import crypto from "crypto";
 import axios from "axios";
 import {sendEmail} from '../services/emailService.js';
-
+import { keycloakAddUser } from "../services/keycloakService/keycloakAddUser.js";
+import {getKeycloakUserPermission} from "../services/keycloakService/getUserDetailsPermission.js"
+import { keycloakUpdateUserRole } from "../helper/keycloak/keycloakUpdateUserRole.js";
 const uniqueUsername = uuidv4();
 const getEmployeeBySAPID = async (sapId) => {
   try {
@@ -1123,7 +1125,8 @@ export const inviteUser = async (req, res) => {
       },
     });
    
-    const createkeycloakData = await axios.post(`${process.env.KEYCLOAK_URL}/api/v1/keycloak/user/create`,{
+
+    keycloakAddUser({
       username:user.name,
       email:user.email,
       firstName:user.name,
@@ -1133,16 +1136,12 @@ export const inviteUser = async (req, res) => {
       designation:user.designation,
     })
 
-console.log(createkeycloakData,"createkeycloakData>>>>>>>>>")
     
-    const getKeyCloakDataforUser = await axios.post(`${process.env.KEYCLOAK_URL}/api/v1/keycloak/user/permission-detail`,{mobile:user.mobile_number})
-    console.log(getKeyCloakDataforUser,"getKeyCloakDataforUser")
-    const assignRoles =await axios.post(`${process.env.KEYCLOAK_URL}/api/v1/keycloak/user/assign-role`,
-      {
-        userId:getKeyCloakDataforUser.data.userDetail.id,
-        roleName:roles_permission
-    }
-    )
+    const getKeyCloakDataforUser = await getKeycloakUserPermission({mobileNumber:user.mobile_number})
+    const assignRoles =await keycloakUpdateUserRole({
+      userId:getKeyCloakDataforUser.userDetail.id,
+      roleName:roles_permission
+    })
     
 
     ///////////////////////////////////////////////////
@@ -1312,6 +1311,7 @@ export const getUserById = async (req, res) => {
 export const updateUserById = async (req, res) => {
   const { user_id, name, email, mobile_number, office_mobile_number, designation, user_type, status, office, contracts, roles_permission } = req.body;
 
+  
   // Validate user_id using Joi validation schema
   const { error } = editUserValidationSchema.validate(req.body);
 
@@ -1330,6 +1330,7 @@ export const updateUserById = async (req, res) => {
         user_id: user_id, // Fetch user using user_id
       },
     });
+    console.log(user,"user")
 
     // If the user is not found
     if (!user) {
@@ -1338,6 +1339,15 @@ export const updateUserById = async (req, res) => {
         status: 200,
         message: "User not found.",
       });
+    }
+
+    if(roles_permission.length > 0){
+     const keyCloakData =await getKeycloakUserPermission({mobileNumber:user.mobile_number})
+     console.log(keyCloakData,"keyCloakData")
+     await keycloakUpdateUserRole({
+      userId:keyCloakData.userDetail.id,
+      roleName:roles_permission
+    })
     }
     const updatedUser = await prisma.user_master.update({
       where: {

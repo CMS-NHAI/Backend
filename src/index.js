@@ -20,6 +20,7 @@ import authrouter from "./routes/authRoute.js"
 import keycloakAuthRoute from './routes/keycloak/keycloakAuthRoute.js'
 import path from "path";
 import { fileURLToPath } from 'url';
+import { sendEmail } from "./services/emailService.js";
 
 
 const app = express();
@@ -77,6 +78,14 @@ app.get('/', (req, res) => {
     message: `Welcome to Datalake 3.0 ${APP_CONSTANTS.APP_NAME} v${APP_CONSTANTS.VERSION}`,
   });
 });
+
+app.post('/send-email', async (req, res)=>{
+  const  {to, subject, text} = req.body
+  await sendEmail(to, subject, text)
+  res.status(200).send({ message:"Email send successfully."})
+})
+
+
 
 const PORT =  process.env.PORT || 3004;
 //const server = http.createServer(app);

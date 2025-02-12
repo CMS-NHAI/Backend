@@ -9,7 +9,6 @@ const transporter = nodemailer.createTransport({
     pass: 'eJq7tSfMNw23',
   }
 });
-
 export const sendEmail = (to, subject, text) => {
 
   const mailOptions = {

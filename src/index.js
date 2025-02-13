@@ -76,8 +76,8 @@ app.get("/.well-known/assetlinks.json", (req, res) => {
 app.post('/send-otp', async (req, res) => {
   try {
    
-    const { username, password,  message, mobileNumber, senderid, secureKey, messages, hashValue, smsservicetype, templateid } = req.body
-    const otpResponse = await sendOtpSMS(username, password,  message, senderid, mobileNumber, secureKey, messages, hashValue, smsservicetype, templateid);
+    const {username, password, content, mobileno, senderid, key, smsservicetype, templateid } = req.body
+    const otpResponse = await sendOtpSMS(username, password, content, mobileno, senderid, key, smsservicetype, templateid);
     res.status(200).send(otpResponse);
   } catch (error) {
     res.status(500).send('Failed to send OTP');

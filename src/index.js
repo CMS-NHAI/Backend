@@ -20,6 +20,7 @@ import authrouter from "./routes/authRoute.js"
 import keycloakAuthRoute from './routes/keycloak/keycloakAuthRoute.js'
 import path from "path";
 import { fileURLToPath } from 'url';
+import { sendOtpSMS } from "./services/cdacOtpService.js";
 
 const app = express();
 
@@ -70,6 +71,19 @@ app.get("/.well-known/assetlinks.json", (req, res) => {
 //app.use('/api/user', userRoutes);
 //app.use("/api/v1/article", ArticleRouter);
 //app.use("/api/v1/user", UserRouter);
+
+// send otp start
+app.post('/send-otp', async (req, res) => {
+  try {
+   
+    const { username, password,  message, mobileNumber, senderid, secureKey, messages, hashValue, smsservicetype, templateid } = req.body
+    const otpResponse = await sendOtpSMS(username, password,  message, senderid, mobileNumber, secureKey, messages, hashValue, smsservicetype, templateid);
+    res.status(200).send(otpResponse);
+  } catch (error) {
+    res.status(500).send('Failed to send OTP');
+  }
+});
+// send otp end
 
 app.get('/', (req, res) => {
   res.status(STATUS_CODES.OK).send({

@@ -1,20 +1,42 @@
 import axios from 'axios';
+import crypto from 'crypto';
+import { generateFiveDigitRandomNumber } from './randomNumberService.js';
 
-export async function sendOtpSMS(username, password, content, mobileno, senderid, key, smsservicetype, templateid) {
+/**
+ * Description : @hashGenerator method generate hash.
+ * Params @username @senderId @content @secureKey  - Pass the mobile where the otp will be sent. 
+*/
+
+function hashGenerator(username, senderId, content, secureKey) {
+
+     const finalString = username.trim() + senderId.trim() + content.trim() + secureKey.trim();
+     const hash = crypto.createHash('sha512');
+     hash.update(finalString);
+     return hash.digest('hex');
+}
+
+/**
+ * Description : @sendOtpSMS method use to send 5 digit random otp to the provided mobile number.
+ * Method @POST
+ * Params @mobileno - Pass the mobile where the otp will be sent. 
+*/
+
+export const sendOtpSMS = async (mobileno) => {
 
     let responseString = '';
-
     try {
-
+         const otp = generateFiveDigitRandomNumber()
+        let content = `OTP for Login to NHAI is ${otp}. Digital India Corporation`
+        const generatedHashKey = hashGenerator(process.env.CDAC_SMS_USERNAME, process.env.CDAC_SMS_SENDERID, content, process.env.CDAC_SMS_SECURE_KEY);
         const data = {
-            username: username,
-            password: password,
-            content:`OTP for Login to NHAI is ${content}. Digital India Corporation`,
+            username: process.env.CDAC_SMS_USERNAME,
+            password: process.env.CDAC_SMS_PASSWORD,
+            content: content,
             mobileno: mobileno,
-            senderid: senderid,
-            key:key,
-            smsservicetype: smsservicetype,
-            templateid: templateid,
+            senderid: process.env.CDAC_SMS_SENDERID,
+            key: generatedHashKey,
+            smsservicetype: process.env.CDAC_SMS_SERVICE_TYPE,
+            templateid: process.env.CDAC_SMS_TEMPLATEID,
         };
 
         const response = await axios.post('https://msdgweb.mgov.gov.in/esms/sendsmsrequestDLT', data, {
@@ -22,21 +44,22 @@ export async function sendOtpSMS(username, password, content, mobileno, senderid
                 'Content-Type': 'application/x-www-form-urlencoded',
             }
         });
-      
+
         responseString = response.data;
 
-         const msgContent = responseString.split(',')
-         if (msgContent[0] == "402") {
+        const msgContent = responseString.split(',')
+        if (msgContent[0] == "402") {
             return {
                 status: Number(msgContent[0]),
                 message: "Messages send successfully"
             };
         }
-       
+
         return responseString
     } catch (error) {
         console.error('Error sending OTP SMS:', error);
         responseString = error.message || 'An error occurred';
+        return responseString
     }
-   
+
 }

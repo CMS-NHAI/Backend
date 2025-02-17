@@ -9,7 +9,7 @@ import { generateFiveDigitRandomNumber } from './randomNumberService.js';
 
 function hashGenerator(username, senderId, content, secureKey) {
 
-     const finalString = username.trim() + senderId.trim() + content.trim() + secureKey.trim();
+     const finalString = username?.trim() + senderId?.trim() + content?.trim() + secureKey?.trim();
      const hash = crypto.createHash('sha512');
      hash.update(finalString);
      return hash.digest('hex');

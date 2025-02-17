@@ -1145,7 +1145,7 @@ export const inviteUser = async (req, res) => {
     
 
     ///////////////////////////////////////////////////
-    const generateInvitationLink = `http://10.3.0.29:3000/signup/user/${uniqueUsername2}`
+    const generateInvitationLink = `http://10.3.0.19:3000/signup/user/${uniqueUsername2}`
     //const uniqueToken = crypto.randomBytes(16).toString("hex");
     //return `http://localhost:3000/signup/agency?${uniqueToken}`;
 

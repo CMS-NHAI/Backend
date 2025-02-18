@@ -1101,7 +1101,7 @@ export const inviteUser = async (req, res) => {
   }
   const user_role = "Manager", aadhar_image = "", user_image = "";
   //if(user_type==="Internal - Contractual"){
-  const organization_id = 1;
+  const organization_id = 83;
   //}
   try {
     //  Create the user in the database

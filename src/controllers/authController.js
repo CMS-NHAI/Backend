@@ -354,13 +354,14 @@ export const digiLockerFinalRegistrationMobile = async(req, res)=>{
 
   // =======================================================================
  const { vectorImage } = req.body
- const finalVectorImage = `${vectorImage}::tenant_nhai.vector(300)`
+ console.log("vectorImage ====>>>>", vectorImage)
+
   // =======================================================================
 
   const result = await prisma.$queryRaw`
         UPDATE tenant_nhai."user_master"
         SET "is_digilocker_verified" = true,
-         "user_vector_image" = ${finalVectorImage}
+         "user_vector_image" = ${vectorImage}::tenant_nhai.vector(300)
         WHERE "email" = ${userEmail}
         RETURNING *;
     `;

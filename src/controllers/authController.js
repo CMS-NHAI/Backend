@@ -361,7 +361,7 @@ export const digiLockerFinalRegistrationMobile = async(req, res)=>{
   const result = await prisma.$queryRaw`
         UPDATE tenant_nhai."user_master"
         SET "is_digilocker_verified" = true,
-         "user_vector_image" = ${vectorImage}::tenant_nhai.vector(300)
+         "user_vector_image" = ${vectorImage}::tenant_nhai.vector(128)
         WHERE "email" = ${userEmail}
         RETURNING *;
     `;

@@ -69,7 +69,7 @@ export const keycloakaddRoleResourceScopePolicyPermission = async (req, res) => 
     });
   } catch (error) {
     // Handle validation or API errors
-    res.status(500).json({ success: false, msg: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -82,7 +82,7 @@ export async function updateRoleAndScopes(req, res) {
   const token = await keycloakAccessToken();
 
   if (!token) {
-    return res.status(400).json({ msg: "Token is missing or invalid" });
+    return res.status(400).json({ message: "Token is missing or invalid" });
   }
 
   const { roleId, roleName, rolePermission } = req.body
@@ -320,18 +320,18 @@ export const keycloakaddRole = async (req, res) => {
   // Get the access token to access other APIs
   const token = await keycloakAccessToken();
   if (!token) {
-    return res.status(400).json({ msg: "Token is missing or invalid" });
+    return res.status(400).json({ message: "Token is missing or invalid" });
   }
 
   // Extract and validate the role data from the request body
   const { role_name, description } = req.body;
 
   if (!role_name || typeof role_name !== 'string' || role_name.trim() === '') {
-    return res.status(400).json({ msg: "Role name is required" });
+    return res.status(400).json({ message: "Role name is required" });
   }
 
   if (description && typeof description !== 'string') {
-    return res.status(400).json({ msg: "Description should be a string if provided." });
+    return res.status(400).json({ message: "Description should be a string if provided." });
   }
 
   const rolePayload = {
@@ -352,7 +352,7 @@ export const keycloakaddRole = async (req, res) => {
     const existingRole = checkRoleResponse.data.find(role => role.name === role_name.trim());
 
     if (existingRole) {
-      return res.status(400).json({ msg: `Role '${role_name}' already exists. Please choose a different role name.` });
+      return res.status(400).json({ message: `Role '${role_name}' already exists. Please choose a different role name.` });
     }
 
     // Step 2: Create the role if it doesn't exist
@@ -391,7 +391,7 @@ export const keycloakRoleList = async (req, res) => {
   const token = await keycloakAccessToken();
 
   if (!token) {
-    return res.status(400).json({ msg: "Token is missing or invalid" });
+    return res.status(400).json({ message: "Token is missing or invalid" });
   }
 
   const keycloakUrl = `${serverUrl}/admin/realms/${realm}/roles`;
@@ -516,7 +516,7 @@ export const keycloakResourceDetail = async (req, res) => {
   const { resourceId } = req.body
 
   if (!token) {
-    return res.status(400).json({ msg: "Token is missing or invalid" });
+    return res.status(400).json({ message: "Token is missing or invalid" });
   }
   const keycloakResourceUrl = `${serverUrl}/admin/realms/${realm}/clients/${client_name_id}/authz/resource-server/resource/${resourceId}`;
 
@@ -529,11 +529,11 @@ export const keycloakResourceDetail = async (req, res) => {
     });
     res.status(200).json({
       success: true,
-      msg: "Resource detail retive successfuly.",
+      message: "Resource detail retive successfuly.",
       data: response.data,
     });
   } catch (error) {
-    res.status(500).json({ success: false, msg: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 

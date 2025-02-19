@@ -63,3 +63,51 @@ export const sendOtpSMS = async (mobileno) => {
     }
 
 }
+
+
+export const sendOtpSMSForInvite = async (mobileno, invitation_link) => {
+
+    let responseString = '';
+    try {
+         const otp = generateFiveDigitRandomNumber()
+        let content = `Dear Sir/Ma'am, 
+                          You have been invited to join Datalake 3.0. Please click the link
+                           ${invitation_link}
+                           Thanks & Regards,
+                           NHAI Group`
+        const generatedHashKey = hashGenerator(process.env.CDAC_SMS_USERNAME, process.env.CDAC_SMS_SENDERID, content, process.env.CDAC_SMS_SECURE_KEY);
+        const data = {
+            username: process.env.CDAC_SMS_USERNAME,
+            password: process.env.CDAC_SMS_PASSWORD,
+            content: content,
+            mobileno: mobileno,
+            senderid: process.env.CDAC_SMS_SENDERID,
+            key: generatedHashKey,
+            smsservicetype: process.env.CDAC_SMS_SERVICE_TYPE,
+            templateid: process.env.CDAC_SMS_TEMPLATEID,
+        };
+
+        const response = await axios.post('https://msdgweb.mgov.gov.in/esms/sendsmsrequestDLT', data, {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            }
+        });
+
+        responseString = response.data;
+
+        const msgContent = responseString.split(',')
+        if (msgContent[0] == "402") {
+            return {
+                status: Number(msgContent[0]),
+                message: "Messages send successfully"
+            };
+        }
+
+        return responseString
+    } catch (error) {
+        console.error('Error sending OTP SMS:', error);
+        responseString = error.message || 'An error occurred';
+        return responseString
+    }
+
+}

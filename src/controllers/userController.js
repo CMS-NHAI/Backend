@@ -21,6 +21,7 @@ import {sendEmail} from '../services/emailService.js';
 import { keycloakAddUser } from "../services/keycloakService/keycloakAddUser.js";
 import {getKeycloakUserPermission} from "../services/keycloakService/getUserDetailsPermission.js"
 import { keycloakUpdateUserRole } from "../helper/keycloak/keycloakUpdateUserRole.js";
+import { sendOtpSMS, sendOtpSMSForInvite } from "../services/cdacOtpService.js";
 const uniqueUsername = uuidv4();
 const getEmployeeBySAPID = async (sapId) => {
   try {
@@ -398,6 +399,8 @@ export const authenticateEntity = async(req,res) => {
             }
 
     const accessToken = await generateEntityAccessToken(code,req,res);
+    console.log("accessToken ======>>>>>>", accessToken)
+
     const apiResponse = await fetch('https://entity.digilocker.gov.in/public/oauth2/1/entity', {
       method: 'GET',
       headers: {
@@ -1167,6 +1170,14 @@ export const inviteUser = async (req, res) => {
         unique_invitation_id : uniqueUsername2
       },
     })
+
+    ///////////////SEND SMS ////////////////////////
+     let phoneNumber = user.mobile_number;
+        if (phoneNumber.startsWith("+91")) {
+          phoneNumber = phoneNumber.substring(3); // Remove first 3 characters
+        }
+       // console.log(phoneNumber); // Output: 9555436473
+        await sendOtpSMSForInvite(phoneNumber, invitation_link)
 
     //////////////////////Send Email /////////////
 

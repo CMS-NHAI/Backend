@@ -352,7 +352,7 @@ export const keycloakaddRole = async (req, res) => {
     const existingRole = checkRoleResponse.data.find(role => role.name === role_name.trim());
 
     if (existingRole) {
-      return res.status(400).json({ message: `Role '${role_name}' already exists. Please choose a different role name.` });
+      return res.status(400).json({ message: `Role ${role_name} already exists. Please choose a different role name.` });
     }
 
     // Step 2: Create the role if it doesn't exist

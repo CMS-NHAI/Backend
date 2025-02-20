@@ -1313,59 +1313,12 @@ export const getUserById = async (req, res) => {
   }
 
   try {
-    const user = await prisma.$queryRaw`
-      SELECT 
-    user_id,
-    unique_username,
-    sap_id,
-    name,
-    first_name,
-    middle_name ,
-    last_name ,
-    email,
-    mobile_number,
-    user_type ,
-    organization_id,
-    level_id,
-    user_role,
-    designation,
-    gender ,
-    nationality,
-    date_of_birth,
-    pan,
-    aadhar_image,
-    user_image,
-    password_hash,
-    user_data,
-    is_kyc_verified,
-    last_kyc_verified_date,
-    is_active,
-    inactive_at,
-    deactivation_reason,
-    activation_status ,
-    created_at,
-    created_by,
-    updated_at,
-    updated_by,
-    is_digilocker_verified,
-    office_location,
-    is_email_verified,
-    is_whatsapp_update,
-    verified_status,
-    status ,
-    location_id,
-    office_mobile_number ,
-    user_keyclock_id,
-    user_role_id,
-    user_roles,
-    user_profile_pic_path,
-    parent_id,
-    user_vector_image::text
-    FROM tenant_nhai.user_master
-    WHERE user_id = ${user_id};
-    `;
-
-    user[0].user_vector_image = JSON.parse(user[0].user_vector_image);
+    // Find user by user_id
+    const user = await prisma.user_master.findUnique({
+      where: {
+        user_id: user_id, // Fetch user using user_id
+      },
+    });
 
     // If the user is not found
     if (!user) {
@@ -1381,7 +1334,7 @@ export const getUserById = async (req, res) => {
       success: true,
       status: 200,
       message: "User fetched successfully.",
-      data: user[0],
+      data: user,
     });
   } catch (error) {
     // Handle unexpected errors
@@ -1393,6 +1346,7 @@ export const getUserById = async (req, res) => {
     });
   }
 };
+
 export const updateUserById = async (req, res) => {
   const { user_id, name, email, mobile_number, office_mobile_number, designation, user_type, status, office, contracts, roles_permission } = req.body;
 

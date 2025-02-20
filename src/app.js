@@ -8,6 +8,8 @@ import error from '~/middlewares/error';
 import rateLimiter from '~/middlewares/rateLimiter';
 import config from '~/config/config';
 import morgan from '~/config/morgan';
+import { config } from 'dotenv';
+config();
 
 const app = express();
 

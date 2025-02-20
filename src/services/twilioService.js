@@ -8,15 +8,17 @@ const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TO
 
 const sendOTP = async (serviceSid, phoneNumber, otp) => {
   try {
-    // await client.verify.v2.services(serviceSid)
-    //   .verifications
-    //   .create({
-    //     to: phoneNumber,
-    //     channel: 'sms',
-    //     customMessage: `Your OTP is: ${otp}`,
-    //   });
+    console.log("test");
+    await client.verify.v2.services(serviceSid)
+      .verifications
+      .create({
+        to: phoneNumber,
+        channel: 'sms'
+       // customMessage: `Your OTP is: ${otp}`,
+      });
+      console.log('otp send successfully');
   } catch (err) {
-    throw new Error('Error sending OTP via Twilio');
+    console.log(err.message);
   }
 };
 

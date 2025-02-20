@@ -17,7 +17,10 @@ import resourcerouter from './routes/keycloak/resourceRoute.js';
 import policyrouter from './routes/keycloak/policyRoute.js'
 import keycloakUserRouter from './routes/keycloak/userRoute.js'
 import authrouter from "./routes/authRoute.js"
-
+import keycloakAuthRoute from './routes/keycloak/keycloakAuthRoute.js'
+import path from "path";
+import { fileURLToPath } from 'url';
+import { sendOtpSMS } from "./services/cdacOtpService.js";
 
 const app = express();
 
@@ -53,11 +56,33 @@ app.use('/api/v1/resource', resourcerouter);
 app.use('/api/v1/policy', policyrouter);
 app.use('/api/v1/keycloak/user', keycloakUserRouter);
 app.use('/api/v1/auth', authrouter);
+app.use('/api/v1/keycloak/auth', keycloakAuthRoute)
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve static files from "public" directory
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.get("/.well-known/assetlinks.json", (req, res) => {
+  res.sendFile(path.join(__dirname, "public/.well-known/assetlinks.json"));
+});
 
 //app.use('/api/user', userRoutes);
 //app.use("/api/v1/article", ArticleRouter);
 //app.use("/api/v1/user", UserRouter);
+
+// send otp start
+app.post('/send-otp', async (req, res) => {
+  try {
+    const {mobileno} = req.body
+    const otpResponse = await sendOtpSMS(mobileno);
+    res.status(200).send(otpResponse);
+  } catch (error) {
+    res.status(500).send('Failed to send OTP');
+  }
+});
+// send otp end
 
 app.get('/', (req, res) => {
   res.status(STATUS_CODES.OK).send({

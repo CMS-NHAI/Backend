@@ -1,4 +1,5 @@
-import { getAccessTokenFromDigiLocker } from "../helper/getAccessTokenFromDigiLocker.js";
+import { getAccessTokenFromDigiLocker, getAccessTokenFromDigiLockerMobile} from "../helper/getAccessTokenFromDigiLocker.js";
+//import { getAccessTokenFromDigiLockerMobile } from "../helper/getAccessTokenFromDigiLocker.js";
 import { parseXmlToJson } from "../helper/parseXmlToJson.js";
 import prisma  from "../config/prismaClient.js";
 import jwt from "jsonwebtoken";
@@ -91,6 +92,7 @@ export const digiLockerUserDetail = async (req, res) => {
 
 export const digiLockerFinalRegistration = async(req, res)=>{
 
+  
   try{
     const authorizationHeader =
     req.headers.Authorization || req.headers.authorization;
@@ -237,3 +239,131 @@ export const entityLockerFinalRegistration = async(req, res)=>{
   }
 
 }
+
+export const  digiLockerCheckUrl = async(req, res)=>{
+
+  res.redirect('https://digilocker.meripehchaan.gov.in/public/oauth2/1/authorize?response_type=code&client_id=EMB8D4AF42&state=oidc_flow&redirect_uri=http%3A%2F%2F10.3.0.19%3A3000%2Fmyauth&code_challenge=5ERzTFfnY5nvB8Mv3QrKfr4e1E_PzVyvHiPrK9jP1Rw&code_challenge_method=S256&dl_flow=signin&acr=pan+aadhaar&amr=all&scope=files.issueddocs+files.uploadeddocs+userdetails+email+address+picture')
+}
+
+
+export const digiLockerUserDetailMobile = async (req, res) => {
+
+  try {
+    const { code } = req.body;
+
+    // Get the access token to access other api
+    const accessToken = await getAccessTokenFromDigiLockerMobile(code);
+
+    // Fetch User Details from degiLocker
+    const userDetailResponse = await fetch(
+      `${process.env.USER_DETAIL_URL}?access_token=${accessToken}`,
+      {
+        method: "GET",
+      }
+    );
+
+    if (!userDetailResponse.ok) {
+      throw new Error(
+        `Failed to fetch user details: ${userDetailResponse.statusText}`
+      );
+    }
+
+    const userDetail = await userDetailResponse.json();
+
+    // Fetch User Aadhaar Image
+    const eAdharDetail = await fetch(
+      `${process.env.E_ADHAR_URL}?access_token=${accessToken}`,
+      {
+        method: "GET",
+      }
+    );
+
+    if (!eAdharDetail.ok) {
+      throw new Error(
+        `Failed to fetch Aadhaar image: ${eAdharDetail.statusText}`
+      );
+    }
+
+    const eAdharXml = await eAdharDetail.text(); // Get the XML response text
+    const eAdharJson = await parseXmlToJson(eAdharXml); // Parse XML to JSON
+
+    // Get the the user email from the access token
+  // Extract user ID and email from the token payload
+  const userEmail = req.user.email;  
+    // Add digilocker detail into database start (address field is missing)
+    const userInfo = {
+      email : userEmail,
+      userDetail: userDetail,
+      eAdharDetail: eAdharJson,
+    }
+
+    const updatedUser = await prisma.user_master.update({
+      where: { email: userEmail },
+      data: {
+        user_data: userInfo, // Adjust the field name based on your schema
+      },
+    });
+
+    //   const data = await prisma.user_master.update({
+    //     where: { email: userEmail },
+    //     user_data: userInfo,
+    // })
+    // Add digilocker detail into database end
+
+    return res.status(200).json({
+      success: true,
+      status: 200,
+      message: "User details from digilocker retrieved successfully.",
+      data: userInfo
+    });
+  } catch (error) {
+    console.error("Error calling APIs:", error);
+    return res.status(500).json({
+      success: false,
+      status: 500,
+      message: error.message,
+    });
+  }
+};
+
+export const digiLockerFinalRegistrationMobile = async(req, res)=>{
+
+  try{
+    const authorizationHeader =
+    req.headers.Authorization || req.headers.authorization;
+
+  if (!authorizationHeader) {
+    return res.status(400).json({ msg: "Authorization header is missing" });
+  }
+
+  const token = authorizationHeader.split(" ")[1];
+
+  if (!token) {
+    return res.status(400).json({ msg: "Token is missing or invalid" });
+  }
+
+  // Decode the token (without verifying) to get the payload
+  const userEmail = req.user.email;  
+  const { vectorImage } = req.body
+
+  await prisma.$executeRaw`
+        UPDATE tenant_nhai."user_master"
+        SET "is_digilocker_verified" = true,
+         "user_vector_image" = ${vectorImage}::tenant_nhai.vector(128)
+        WHERE "email" = ${userEmail}
+        RETURNING *;
+    `;
+
+    res.status(200).json({
+      success: true,
+      status: 200,
+      message: "User verified successfully.",
+    });
+
+  }catch(error){
+
+    res.status(500).json({ success:false, message:error.message})
+
+  }
+
+};

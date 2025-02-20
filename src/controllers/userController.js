@@ -15,6 +15,7 @@ import { userIdValidation } from '../validations/getUserValidation.js';
 import { editUserValidationSchema } from '../validations/editUserValidation.js';
 import { orgIdValidationSchema } from '../validations/getOfficeValidation.js';
 import { v4 as uuidv4 } from 'uuid';
+import { customAlphabet } from 'nanoid';
 import crypto from "crypto";
 import axios from "axios";
 import {sendEmail} from '../services/emailService.js';

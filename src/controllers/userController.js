@@ -1293,7 +1293,7 @@ export const getUserById = async (req, res) => {
     //   },
     // });
 
-    const user = await prisma.user_master.$queryRaw`
+    const user = await prisma.$queryRaw`
       SELECT * FROM tenant_nhai.user_master;
     `;
 

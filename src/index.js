@@ -41,7 +41,7 @@ app.use(compression());
 app.use(cors({ origin: '*' }));
 app.use(bodyParser.json());
 
-app.use(express.json({ limit: '50kb' })); 
+app.use(express.json({ limit: '150kb' })); 
 
 app.use('/api/v1/otp', router);
 app.use('/api/v1/auth', router);

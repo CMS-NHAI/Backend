@@ -313,7 +313,7 @@ export const digiLockerUserDetailMobile = async (req, res) => {
     return res.status(200).json({
       success: true,
       status: 200,
-      msg: "User details from digilocker retrieved successfully.",
+      message: "User details from digilocker retrieved successfully.",
       data: userInfo
     });
   } catch (error) {
@@ -329,36 +329,24 @@ export const digiLockerUserDetailMobile = async (req, res) => {
 export const digiLockerFinalRegistrationMobile = async(req, res)=>{
 
   try{
-  //   const authorizationHeader =
-  //   req.headers.Authorization || req.headers.authorization;
+    const authorizationHeader =
+    req.headers.Authorization || req.headers.authorization;
 
-  // if (!authorizationHeader) {
-  //   return res.status(400).json({ msg: "Authorization header is missing" });
-  // }
+  if (!authorizationHeader) {
+    return res.status(400).json({ msg: "Authorization header is missing" });
+  }
 
-  // const token = authorizationHeader.split(" ")[1];
+  const token = authorizationHeader.split(" ")[1];
 
-  // if (!token) {
-  //   return res.status(400).json({ msg: "Token is missing or invalid" });
-  // }
+  if (!token) {
+    return res.status(400).json({ msg: "Token is missing or invalid" });
+  }
 
   // Decode the token (without verifying) to get the payload
-  //const userEmail = req.user.email;  
-  const userEmail = "bhawesh_bhanu@cms.co.in"	
-  // Extract user ID and email from the token payload
-  // const data = await prisma.user_master.update({
-  //       where: { email: userEmail },
-  //       is_digilocker_verified: true,
-  //   })
+  const userEmail = req.user.email;  
+  const { vectorImage } = req.body
 
-
-  // =======================================================================
- const { vectorImage } = req.body
- console.log("vectorImage ====>>>>", vectorImage)
-
-  // =======================================================================
-
-  const result = await prisma.$queryRaw`
+  await prisma.$executeRaw`
         UPDATE tenant_nhai."user_master"
         SET "is_digilocker_verified" = true,
          "user_vector_image" = ${vectorImage}::tenant_nhai.vector(128)
@@ -366,22 +354,15 @@ export const digiLockerFinalRegistrationMobile = async(req, res)=>{
         RETURNING *;
     `;
 
-    // const data = await prisma.user_master.update({
-    //   where: { email: userEmail },
-    //   data: {
-    //     is_digilocker_verified: true,
-    //     user_vector_image: vectorImage
-    //   },
-    // });
-
     res.status(200).json({
       success: true,
-      msg: "User verified successfully.",
+      status: 200,
+      message: "User verified successfully.",
     });
 
   }catch(error){
 
-    res.status(500).json({ success:false, msg:error.message})
+    res.status(500).json({ success:false, message:error.message})
 
   }
 

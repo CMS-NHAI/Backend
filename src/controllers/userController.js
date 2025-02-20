@@ -1308,13 +1308,6 @@ export const getUserById = async (req, res) => {
   }
 
   try {
-    // Find user by user_id
-    // const user = await prisma.user_master.findUnique({
-    //   where: {
-    //     user_id: user_id, // Fetch user using user_id
-    //   },
-    // });
-
     const user = await prisma.$queryRaw`
       SELECT 
     user_id,
@@ -1367,12 +1360,7 @@ export const getUserById = async (req, res) => {
     WHERE user_id = ${user_id};
     `;
 
-    console.log("Get User By ID dataaaa :::::::::: ", user);
-    // console.log("Get User By ID dataaaa :::::::::: ", user[0]);
-    console.log("Get User By ID dataaaa :::::::::: ", user[0].user_vector_image);
-    console.log("Get User By ID dataaaa :::::::::: ", typeof user[0].user_vector_image);
-    console.log("Get User By ID dataaaa :::::::::: ", typeof JSON.parse(user[0].user_vector_image));
-    console.log("Get User By ID dataaaa :::::::::: ", JSON.parse(user[0].user_vector_image));
+    user[0].user_vector_image = JSON.parse(user[0].user_vector_image);
 
     // If the user is not found
     if (!user) {

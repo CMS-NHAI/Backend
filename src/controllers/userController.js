@@ -1287,11 +1287,15 @@ export const getUserById = async (req, res) => {
 
   try {
     // Find user by user_id
-    const user = await prisma.user_master.findUnique({
-      where: {
-        user_id: user_id, // Fetch user using user_id
-      },
-    });
+    // const user = await prisma.user_master.findUnique({
+    //   where: {
+    //     user_id: user_id, // Fetch user using user_id
+    //   },
+    // });
+
+    const user = await prisma.user_master.$queryRaw`
+      SELECT * FROM tenant_nhai.user_master;
+    `;
 
     // If the user is not found
     if (!user) {

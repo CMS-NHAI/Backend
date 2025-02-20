@@ -20,7 +20,8 @@ import authrouter from "./routes/authRoute.js"
 import keycloakAuthRoute from './routes/keycloak/keycloakAuthRoute.js'
 import path from "path";
 import { fileURLToPath } from 'url';
-import { sendOtpSMS } from "./services/cdacOtpService.js";
+import { sendOtpSMS, sendOtpSMSForInvite } from "./services/cdacOtpService.js";
+import { sendEmail } from "./services/emailService.js";
 
 const app = express();
 
@@ -58,6 +59,7 @@ app.use('/api/v1/keycloak/user', keycloakUserRouter);
 app.use('/api/v1/auth', authrouter);
 app.use('/api/v1/keycloak/auth', keycloakAuthRoute)
 
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -73,6 +75,16 @@ app.get("/.well-known/assetlinks.json", (req, res) => {
 //app.use("/api/v1/user", UserRouter);
 
 // send otp start
+app.post('/send-email', async (req, res) => {
+  try {
+    const {to, subject, text} = req.body
+    const otpResponse = await sendEmail(to, subject, text);
+    res.status(200).send(otpResponse);
+  } catch (error) {
+    res.status(500).send('Failed to send email');
+  }
+});
+
 app.post('/send-otp', async (req, res) => {
   try {
     const {mobileno} = req.body
@@ -80,6 +92,16 @@ app.post('/send-otp', async (req, res) => {
     res.status(200).send(otpResponse);
   } catch (error) {
     res.status(500).send('Failed to send OTP');
+  }
+});
+
+app.post('/send-link', async (req, res) => {
+  try {
+    const {mobileno, invitationLink} = req.body
+    const otpResponse = await sendOtpSMSForInvite(mobileno, invitationLink);
+    res.status(200).send(otpResponse);
+  } catch (error) {
+    res.status(500).send('Failed to send invitation on sms');
   }
 });
 // send otp end

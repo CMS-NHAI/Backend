@@ -950,34 +950,12 @@ export const verifyEmailOtpAgency = async (req, res) => {
     }
 
 
-    const payload = {
-      user: {
-         org_id: user.org_id, // Include the user ID (or any other info)
-         name:user.name,
-         org_type:user.org_type,
-         contractor_agency_type:user.contractor_agency_type,
-         date_of_incorporation:user.date_of_incorporation,
-         selection_method: user.selection_method,
-         empanelment_start_date:user.empanelment_start_date,
-         empanelment_end_date:user.empanelment_end_date,
-         organization_data:user.organization_data,
-         spoc_details:user.spoc_details,
-         tin:user.tin,
-         contact_number:user.contact_number,
-         gst_number:user.gst_number,
-         pan:user.pan,
-         contact_email:user.contact_email,
-         invite_status:user.invite_status,
-         is_active:user.is_active,
-         created_by:user.created_by,
-         created_date:user.created_date,
-         last_updated_by:user.last_updated_by,
-         last_updated_date:user.last_updated_date,
-         status:user.status,
-         is_entity_locker_verified:user.is_entity_locker_verified,
-         CIN:user.CIN,
-         entity_data:user.entity_data
-      }
+    const payload = {user
+      // org_id: user.org_id, // Include the user ID (or any other info)
+      // name:user.name,
+      // org_type:user.org_type,
+      // contact_email:user.contact_email,
+      // contact_number: user.contact_number
     };
 
     // Replace 'your_secret_key' with your actual secret key for signing the token
@@ -1309,15 +1287,11 @@ export const getUserById = async (req, res) => {
 
   try {
     // Find user by user_id
-    // const user = await prisma.user_master.findUnique({
-    //   where: {
-    //     user_id: user_id, // Fetch user using user_id
-    //   },
-    // });
-
-    const user = await prisma.$queryRaw`
-      SELECT * FROM tenant_nhai.user_master;
-    `;
+    const user = await prisma.user_master.findUnique({
+      where: {
+        user_id: user_id, // Fetch user using user_id
+      },
+    });
 
     // If the user is not found
     if (!user) {

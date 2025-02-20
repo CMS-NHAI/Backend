@@ -1085,7 +1085,11 @@ export const inviteUser = async (req, res) => {
     contracts,
     roles_permission,
   } = req.body;
-  const uniqueUsername2 = uuidv4();
+  
+  const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 6); 
+  const uniqueUsername2 = nanoid();
+
+ // const uniqueUsername2 = uuidv4();
   const { error } = inviteUserValidationSchema.validate(req.body);
 
   if (error) {
@@ -1170,6 +1174,7 @@ export const inviteUser = async (req, res) => {
     
 
     ///////////////////////////////////////////////////
+    
     const generateInvitationLink = `http://10.3.0.19:3000/signup/user/${uniqueUsername2}`
     //const uniqueToken = crypto.randomBytes(16).toString("hex");
     //return `http://localhost:3000/signup/agency?${uniqueToken}`;

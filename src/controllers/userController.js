@@ -1362,7 +1362,7 @@ export const getUserById = async (req, res) => {
     user_roles,
     user_profile_pic_path,
     parent_id,
-    user_vector_image::json
+    user_vector_image::text
     FROM tenant_nhai.user_master
     WHERE user_id = ${user_id};
     `;
@@ -1371,6 +1371,8 @@ export const getUserById = async (req, res) => {
     // console.log("Get User By ID dataaaa :::::::::: ", user[0]);
     console.log("Get User By ID dataaaa :::::::::: ", user[0].user_vector_image);
     console.log("Get User By ID dataaaa :::::::::: ", typeof user[0].user_vector_image);
+    console.log("Get User By ID dataaaa :::::::::: ", typeof JSON.parse(user[0].user_vector_image));
+    console.log("Get User By ID dataaaa :::::::::: ", JSON.parse(user[0].user_vector_image));
 
     // If the user is not found
     if (!user) {

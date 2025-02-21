@@ -1,5 +1,7 @@
 import prisma from "../../config/prismaClient.js";
+import jwt from "jsonwebtoken";
 import { STATUS_CODES } from "../../constants/statusCodesConstant.js";
+import { v4 as uuidv4 } from 'uuid';
 import { customAlphabet } from 'nanoid';
 import crypto from 'crypto';
 import {sendEmail} from '../../services/emailService.js';
@@ -12,6 +14,12 @@ export const createAgency = async (req, res) => {
 
     const data = req.body
 
+   /* const { error } = organizationSchema.validate(req.body);
+  if (error) return res.status(400).json({ 
+    success: false,
+    status:STATUS_CODES.NOT_FOUND,
+    message: error.details[0].message 
+  }); */
 
     data['date_of_incorporation']  = new Date(data['date_of_incorporation']).toISOString();
     data['empanelment_start_date'] = new Date(data['empanelment_start_date']).toISOString();
@@ -19,8 +27,9 @@ export const createAgency = async (req, res) => {
     const newAgency = await prisma.organization_master.create({ data: data });
 
     ///////////////////////////////////////////////////
-    const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 6); 
-    const uniqueUsername2 = nanoid();
+   // const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 6); // 6-character ID
+    //console.log(nanoid()); 
+    const uniqueUsername2 = uuidv4();
     const generateInvitationLink = `http://10.3.0.19:3000/signup/agency/${uniqueUsername2}`
     //const uniqueToken = crypto.randomBytes(16).toString("hex");
     //return `http://localhost:3000/signup/agency?${uniqueToken}`;

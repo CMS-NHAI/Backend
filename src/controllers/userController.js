@@ -15,6 +15,7 @@ import { userIdValidation } from '../validations/getUserValidation.js';
 import { editUserValidationSchema } from '../validations/editUserValidation.js';
 import { orgIdValidationSchema } from '../validations/getOfficeValidation.js';
 import { v4 as uuidv4 } from 'uuid';
+import { customAlphabet } from 'nanoid';
 import crypto from "crypto";
 import axios from "axios";
 import {sendEmail} from '../services/emailService.js';
@@ -1086,10 +1087,10 @@ export const inviteUser = async (req, res) => {
     roles_permission,
   } = req.body;
   
-  const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 6); 
-  const uniqueUsername2 = nanoid();
+ // const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 6); 
+ // const uniqueUsername2 = nanoid();
 
- // const uniqueUsername2 = uuidv4();
+  const uniqueUsername2 = uuidv4();
   const { error } = inviteUserValidationSchema.validate(req.body);
 
   if (error) {

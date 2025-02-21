@@ -15,6 +15,7 @@ import { userIdValidation } from '../validations/getUserValidation.js';
 import { editUserValidationSchema } from '../validations/editUserValidation.js';
 import { orgIdValidationSchema } from '../validations/getOfficeValidation.js';
 import { v4 as uuidv4 } from 'uuid';
+import { customAlphabet } from 'nanoid';
 import crypto from "crypto";
 import axios from "axios";
 import {sendEmail} from '../services/emailService.js';
@@ -1085,6 +1086,10 @@ export const inviteUser = async (req, res) => {
     contracts,
     roles_permission,
   } = req.body;
+  
+ // const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 6); 
+ // const uniqueUsername2 = nanoid();
+
   const uniqueUsername2 = uuidv4();
   const { error } = inviteUserValidationSchema.validate(req.body);
 
@@ -1170,6 +1175,7 @@ export const inviteUser = async (req, res) => {
     
 
     ///////////////////////////////////////////////////
+    
     const generateInvitationLink = `http://10.3.0.19:3000/signup/user/${uniqueUsername2}`
     //const uniqueToken = crypto.randomBytes(16).toString("hex");
     //return `http://localhost:3000/signup/agency?${uniqueToken}`;
@@ -1341,6 +1347,7 @@ export const getUserById = async (req, res) => {
     });
   }
 };
+
 export const updateUserById = async (req, res) => {
   const { user_id, name, email, mobile_number, office_mobile_number, designation, user_type, status, office, contracts, roles_permission } = req.body;
 

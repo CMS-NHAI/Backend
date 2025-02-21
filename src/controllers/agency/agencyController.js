@@ -2,6 +2,7 @@ import prisma from "../../config/prismaClient.js";
 import jwt from "jsonwebtoken";
 import { STATUS_CODES } from "../../constants/statusCodesConstant.js";
 import { v4 as uuidv4 } from 'uuid';
+import { customAlphabet } from 'nanoid';
 import crypto from 'crypto';
 import {sendEmail} from '../../services/emailService.js';
 import organizationSchema from "../../validations/agencyValidation.js";
@@ -26,6 +27,8 @@ export const createAgency = async (req, res) => {
     const newAgency = await prisma.organization_master.create({ data: data });
 
     ///////////////////////////////////////////////////
+   // const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 6); // 6-character ID
+    //console.log(nanoid()); 
     const uniqueUsername2 = uuidv4();
     const generateInvitationLink = `http://10.3.0.19:3000/signup/agency/${uniqueUsername2}`
     //const uniqueToken = crypto.randomBytes(16).toString("hex");

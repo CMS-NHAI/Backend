@@ -1315,15 +1315,11 @@ export const getUserById = async (req, res) => {
 
   try {
     // Find user by user_id
-    // const user = await prisma.user_master.findUnique({
-    //   where: {
-    //     user_id: user_id, // Fetch user using user_id
-    //   },
-    // });
-
-    const user = await prisma.$queryRaw`
-      SELECT * FROM tenant_nhai.user_master;
-    `;
+    const user = await prisma.user_master.findUnique({
+      where: {
+        user_id: user_id, // Fetch user using user_id
+      },
+    });
 
     // If the user is not found
     if (!user) {
@@ -1351,6 +1347,7 @@ export const getUserById = async (req, res) => {
     });
   }
 };
+
 export const updateUserById = async (req, res) => {
   const { user_id, name, email, mobile_number, office_mobile_number, designation, user_type, status, office, contracts, roles_permission } = req.body;
 

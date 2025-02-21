@@ -1087,10 +1087,10 @@ export const inviteUser = async (req, res) => {
     roles_permission,
   } = req.body;
   
-  const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 6); 
-  const uniqueUsername2 = nanoid();
+ // const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 6); 
+ // const uniqueUsername2 = nanoid();
 
- // const uniqueUsername2 = uuidv4();
+  const uniqueUsername2 = uuidv4();
   const { error } = inviteUserValidationSchema.validate(req.body);
 
   if (error) {

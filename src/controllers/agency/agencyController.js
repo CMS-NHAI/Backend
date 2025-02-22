@@ -30,7 +30,7 @@ export const createAgency = async (req, res) => {
    // const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 6); // 6-character ID
     //console.log(nanoid()); 
     const uniqueUsername2 = uuidv4();
-    const generateInvitationLink = `http://10.3.0.19:3000/signup/agency/${uniqueUsername2}`
+    const generateInvitationLink = `${process.env.BASE_URL}/signup/agency/${uniqueUsername2}`
     //const uniqueToken = crypto.randomBytes(16).toString("hex");
     //return `http://localhost:3000/signup/agency?${uniqueToken}`;
 

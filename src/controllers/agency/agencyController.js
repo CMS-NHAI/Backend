@@ -86,7 +86,7 @@ export const createAgency = async (req, res) => {
 // Get all agencies
 export const getAllAgencies = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 9 } = req.query;
     const pageNumber = parseInt(page, 10);
     const limitNumber = parseInt(limit, 10);
     const skip = (pageNumber - 1) * limitNumber;

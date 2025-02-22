@@ -30,7 +30,7 @@ export const createAgency = async (req, res) => {
    // const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 6); // 6-character ID
     //console.log(nanoid()); 
     const uniqueUsername2 = uuidv4();
-    const generateInvitationLink = `http://10.3.0.19:3000/signup/agency/${uniqueUsername2}`
+    const generateInvitationLink = `${process.env.BASE_URL}/signup/agency/${uniqueUsername2}`
     //const uniqueToken = crypto.randomBytes(16).toString("hex");
     //return `http://localhost:3000/signup/agency?${uniqueToken}`;
 
@@ -86,20 +86,38 @@ export const createAgency = async (req, res) => {
 // Get all agencies
 export const getAllAgencies = async (req, res) => {
   try {
+    const { page = 1, limit = 9 } = req.query;
+    const pageNumber = parseInt(page, 10);
+    const limitNumber = parseInt(limit, 10);
+    const skip = (pageNumber - 1) * limitNumber;
+
     const agencies = await prisma.organization_master.findMany({
       orderBy: {
         org_id: 'desc', 
-      }
+      },
+      skip,
+      take: limitNumber,
      // where: {
        // deletedAt: null // Only include rows where `deletedAt` is null
      // }
     });
+
+    const totalRecords = await prisma.organization_master.count();
+    const totalPages = Math.ceil(totalRecords / limitNumber);
+
     res.status(STATUS_CODES.OK).json({
       
       success: true,
       status: STATUS_CODES.OK,
       message: 'Agency List Retrived Successfully.',
-      data: { agencies },
+      data: { agencies, 
+              pagination: {
+              totalRecords,
+              totalPages,
+              currentPage: pageNumber,
+              limit: limitNumber,
+              }, 
+           },
       });
   } catch (error) {
     console.log(error)

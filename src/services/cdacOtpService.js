@@ -51,10 +51,12 @@ export const sendOtpSMS = async (mobileno) => {
         if (msgContent[0] == "402") {
             return {
                 status: Number(msgContent[0]),
-                message: "Messages send successfully"
+                message: "Messages send successfully",
+                genOtp: otp
+                
             };
         }
-
+         // const result = responseString.concat(" ", otp);
         return responseString
     } catch (error) {
         console.error('Error sending OTP SMS:', error);

@@ -15,11 +15,7 @@ import { sendOtpSMS } from "../services/cdacOtpService.js";
 
 const uniqueUsername = uuidv4();
 
-async function hashPassword(password) {
-  const saltRounds = 10; // Higher value means stronger but slower hashing
-  const hashedPassword = await bcrypt.hash(password, saltRounds);
-  return hashedPassword;
-}
+
 
 export const sendOtpToUser = async (req, res) => {
   const { mobile_number, count } = req.body;
@@ -239,9 +235,9 @@ export const sendOtpToUserLatest = async (req, res) => {
       phoneNumber = phoneNumber.substring(3); 
     }
     const smsinfo = await sendOtpSMS(phoneNumber)
-    const otp_hash = crypto.createHash("sha256").update(smsinfo.genOtp).digest("hex"); 
+    //const otp_hash = crypto.createHash("sha256").update(smsinfo.genOtp).digest("hex"); 
     //const hashpassword = hashPassword(smsinfo.genOtp)
-    console.log(otp_hash) 
+    //console.log(otp_hash) 
     await prisma.otp_verification.create({
       data: {
         otp_id: crypto.randomUUID(),

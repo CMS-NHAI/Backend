@@ -1,6 +1,6 @@
 // routes/otpRoutes.js
 import { Router } from 'express';
-import { sendOtpToUser , authenticateOtp, sendOtpToUserLatest, sendOtpToUserViaEmailLatest} from "../controllers/otpController.js"
+import { authenticateOtp, sendOtpToUserLatest, sendOtpToUserViaEmailLatest} from "../controllers/otpController.js"
 
 const router = Router();
 

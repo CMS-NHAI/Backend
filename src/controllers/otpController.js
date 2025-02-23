@@ -8,15 +8,25 @@ import { otpmobileValidationSchema } from "../validations/otpMobileValidation.js
 import { OTP_CONSTANT, SEND_RESEND_OTP_CONSTANT } from '../constants/constant.js';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { STATUS_CODES } from "../constants/statusCodesConstant.js";
 import { sendEmail } from '../services/emailService.js';
 import { sendOtpSMS } from "../services/cdacOtpService.js";
 
 const uniqueUsername = uuidv4();
 
+async function hashOTP(otp) {
+  const salt = await bcrypt.genSalt(10);
+  return await bcrypt.hash(otp.toString(), salt);
+}
+
+async function verifyOTP(otp, hashedOTP) {
+  return await bcrypt.compare(otp.toString(), hashedOTP);
+}
 
 
+
+/* This Function is not working any more /////////
 export const sendOtpToUser = async (req, res) => {
   const { mobile_number, count } = req.body;
   const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
@@ -123,7 +133,7 @@ export const sendOtpToUser = async (req, res) => {
       message: err,
     });
   }
-};
+}; */
 
 export const authenticateOtp = async (req, res) => {
   try {
@@ -235,9 +245,10 @@ export const sendOtpToUserLatest = async (req, res) => {
       phoneNumber = phoneNumber.substring(3); 
     }
     const smsinfo = await sendOtpSMS(phoneNumber)
+    const hashed = await hashOTP(smsinfo.genOtp);
     //const otp_hash = crypto.createHash("sha256").update(smsinfo.genOtp).digest("hex"); 
     //const hashpassword = hashPassword(smsinfo.genOtp)
-    //console.log(otp_hash) 
+     console.log(hashed) 
     await prisma.otp_verification.create({
       data: {
         otp_id: crypto.randomUUID(),
@@ -245,8 +256,8 @@ export const sendOtpToUserLatest = async (req, res) => {
         otp_sent_timestamp: new Date(),
         otp_verification_status: "PENDING",
         otp_expiration: expirationTime,
-        otp_verification_method: 'SMS'
-        //otp_hash: otp_hash
+        otp_verification_method: 'SMS',
+        otp_hash: hashed
       },
     });
 

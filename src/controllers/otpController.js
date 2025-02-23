@@ -8,13 +8,20 @@ import { otpmobileValidationSchema } from "../validations/otpMobileValidation.js
 import { OTP_CONSTANT, SEND_RESEND_OTP_CONSTANT } from '../constants/constant.js';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
+import bcrypt from "bcrypt";
 import { STATUS_CODES } from "../constants/statusCodesConstant.js";
 import { sendEmail } from '../services/emailService.js';
 import { sendOtpSMS } from "../services/cdacOtpService.js";
 
 const uniqueUsername = uuidv4();
 
-export const sendOtpToUser = async (req, res) => {
+async function hashPassword(password) {
+  const saltRounds = 10; // Higher value means stronger but slower hashing
+  const hashedPassword = await bcrypt.hash(password, saltRounds);
+  return hashedPassword;
+}
+
+/*export const sendOtpToUser = async (req, res) => {
   const { mobile_number, count } = req.body;
   const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
 
@@ -120,7 +127,7 @@ export const sendOtpToUser = async (req, res) => {
       message: err,
     });
   }
-};
+};*/
 
 export const authenticateOtp = async (req, res) => {
   try {
@@ -207,10 +214,6 @@ export const sendOtpToUserLatest = async (req, res) => {
     }
   });
 
-
-  const generateOtp = () => crypto.randomInt(10000, 99999).toString();
-
-
   try {
     const recentOtps = await prisma.otp_verification.count({
       where: {
@@ -229,22 +232,17 @@ export const sendOtpToUserLatest = async (req, res) => {
         message: "Max OTP limit reached."
       });
     }
-
-    // Generate OTP
-    //const otp = generateOtp();
-    //const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
     const expirationTime = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
     //await sendOTP(serviceSid, mobile_number, otp);
     let phoneNumber = mobile_number;
     if (phoneNumber.startsWith("+91")) {
-      phoneNumber = phoneNumber.substring(3); // Remove first 3 characters
+      phoneNumber = phoneNumber.substring(3); 
     }
-    //console.log(phoneNumber); // Output: 9555436473
     const smsinfo = await sendOtpSMS(phoneNumber)
-    //const smsmsgContent = smsinfo.split(',')
-    //const genratedOtp = smsmsgContent[2]
     console.log(smsinfo.genOtp)
-      
+
+    const hashpassword = hashPassword(password)
+    console.log(hashpassword) 
     await prisma.otp_verification.create({
       data: {
         otp_id: crypto.randomUUID(),
@@ -252,12 +250,10 @@ export const sendOtpToUserLatest = async (req, res) => {
         otp_sent_timestamp: new Date(),
         otp_verification_status: "PENDING",
         otp_expiration: expirationTime,
-        otp_verification_method: 'SMS'//method,
+        otp_verification_method: 'SMS',  
+        otp_hash: hashpassword
       },
     });
-
-    // Send the OTP (via email/SMS)
-    console.log(`OTP for user Mobile ${mobile_number}: ${otp}`);
 
     res.json({
       success: true,

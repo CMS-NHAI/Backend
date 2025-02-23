@@ -231,18 +231,20 @@ export const sendOtpToUserLatest = async (req, res) => {
     }
 
     // Generate OTP
-    const otp = generateOtp();
-    const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
+    //const otp = generateOtp();
+    //const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
     const expirationTime = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
     //await sendOTP(serviceSid, mobile_number, otp);
     let phoneNumber = mobile_number;
     if (phoneNumber.startsWith("+91")) {
       phoneNumber = phoneNumber.substring(3); // Remove first 3 characters
     }
-    console.log(phoneNumber); // Output: 9555436473
+    //console.log(phoneNumber); // Output: 9555436473
     const smsinfo = await sendOtpSMS(phoneNumber)
-    console.log(smsinfo)
-    //   
+    const smsmsgContent = smsinfo.split(',')
+    const genratedOtp = smsmsgContent[2]
+    console.log(genratedOtp)
+      
     await prisma.otp_verification.create({
       data: {
         otp_id: crypto.randomUUID(),

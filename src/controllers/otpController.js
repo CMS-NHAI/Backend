@@ -239,9 +239,8 @@ export const sendOtpToUserLatest = async (req, res) => {
       phoneNumber = phoneNumber.substring(3); 
     }
     const smsinfo = await sendOtpSMS(phoneNumber)
-    console.log(smsinfo.genOtp)
 
-    const hashpassword = hashPassword(password)
+    const hashpassword = hashPassword(smsinfo.genOtp)
     console.log(hashpassword) 
     await prisma.otp_verification.create({
       data: {

@@ -241,7 +241,7 @@ export const sendOtpToUserLatest = async (req, res) => {
     const smsinfo = await sendOtpSMS(phoneNumber)
     const otp_hash = crypto.createHash("sha256").update(smsinfo.genOtp).digest("hex"); 
     //const hashpassword = hashPassword(smsinfo.genOtp)
-    //console.log(hashpassword) 
+    console.log(otp_hash) 
     await prisma.otp_verification.create({
       data: {
         otp_id: crypto.randomUUID(),
@@ -249,8 +249,8 @@ export const sendOtpToUserLatest = async (req, res) => {
         otp_sent_timestamp: new Date(),
         otp_verification_status: "PENDING",
         otp_expiration: expirationTime,
-        otp_verification_method: 'SMS',  
-        otp_hash: otp_hash
+        otp_verification_method: 'SMS'
+        //otp_hash: otp_hash
       },
     });
 

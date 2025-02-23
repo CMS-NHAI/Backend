@@ -21,7 +21,7 @@ async function hashPassword(password) {
   return hashedPassword;
 }
 
-/*export const sendOtpToUser = async (req, res) => {
+export const sendOtpToUser = async (req, res) => {
   const { mobile_number, count } = req.body;
   const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
 
@@ -127,7 +127,7 @@ async function hashPassword(password) {
       message: err,
     });
   }
-};*/
+};
 
 export const authenticateOtp = async (req, res) => {
   try {

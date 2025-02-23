@@ -240,7 +240,8 @@ export const sendOtpToUserLatest = async (req, res) => {
       phoneNumber = phoneNumber.substring(3); // Remove first 3 characters
     }
     console.log(phoneNumber); // Output: 9555436473
-    await sendOtpSMS(phoneNumber)
+    const smsinfo = await sendOtpSMS(phoneNumber)
+    console.log(smsinfo)
     //   
     await prisma.otp_verification.create({
       data: {

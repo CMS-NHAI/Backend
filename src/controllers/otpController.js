@@ -25,116 +25,6 @@ async function verifyOTP(otp, hashedOTP) {
 }
 
 
-
-/* This Function is not working any more /////////
-export const sendOtpToUser = async (req, res) => {
-  const { mobile_number, count } = req.body;
-  const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
-
-  const { error } = phoneValidationSchema.validate({ mobile_number });
-
-  if (error) {
-    return res.status(400).json({
-      success: false,
-      status: 400,
-      message: error.details[0].message,
-    });
-  }
-  if (!count) {
-    return res.status(400).json({
-      success: false,
-      status: 400,
-      message: "count parameter is missing",
-    });
-  }
-  try {
-    prisma.otp
-    const user = await prisma.user_master.findUnique({  // Use correct model name
-      where: { mobile_number: mobile_number },  // Assuming `mobile_number` is the field to search
-    });
-    console.log(user);
-    if (!user) {
-      // u = await prisma.user_master.create({
-      //     data: {
-      //       // unique_username: uuidv4(),
-      //       mobile_number: mobile_number,
-      //       name: 'Amit',  // Dummy name or leave it blank
-      //       first_name: 'Amit',  // First name can also be default
-      //       user_type: 'Internal - Permanent',  // A type to indicate the user is not yet registered
-      //       user_role: { role: 'UNREGISTERED' },  // You can set a default role
-      //       email: 'user1@gmail.com',  // No email for a dummy user
-      //       is_active: false,  // Set to false for unregistered users
-      //       is_kyc_verified: false,  // Assuming KYC is not verified for dummy users
-      //       otp: generateOTP(),  // Generate OTP
-      //       otp_timestamp: new Date(),
-      //       created_at: new Date(),
-      //       updated_at: new Date(),
-      //       // Optional: You can fill in additional fields if needed (e.g., `activation_status`)
-      //       activation_status: 'Pending', 
-      //       organization_id: 1,
-      //       unique_username : uniqueUsername,
-      //       sap_id : "SAP12345",
-      //       aadhar_image : "HTTP",
-      //       user_image : "HEE" // Status indicating the user is pending activation
-      //     },
-      //   });
-      //   console.log(u);
-      return res.status(200).json({
-        success: false,
-        status: 200,
-        message: 'User not registered with this phone number.',
-      });
-
-    }
-
-    if (count === 1) {
-      const otpTimestamp = new Date(user.otp_timestamp);
-      const currentTimestamp = new Date();
-      const timeDifference = currentTimestamp - otpTimestamp;
-      // Convert time difference from milliseconds to hours
-      const timeDifferenceInHours = timeDifference / 1000;
-
-      if (timeDifferenceInHours < SEND_RESEND_OTP_CONSTANT) {
-        return res.status(400).json({
-          success: false,
-          status: 400,
-          message: `Otp resend limit exceeded, please retry after ${SEND_RESEND_OTP_CONSTANT / 60} minutes`,
-        });
-      }
-    }
-    if (count > 5) {
-
-      return res.status(400).json({
-        success: false,
-        status: 400,
-        message: `Otp resend limit exceeded, please retry after ${SEND_RESEND_OTP_CONSTANT / 60} minutes`,
-      });
-
-    }
-    const otp = generateOTP();
-    const otp_timestamp = new Date();
-    await prisma.user_master.update({
-      where: { mobile_number },
-      data: { otp, otp_timestamp },
-    });
-
-    await sendOTP(serviceSid, mobile_number, otp);
-
-    res.status(200).json({
-      success: true,
-      status: 200,
-      message: 'OTP sent successfully.',
-    });
-
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      status: 500,
-      message: err,
-    });
-  }
-}; */
-
 export const authenticateOtp = async (req, res) => {
   try {
     // Validate the request body using Joi
@@ -239,16 +129,14 @@ export const sendOtpToUserLatest = async (req, res) => {
       });
     }
     const expirationTime = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
-    //await sendOTP(serviceSid, mobile_number, otp);
+    
     let phoneNumber = mobile_number;
     if (phoneNumber.startsWith("+91")) {
       phoneNumber = phoneNumber.substring(3); 
     }
     const smsinfo = await sendOtpSMS(phoneNumber)
     const hashed = await hashOTP(smsinfo.genOtp);
-    //const otp_hash = crypto.createHash("sha256").update(smsinfo.genOtp).digest("hex"); 
-    //const hashpassword = hashPassword(smsinfo.genOtp)
-     console.log(hashed) 
+    
     await prisma.otp_verification.create({
       data: {
         otp_id: crypto.randomUUID(),
@@ -271,7 +159,7 @@ export const sendOtpToUserLatest = async (req, res) => {
     res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: false,
       status: STATUS_CODES.INTERNAL_SERVER_ERROR,
-      message: "Mobile Number is not Registered."
+      message: "Something went wrong! Please try again."
     });
   }
 }
@@ -313,16 +201,6 @@ export const sendOtpToUserViaEmailLatest = async (req, res) => {
       console.log(error);
       res.status(500).send('Error sending email');
     });
-
-  //console.log('Email sent:', info.response);
-  // res.status(200).json({ 
-  //   success : true,
-  //   status : 200,
-  //   message: 'OTP sent successfully' 
-
-  // });
-
-
 }
 
 

@@ -1,5 +1,6 @@
 import prisma from "../../config/prismaClient.js";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 import { STATUS_CODES } from "../../constants/statusCodesConstant.js";
 import { v4 as uuidv4 } from 'uuid';
 import { customAlphabet } from 'nanoid';
@@ -235,6 +236,29 @@ export const deleteAgency = async (req, res) => {
     });
   }
 };
+
+export const loginAgency = async (req, res) => {
+
+  const { email, password } = req.body;
+   // Check if user exists
+   const userAgency = await prisma.organization_master.findUnique({ where: { contact_email:email } });
+   if (!userAgency) return res.status(401).json({ error: "Invalid email or password" });
+
+     // Compare password
+     const isMatch = await bcrypt.compare(password, user.password);
+     if (!isMatch) return res.status(401).json({ error: "Invalid email or password" });
+
+      // Generate JWT Token
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    
+    res.status(STATUS_CODES.OK).json({
+      success: true,
+      status: STATUS_CODES.OK,
+      message: "Login successful",
+      data: userAgency
+    });
+    //res.json({ message: "Login successful", token });
+}
 
 //bhawesh new code////////////////////////////////////////////////////////////////////
 

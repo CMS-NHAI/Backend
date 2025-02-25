@@ -18,9 +18,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { customAlphabet } from 'nanoid';
 import crypto from "crypto";
 import axios from "axios";
-import {sendEmail} from '../services/emailService.js';
+import { sendEmail } from '../services/emailService.js';
 import { keycloakAddUser } from "../services/keycloakService/keycloakAddUser.js";
-import {getKeycloakUserPermission} from "../services/keycloakService/getUserDetailsPermission.js"
+import { getKeycloakUserPermission } from "../services/keycloakService/getUserDetailsPermission.js"
 import { keycloakUpdateUserRole } from "../helper/keycloak/keycloakUpdateUserRole.js";
 import { sendOtpSMS, sendOtpSMSForInvite } from "../services/cdacOtpService.js";
 const uniqueUsername = uuidv4();
@@ -99,6 +99,7 @@ export const verifyOtp = async (req, res) => {
     const payload = {
       user_id: user.id, // Include the user ID (or any other info)
       phone_number: user.mobile_number,
+      office_location: user.office_location
     };
 
     // Replace 'your_secret_key' with your actual secret key for signing the token
@@ -114,9 +115,9 @@ export const verifyOtp = async (req, res) => {
       message: 'OTP verified successfully.',
       data: {
         access_token: access_token,
-        user_id : user.user_id,
-        sap_id : user.sap_id,
-        is_active : user.is_active,
+        user_id: user.user_id,
+        sap_id: user.sap_id,
+        is_active: user.is_active,
         //name: user.first_name + ' ' + user.last_name,
         name: user.name,
         mobile_number: user.mobile_number,
@@ -125,9 +126,9 @@ export const verifyOtp = async (req, res) => {
         is_digilocker_verified: user.is_digilocker_verified,
         office_location: user.office_location,
         user_type: user.user_type,
-        user_role : user.user_role,
-        organization_id : user.organization_id
-       
+        user_role: user.user_role,
+        organization_id: user.organization_id
+
       },
     });
   } catch (err) {
@@ -329,77 +330,76 @@ export const getSapDetails = async (req, res) => {
 };
 
 
-  async function generateEntityAccessToken(code,req,res) {
-    try {
-      const query = {
-        code,
-        grant_type: "authorization_code",
-        redirect_uri: process.env.ENTITY_REDIRECT_URI,
-        client_id: process.env.ENTITY_CLIENT_ID,
-        client_secret: process.env.ENTITY_CLIENT_SECRET,
-        code_verifier: process.env.ENTITY_CODE_VERIFIER,
-      };
-  
-      const accessTokenResponse = await fetch(
-        'https://entity.digilocker.gov.in/public/oauth2/1/token',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(query),
-        }
-      );
-  
-      if (!accessTokenResponse.ok) {
-        const errorData = await accessTokenResponse.json();
-        console.error('Error:', accessTokenResponse.status, accessTokenResponse.statusText, errorData);
-        return res.status(accessTokenResponse.status).json({
-          success: false,
-          status: 400,
-          message:"Failed to generate token",
-          ...errorData,
-        }); 
+async function generateEntityAccessToken(code, req, res) {
+  try {
+    const query = {
+      code,
+      grant_type: "authorization_code",
+      redirect_uri: process.env.ENTITY_REDIRECT_URI,
+      client_id: process.env.ENTITY_CLIENT_ID,
+      client_secret: process.env.ENTITY_CLIENT_SECRET,
+      code_verifier: process.env.ENTITY_CODE_VERIFIER,
+    };
+
+    const accessTokenResponse = await fetch(
+      'https://entity.digilocker.gov.in/public/oauth2/1/token',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(query),
       }
-  
-      const accessTokenData = await accessTokenResponse.json();
-      return  accessTokenData.access_token; // This could contain the access token and other details
-  
-    } catch (error) {
-      console.error('Error generating access token:', error);
-      return res.status(500).json({
+    );
+
+    if (!accessTokenResponse.ok) {
+      const errorData = await accessTokenResponse.json();
+      console.error('Error:', accessTokenResponse.status, accessTokenResponse.statusText, errorData);
+      return res.status(accessTokenResponse.status).json({
         success: false,
-        status: 500,
-        message:error
-      }); 
+        status: 400,
+        message: "Failed to generate token",
+        ...errorData,
+      });
     }
+
+    const accessTokenData = await accessTokenResponse.json();
+    return accessTokenData.access_token; // This could contain the access token and other details
+
+  } catch (error) {
+    console.error('Error generating access token:', error);
+    return res.status(500).json({
+      success: false,
+      status: 500,
+      message: error
+    });
   }
+}
 
 //get entity data 
 
-export const authenticateEntity = async(req,res) => {
+export const authenticateEntity = async (req, res) => {
   try {
-    const { code,userEmail } = req.body;
+    const { code, userEmail } = req.body;
     if (!code) {
       return res.status(400).json({
-              success: false,
-              status: 400,
-              message: 'Invalid credentials',
-            });
+        success: false,
+        status: 400,
+        message: 'Invalid credentials',
+      });
     }
 
 
     const organization = await prisma.organization_master.findFirst({
       where: { contact_email: userEmail }
     });
-           if (!organization) {
-              return res.status(400).json({
-                success: false,
-                status: 400,
-                message: 'Agency Contact email not found',
-              });
-            }
+    if (!organization) {
+      return res.status(400).json({
+        success: false,
+        status: 400,
+        message: 'Agency Contact email not found',
+      });
+    }
 
-    const accessToken = await generateEntityAccessToken(code,req,res);
-    console.log("accessToken ======>>>>>>", accessToken)
+    const accessToken = await generateEntityAccessToken(code, req, res);
 
     const apiResponse = await fetch('https://entity.digilocker.gov.in/public/oauth2/1/entity', {
       method: 'GET',
@@ -413,13 +413,13 @@ export const authenticateEntity = async(req,res) => {
       return res.status(400).json({
         success: false,
         status: 400,
-        message:"Failed to fetch user Entity details"
-      }); 
+        message: "Failed to fetch user Entity details"
+      });
     }
 
     const apiData = await apiResponse.json();
-   
-    
+
+
     if (organization) {
       const updatedOrganization = await prisma.organization_master.update({
         where: { org_id: organization.org_id }, // Use the unique ID
@@ -438,8 +438,8 @@ export const authenticateEntity = async(req,res) => {
     return res.status(500).json({
       success: false,
       status: 500,
-      message:error
-    }); 
+      message: error
+    });
   }
 }
 
@@ -459,11 +459,11 @@ export const getAllUsers = async (req, res) => {
     // Calculate skip and take based on pageSize and page
     const skip = (page - 1) * pageSize;
     const take = pageSize;
-       // org_id = 157
-      //  const {org_id} = req.user || {};
-      //  const condition = org_id !== 157 
-      //  ? `INNER JOIN tenant_nhai.registration_invitation AS ri ON um.user_id = ri.user_id` 
-      //  : '';
+    // org_id = 157
+    //  const {org_id} = req.user || {};
+    //  const condition = org_id !== 157 
+    //  ? `INNER JOIN tenant_nhai.registration_invitation AS ri ON um.user_id = ri.user_id` 
+    //  : '';
     const users = await prisma.$queryRaw`
             SELECT 
     um.sap_id,
@@ -509,7 +509,7 @@ ORDER BY um.user_id DESC
       });
     }
 
-    
+
     return res.status(STATUS_CODES.OK).json({
       success: true,
       message: 'Users retrieved successfully.',
@@ -808,7 +808,8 @@ export const verifyOtpLatest = async (req, res) => {
       user_id: user.user_id, // Include the user ID (or any other info)
       email: user.email,
       phone_number: user.mobile_number,
-
+      office_location: user.office_location,
+      designation: user.designation,
     };
 
     // Replace 'your_secret_key' with your actual secret key for signing the token
@@ -824,9 +825,9 @@ export const verifyOtpLatest = async (req, res) => {
       message: 'OTP verified successfully.',
       data: {
         access_token: access_token,
-        user_id : user.user_id,
-        sap_id : user.sap_id,
-        is_active : user.is_active,
+        user_id: user.user_id,
+        sap_id: user.sap_id,
+        is_active: user.is_active,
         //name: user.first_name + ' ' + user.last_name,
         name: user.name,
         mobile_number: user.mobile_number,
@@ -835,9 +836,9 @@ export const verifyOtpLatest = async (req, res) => {
         is_digilocker_verified: user.is_digilocker_verified,
         office_location: user.office_location,
         user_type: user.user_type,
-        user_role : user.user_role,
-        organization_id : user.organization_id
-       
+        user_role: user.user_role,
+        organization_id: user.organization_id
+
       },
     });
   } catch (err) {
@@ -897,7 +898,7 @@ export const verifyEmailOtpLatest = async (req, res) => {
       message: 'Email OTP verified successfully.',
       data: {
         access_token: access_token,
-        user_id : user.user_id,
+        user_id: user.user_id,
         name: user.name,
         mobile_number: user.mobile_number,
         email: user.email,
@@ -952,31 +953,31 @@ export const verifyEmailOtpAgency = async (req, res) => {
 
     const payload = {
       user: {
-         org_id: user.org_id, // Include the user ID (or any other info)
-         name:user.name,
-         org_type:user.org_type,
-         contractor_agency_type:user.contractor_agency_type,
-         date_of_incorporation:user.date_of_incorporation,
-         selection_method: user.selection_method,
-         empanelment_start_date:user.empanelment_start_date,
-         empanelment_end_date:user.empanelment_end_date,
-         organization_data:user.organization_data,
-         spoc_details:user.spoc_details,
-         tin:user.tin,
-         contact_number:user.contact_number,
-         gst_number:user.gst_number,
-         pan:user.pan,
-         contact_email:user.contact_email,
-         invite_status:user.invite_status,
-         is_active:user.is_active,
-         created_by:user.created_by,
-         created_date:user.created_date,
-         last_updated_by:user.last_updated_by,
-         last_updated_date:user.last_updated_date,
-         status:user.status,
-         is_entity_locker_verified:user.is_entity_locker_verified,
-         CIN:user.CIN,
-         entity_data:user.entity_data
+        org_id: user.org_id, // Include the user ID (or any other info)
+        name: user.name,
+        org_type: user.org_type,
+        contractor_agency_type: user.contractor_agency_type,
+        date_of_incorporation: user.date_of_incorporation,
+        selection_method: user.selection_method,
+        empanelment_start_date: user.empanelment_start_date,
+        empanelment_end_date: user.empanelment_end_date,
+        organization_data: user.organization_data,
+        spoc_details: user.spoc_details,
+        tin: user.tin,
+        contact_number: user.contact_number,
+        gst_number: user.gst_number,
+        pan: user.pan,
+        contact_email: user.contact_email,
+        invite_status: user.invite_status,
+        is_active: user.is_active,
+        created_by: user.created_by,
+        created_date: user.created_date,
+        last_updated_by: user.last_updated_by,
+        last_updated_date: user.last_updated_date,
+        status: user.status,
+        is_entity_locker_verified: user.is_entity_locker_verified,
+        CIN: user.CIN,
+        entity_data: user.entity_data
       }
     };
 
@@ -1131,7 +1132,7 @@ export const inviteUser = async (req, res) => {
   //}
   try {
     //  Create the user in the database
-    const user = await prisma.user_master.create({  
+    const user = await prisma.user_master.create({
       data: {
         name,
         email,
@@ -1153,25 +1154,25 @@ export const inviteUser = async (req, res) => {
         },
       },
     });
-   
 
-   await keycloakAddUser({
-      username:user.name,
-      email:user.email,
-      firstName:user.name,
-      lastName:user.name,
-      mobile:user.mobile_number,
-      division:"",
-      designation:user.designation,
+
+    await keycloakAddUser({
+      username: user.name,
+      email: user.email,
+      firstName: user.name,
+      lastName: user.name,
+      mobile: user.mobile_number,
+      division: "",
+      designation: user.designation,
     })
 
-    
-    const getKeyCloakDataforUser = await getKeycloakUserPermission({mobileNumber:user.mobile_number})
-    const assignRoles =await keycloakUpdateUserRole({
-      userId:getKeyCloakDataforUser.userDetail.id,
-      roleName:roles_permission
+
+    const getKeyCloakDataforUser = await getKeycloakUserPermission({ mobileNumber: user.mobile_number })
+    const assignRoles = await keycloakUpdateUserRole({
+      userId: getKeyCloakDataforUser.userDetail.id,
+      roleName: roles_permission
     })
-    
+
 
     ///////////////////////////////////////////////////
     
@@ -1194,23 +1195,23 @@ export const inviteUser = async (req, res) => {
         invite_message: "You are invited to join the platform.",
         expiry_date: new Date(new Date().setDate(new Date().getDate() + 7)),
         created_by: user.user_id,
-        unique_invitation_id : uniqueUsername2
+        unique_invitation_id: uniqueUsername2
       },
     })
 
     ///////////////SEND SMS ////////////////////////
-     let phoneNumber = user.mobile_number;
-        if (phoneNumber.startsWith("+91")) {
-          phoneNumber = phoneNumber.substring(3); // Remove first 3 characters
-        }
-       // console.log(phoneNumber); // Output: 9555436473
-        await sendOtpSMSForInvite(phoneNumber, invitation_link)
+    let phoneNumber = user.mobile_number;
+    if (phoneNumber.startsWith("+91")) {
+      phoneNumber = phoneNumber.substring(3); // Remove first 3 characters
+    }
+    // console.log(phoneNumber); // Output: 9555436473
+    await sendOtpSMSForInvite(phoneNumber, invitation_link)
 
     //////////////////////Send Email /////////////
 
     const otp = crypto.randomInt(10000, 99999).toString();
     const subject = 'Invitations Link For User Registration: DATALAKE 3.0';
-        const text = `Dear Sir/Ma'am, 
+    const text = `Dear Sir/Ma'am, 
                           You have been invited to join Datalake 3.0. Please click the link
                            ${invitation_link}
                            Thanks & Regards,
@@ -1219,8 +1220,8 @@ export const inviteUser = async (req, res) => {
     //const subject = 'OTP FOR USER REGISTRATION: DATALAKE';
     //const text = `Your requested OTP is ${otp}`;
     const emailtosent = user.email;
-    
-  sendEmail(emailtosent, subject, text)
+
+    sendEmail(emailtosent, subject, text)
     // .then(info => {
     //   console.log('Email sent: ' + info.response);
     //   res.status(200).json({ 
@@ -1228,9 +1229,9 @@ export const inviteUser = async (req, res) => {
     //     status : 200,
     //     message: 'OTP sent successfully'     
     //   });
-      
+
     // })
-   
+
 
     //////////////////////////////////////////////
     res.status(STATUS_CODES.CREATED).json({
@@ -1249,54 +1250,56 @@ export const inviteUser = async (req, res) => {
   }
 }
 
-export const getUserByInviteId = async(req, res) =>{
-  const{id}= req.params;
-  try{
-        const agency = await prisma.registration_invitation.findFirst({
-          where :{unique_invitation_id: id}
-        });
-        if (!agency) {
-          return res.status(STATUS_CODES.NOT_FOUND).json({
-            success: false,
-            status:STATUS_CODES.NOT_FOUND,
-            message: "User Link Invalid or expired invitation" });
-        }
-        
-          // Check if invitation has expired
-        if (new Date() > agency.expiry_date) {
-          return res.status(400).json({ 
-            success:false,
-            status:STATUS_CODES.BAD_REQUEST,
-            message: 'Invitation has expired' });
-        }
-        const inviteagency = await prisma.user_master.findUnique({ 
-          where: { user_id: agency.user_id } 
-        });
-
-
-        await prisma.registration_invitation.update({
-          where: { invitation_id: agency.invitation_id},
-          data: { is_active: false, last_updated_date: new Date() },
-        });
-          //invitation_status: '"Pending"', 
-        res.status(STATUS_CODES.OK).json({
-          success: true,
-          status:STATUS_CODES.OK,
-          data: {inviteagency,
-            ...agency}
-        });
-      }catch(error){
-        console.log(error)
-        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ 
+export const getUserByInviteId = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const agency = await prisma.registration_invitation.findFirst({
+      where: { unique_invitation_id: id }
+    });
+    if (!agency) {
+      return res.status(STATUS_CODES.NOT_FOUND).json({
         success: false,
-        status:STATUS_CODES.INTERNAL_SERVER_ERROR,
-        Message: "Error fetching User."
+        status: STATUS_CODES.NOT_FOUND,
+        message: "User Link Invalid or expired invitation"
       });
+    }
+
+    // Check if invitation has expired
+    if (new Date() > agency.expiry_date) {
+      return res.status(400).json({
+        success: false,
+        status: STATUS_CODES.BAD_REQUEST,
+        message: 'Invitation has expired'
+      });
+    }
+    const inviteagency = await prisma.user_master.findUnique({
+      where: { user_id: agency.user_id }
+    });
+
+
+    await prisma.registration_invitation.update({
+      where: { invitation_id: agency.invitation_id },
+      data: { is_active: false, last_updated_date: new Date() },
+    });
+    //invitation_status: '"Pending"', 
+    res.status(STATUS_CODES.OK).json({
+      success: true,
+      status: STATUS_CODES.OK,
+      data: {
+        inviteagency,
+        ...agency
+      }
+    });
+  } catch (error) {
+    console.log(error)
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+      Message: "Error fetching User."
+    });
 
   }
 }
-
-
 
 export const getUserById = async (req, res) => {
   const { user_id } = req.body;
@@ -1353,7 +1356,7 @@ export const getUserById = async (req, res) => {
 export const updateUserById = async (req, res) => {
   const { user_id, name, email, mobile_number, office_mobile_number, designation, user_type, status, office, contracts, roles_permission } = req.body;
 
-  
+
   // Validate user_id using Joi validation schema
   const { error } = editUserValidationSchema.validate(req.body);
 
@@ -1402,11 +1405,11 @@ export const updateUserById = async (req, res) => {
         user_type,
         status,
         user_data: {
-            office: office || [],
-            contracts: contracts || [],
-            roles_permission: roles_permission || [],
-          },
+          office: office || [],
+          contracts: contracts || [],
+          roles_permission: roles_permission || [],
         },
+      },
     });
     // Return the user data if found
     res.status(STATUS_CODES.OK).json({
@@ -1495,6 +1498,33 @@ export const getContractDetails = async (req, res) => {
   });
 
 };
+
+
+/**
+ * Method : @patch
+ * Params : @user_id , @office_location
+ * Description: @transferUser method Use to update the user office loaction. So that user get transfer from one piu to another piu
+*/
+
+export const transferUser = async (req, res) => {
+  try {
+
+    const { user_id, office_location } = req.body
+
+    // Validate that both user_id and office_location are provided
+    if (!user_id || !office_location) {
+      return res.status(400).json({ message: "User ID and office location are required." });
+    }
+    await prisma.user_master.update({
+      where: { user_id },
+      data: { office_location: office_location },
+    });
+
+    res.status(200).json({ message: `User transfer to ${office_location} PIU` })
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+}
 
 
 

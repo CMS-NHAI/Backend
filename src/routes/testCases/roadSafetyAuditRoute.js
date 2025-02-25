@@ -4,9 +4,9 @@ import { viewRoadSafetyAudit, recommendRoadSafetyAudit, approveRoadSafetyAudit, 
 import { userRoleResourcePermissionBasedAccess } from '../../middlewares/testCases/permissionMiddleware.js'
 import checkToken from '../../middlewares/checkToken.js';
 
-router.get('/view', checkToken, userRoleResourcePermissionBasedAccess(['Admin','PD', 'RO', 'Dy Manager', 'Manager', 'DGM', 'Other Staff'], ['Road Safety Audit'], ['view']), viewRoadSafetyAudit)
-router.post('/recommend', checkToken, userRoleResourcePermissionBasedAccess(['Admin', 'PD'], ['Road Safety Audit'], ['Recommend']), recommendRoadSafetyAudit)
-router.post('/approve', checkToken, userRoleResourcePermissionBasedAccess(['Admin','RO'], ['Road Safety Audit'], ['Approve']), approveRoadSafetyAudit)
-router.post('/suggest', checkToken, userRoleResourcePermissionBasedAccess(['Admin', 'Dy Manager', 'Manager', 'DGM', 'Other Staff'], ['Road Safety Audit'], ['Suggest']), suggestRoadSafetyAudit)
+router.get('/view', checkToken, userRoleResourcePermissionBasedAccess(['PD', 'RO', 'Deputy Manager', 'Manager', 'DGM', 'Other Staff'], ['Road Safety Audit'], ['View']), viewRoadSafetyAudit)
+router.post('/recommend', checkToken, userRoleResourcePermissionBasedAccess(['PD'], ['Road Safety Audit'], ['Recommend']), recommendRoadSafetyAudit)
+router.post('/approve', checkToken, userRoleResourcePermissionBasedAccess(['RO'], ['Road Safety Audit'], ['Approve']), approveRoadSafetyAudit)
+router.post('/suggest', checkToken, userRoleResourcePermissionBasedAccess(['Deputy Manager', 'Manager', 'DGM', 'Other Staff'], ['Road Safety Audit'], ['Suggest']), suggestRoadSafetyAudit)
 
 export default router

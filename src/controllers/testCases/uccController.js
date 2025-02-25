@@ -44,7 +44,7 @@ export const transferPiu = async (req, res) => {
         const { ucc_id, piu } = req.body
         await prisma.ucc_master.update({
             where: { ucc_id },
-            data: { piu: piu },
+            data: { piu_id:piu_id, piu: piu },
           });
 
           res.status(200).json({ message: "Piu updated successfully." })
@@ -52,7 +52,6 @@ export const transferPiu = async (req, res) => {
         res.status(500).json({ message: error.message })
     }
 }
-
 
 export const uccLog = async (req, res) => {
     try {

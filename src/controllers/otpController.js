@@ -184,7 +184,7 @@ export const sendOtpToUserViaEmailLatest = async (req, res) => {
 
   // Store OTP with an expiration time (5 minutes)
 
-  const subject = 'OTP FOR AGENCY REGISTRATION: DATALAKE';
+  const subject = 'OTP for Login and Registration: DATALAKE 3.0';
   const text = `Your requested OTP is ${otp}`;
 
   sendEmail(email, subject, text)

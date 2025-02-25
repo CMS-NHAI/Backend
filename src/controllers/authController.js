@@ -11,6 +11,22 @@ import jwt from "jsonwebtoken";
  * required params @code
  * 
  */
+
+const base64ToVector128 = (base64String) => {
+  const buffer = Buffer.from(base64String, 'base64');
+  
+  if (buffer.length !== 16) {
+    res.status(500).json({
+      success: true,
+      msg: "Invalid input: Base64 must decode to 16 bytes (128 bits)",
+    });
+      //throw new Error('Invalid input: Base64 must decode to 16 bytes (128 bits)');
+  }
+
+  return new Uint8Array(buffer);
+};
+
+
 export const digiLockerUserDetail = async (req, res) => {
   try {
     const { code } = req.body;
@@ -109,11 +125,41 @@ export const digiLockerFinalRegistration = async(req, res)=>{
 
   // Decode the token (without verifying) to get the payload
   const userEmail = req.user.email;  
+
+  const employee = await prisma.user_master.findUnique({
+    where: {
+      email: userEmail, 
+    },
+    select: {
+      user_type: true,
+    },
+  });
+  
   // Extract user ID and email from the token payload
   // const data = await prisma.user_master.update({
   //       where: { email: userEmail },
   //       is_digilocker_verified: true,
   //   })
+
+  if(employee.user_type == 'External'){
+    const { base64String } = req.body
+    const vectorImage = base64ToVector128(base64String);
+    await prisma.user_master.update({
+      where: {
+        email: userEmail,
+      },
+      data: {
+        is_digilocker_verified: true,
+        user_vector_image: vectorImage,
+      },
+      select: {
+        user_id: true,
+        unique_username: true,
+        email: true,
+        user_vector_image: true,
+      },
+    });
+  }else{
 
     const data = await prisma.user_master.update({
       where: { email: userEmail },
@@ -121,6 +167,8 @@ export const digiLockerFinalRegistration = async(req, res)=>{
         is_digilocker_verified: true,
       },
     });
+
+  }
 
     res.status(200).json({
       success: true,

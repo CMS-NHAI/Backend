@@ -205,8 +205,7 @@ export const getUserDetails = async (req, res) => {
 
     console.log('Decoded token:', decoded);
     const user = await getUserByPhoneNo(mobile_number);
-    const keyCloakDetails = await axios.post(`${process.env.KEYCLOAK_URL}/api/v1/keycloak/user/permission-detail`,{mobile:mobile_number})
-    console.log(JSON.stringify(keyCloakDetails.data),"keyCloakDetails>>>>>>>")
+    const keyCloakDetails = await getKeycloakUserPermission({mobileNumber:mobile_number,email:user?.email})
     if (!user) {
       return res.status(STATUS_CODES.OK).json({
         success: "false",
@@ -228,8 +227,8 @@ export const getUserDetails = async (req, res) => {
         designation: user.designation,
         office_location: user.office_location,
         user_type: user.user_type,
-        user_role:keyCloakDetails.data.userRole,
-        userAuthroization:keyCloakDetails.data.userAuthorization
+        user_role:keyCloakDetails?.userRole,
+        userAuthroization:keyCloakDetails?.userAuthorization
       },
     });
   } catch (err) {
@@ -1329,7 +1328,10 @@ export const getUserById = async (req, res) => {
         message: "User not found.",
       });
     }
+    const getKeyCloakDataforUser = await getKeycloakUserPermission({mobileNumber:user?.mobile_number,email:user?.email})
 
+    user.role =getKeyCloakDataforUser?.userRole
+    user.permission = getKeyCloakDataforUser?.userAuthorization
     // Return the user data if found
     res.status(STATUS_CODES.OK).json({
       success: true,
@@ -1370,7 +1372,6 @@ export const updateUserById = async (req, res) => {
         user_id: user_id, // Fetch user using user_id
       },
     });
-    console.log(user,"user")
 
     // If the user is not found
     if (!user) {
@@ -1383,7 +1384,6 @@ export const updateUserById = async (req, res) => {
 
     if(roles_permission.length > 0){
      const keyCloakData =await getKeycloakUserPermission({mobileNumber:user.mobile_number})
-     console.log(keyCloakData,"keyCloakData")
      await keycloakUpdateUserRole({
       userId:keyCloakData.userDetail.id,
       roleName:roles_permission

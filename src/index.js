@@ -20,8 +20,8 @@ import authrouter from "./routes/authRoute.js"
 import keycloakAuthRoute from './routes/keycloak/keycloakAuthRoute.js'
 import path from "path";
 import { fileURLToPath } from 'url';
+import { sendOtpSMS, sendOtpSMSForInvite } from "./services/cdacOtpService.js";
 import { sendEmail } from "./services/emailService.js";
-
 
 const app = express();
 
@@ -42,8 +42,8 @@ app.use(compression());
 app.use(cors({ origin: '*' }));
 app.use(bodyParser.json());
 
-app.use(express.json()); 
-
+app.use(express.json({ limit: '150kb' })); 
+ 
 app.use('/api/v1/otp', router);
 app.use('/api/v1/auth', router);
 app.use('/api/v1/user', userrouter);
@@ -59,6 +59,7 @@ app.use('/api/v1/keycloak/user', keycloakUserRouter);
 app.use('/api/v1/auth', authrouter);
 app.use('/api/v1/keycloak/auth', keycloakAuthRoute)
 
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -73,19 +74,43 @@ app.get("/.well-known/assetlinks.json", (req, res) => {
 //app.use("/api/v1/article", ArticleRouter);
 //app.use("/api/v1/user", UserRouter);
 
+// send otp start
+app.post('/send-email', async (req, res) => {
+  try {
+    const {to, subject, text} = req.body
+    const otpResponse = await sendEmail(to, subject, text);
+    res.status(200).send(otpResponse);
+  } catch (error) {
+    res.status(500).send('Failed to send email');
+  }
+});
+
+app.post('/send-otp', async (req, res) => {
+  try {
+    const {mobileno} = req.body
+    const otpResponse = await sendOtpSMS(mobileno);
+    res.status(200).send(otpResponse);
+  } catch (error) {
+    res.status(500).send('Failed to send OTP');
+  }
+});
+
+app.post('/send-link', async (req, res) => {
+  try {
+    const {mobileno, invitationLink} = req.body
+    const otpResponse = await sendOtpSMSForInvite(mobileno, invitationLink);
+    res.status(200).send(otpResponse);
+  } catch (error) {
+    res.status(500).send('Failed to send invitation on sms');
+  }
+});
+// send otp end
+
 app.get('/', (req, res) => {
   res.status(STATUS_CODES.OK).send({
     message: `Welcome to Datalake 3.0 ${APP_CONSTANTS.APP_NAME} v${APP_CONSTANTS.VERSION}`,
   });
 });
-
-app.post('/send-email', async (req, res)=>{
-  const  {to, subject, text} = req.body
-  await sendEmail(to, subject, text)
-  res.status(200).send({ message:"Email send successfully."})
-})
-
-
 
 const PORT =  process.env.PORT || 3004;
 //const server = http.createServer(app);

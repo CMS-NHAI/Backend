@@ -92,6 +92,7 @@ export const digiLockerUserDetail = async (req, res) => {
 
 export const digiLockerFinalRegistration = async(req, res)=>{
 
+  
   try{
     const authorizationHeader =
     req.headers.Authorization || req.headers.authorization;
@@ -312,7 +313,7 @@ export const digiLockerUserDetailMobile = async (req, res) => {
     return res.status(200).json({
       success: true,
       status: 200,
-      msg: "User details from digilocker retrieved successfully.",
+      message: "User details from digilocker retrieved successfully.",
       data: userInfo
     });
   } catch (error) {
@@ -343,27 +344,41 @@ export const digiLockerFinalRegistrationMobile = async(req, res)=>{
 
   // Decode the token (without verifying) to get the payload
   const userEmail = req.user.email;  
-  // Extract user ID and email from the token payload
-  // const data = await prisma.user_master.update({
-  //       where: { email: userEmail },
-  //       is_digilocker_verified: true,
-  //   })
+  const { vectorImage } = req.body
 
-    const data = await prisma.user_master.update({
-      where: { email: userEmail },
+  // await prisma.$executeRaw`
+  //       UPDATE tenant_nhai."user_master"
+  //       SET "is_digilocker_verified" = true,
+  //        "user_vector_image" = ${vectorImage}::tenant_nhai.vector(128)
+  //       WHERE "email" = ${userEmail}
+  //       RETURNING *;
+  //   `;
+
+    await prisma.user_master.update({
+      where: {
+        email: userEmail,
+      },
       data: {
         is_digilocker_verified: true,
+        user_vector_image: vectorImage,
+      },
+      select: {
+        user_id: true,
+        unique_username: true,
+        email: true,
+        user_vector_image: true,
       },
     });
 
     res.status(200).json({
       success: true,
-      msg: "User verified successfully.",
+      status: 200,
+      message: "User verified successfully.",
     });
 
   }catch(error){
 
-    res.status().json({ success:false, msg:error.message})
+    res.status(500).json({ success:false, message:error.message})
 
   }
 

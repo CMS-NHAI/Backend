@@ -15,12 +15,14 @@ import { userIdValidation } from '../validations/getUserValidation.js';
 import { editUserValidationSchema } from '../validations/editUserValidation.js';
 import { orgIdValidationSchema } from '../validations/getOfficeValidation.js';
 import { v4 as uuidv4 } from 'uuid';
+import { customAlphabet } from 'nanoid';
 import crypto from "crypto";
 import axios from "axios";
 import {sendEmail} from '../services/emailService.js';
 import { keycloakAddUser } from "../services/keycloakService/keycloakAddUser.js";
 import {getKeycloakUserPermission} from "../services/keycloakService/getUserDetailsPermission.js"
 import { keycloakUpdateUserRole } from "../helper/keycloak/keycloakUpdateUserRole.js";
+import { sendOtpSMS, sendOtpSMSForInvite } from "../services/cdacOtpService.js";
 const uniqueUsername = uuidv4();
 const getEmployeeBySAPID = async (sapId) => {
   try {
@@ -398,6 +400,8 @@ export const authenticateEntity = async(req,res) => {
             }
 
     const accessToken = await generateEntityAccessToken(code,req,res);
+    console.log("accessToken ======>>>>>>", accessToken)
+
     const apiResponse = await fetch('https://entity.digilocker.gov.in/public/oauth2/1/entity', {
       method: 'GET',
       headers: {
@@ -860,7 +864,7 @@ export const verifyEmailOtpLatest = async (req, res) => {
       return res.status(STATUS_CODES.NOT_FOUND).json({
         success: false,
         status: STATUS_CODES.NOT_FOUND,
-        message: 'No OTP found for the User.'
+        message: 'User is not registered with provided email'
       })
     }
     console.log(user)
@@ -947,12 +951,34 @@ export const verifyEmailOtpAgency = async (req, res) => {
     }
 
 
-    const payload = {user
-      // org_id: user.org_id, // Include the user ID (or any other info)
-      // name:user.name,
-      // org_type:user.org_type,
-      // contact_email:user.contact_email,
-      // contact_number: user.contact_number
+    const payload = {
+      user: {
+         org_id: user.org_id, // Include the user ID (or any other info)
+         name:user.name,
+         org_type:user.org_type,
+         contractor_agency_type:user.contractor_agency_type,
+         date_of_incorporation:user.date_of_incorporation,
+         selection_method: user.selection_method,
+         empanelment_start_date:user.empanelment_start_date,
+         empanelment_end_date:user.empanelment_end_date,
+         organization_data:user.organization_data,
+         spoc_details:user.spoc_details,
+         tin:user.tin,
+         contact_number:user.contact_number,
+         gst_number:user.gst_number,
+         pan:user.pan,
+         contact_email:user.contact_email,
+         invite_status:user.invite_status,
+         is_active:user.is_active,
+         created_by:user.created_by,
+         created_date:user.created_date,
+         last_updated_by:user.last_updated_by,
+         last_updated_date:user.last_updated_date,
+         status:user.status,
+         is_entity_locker_verified:user.is_entity_locker_verified,
+         CIN:user.CIN,
+         entity_data:user.entity_data
+      }
     };
 
     // Replace 'your_secret_key' with your actual secret key for signing the token
@@ -1060,6 +1086,10 @@ export const inviteUser = async (req, res) => {
     contracts,
     roles_permission,
   } = req.body;
+  
+ // const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 6); 
+ // const uniqueUsername2 = nanoid();
+
   const uniqueUsername2 = uuidv4();
   const { error } = inviteUserValidationSchema.validate(req.body);
 
@@ -1145,7 +1175,8 @@ export const inviteUser = async (req, res) => {
     
 
     ///////////////////////////////////////////////////
-    const generateInvitationLink = `http://10.3.0.19:3000/signup/user/${uniqueUsername2}`
+    
+    const generateInvitationLink = `${process.env.BASE_URL}/signup/user/${uniqueUsername2}`
     //const uniqueToken = crypto.randomBytes(16).toString("hex");
     //return `http://localhost:3000/signup/agency?${uniqueToken}`;
 
@@ -1167,6 +1198,14 @@ export const inviteUser = async (req, res) => {
         unique_invitation_id : uniqueUsername2
       },
     })
+
+    ///////////////SEND SMS ////////////////////////
+     let phoneNumber = user.mobile_number;
+        if (phoneNumber.startsWith("+91")) {
+          phoneNumber = phoneNumber.substring(3); // Remove first 3 characters
+        }
+       // console.log(phoneNumber); // Output: 9555436473
+        await sendOtpSMSForInvite(phoneNumber, invitation_link)
 
     //////////////////////Send Email /////////////
 
@@ -1308,6 +1347,7 @@ export const getUserById = async (req, res) => {
     });
   }
 };
+
 export const updateUserById = async (req, res) => {
   const { user_id, name, email, mobile_number, office_mobile_number, designation, user_type, status, office, contracts, roles_permission } = req.body;
 
@@ -1355,8 +1395,8 @@ export const updateUserById = async (req, res) => {
       },
       data: {
         name,
-        email,
-        mobile_number,
+        // email,
+        // mobile_number,
         office_mobile_number,
         designation,
         user_type,

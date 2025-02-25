@@ -18,6 +18,11 @@ import policyrouter from './routes/keycloak/policyRoute.js'
 import keycloakUserRouter from './routes/keycloak/userRoute.js'
 import authrouter from "./routes/authRoute.js"
 import keycloakAuthRoute from './routes/keycloak/keycloakAuthRoute.js'
+// for test cases start
+import uccRouter from './routes/testCases/uccRoute.js'
+import roadSafetyAuditRouter from './routes/testCases/roadSafetyAuditRoute.js'
+import tollMasterRouter from './routes/testCases/tollMasterRoute.js'
+// for test cases end
 import path from "path";
 import { fileURLToPath } from 'url';
 import { sendOtpSMS, sendOtpSMSForInvite } from "./services/cdacOtpService.js";
@@ -58,6 +63,12 @@ app.use('/api/v1/policy', policyrouter);
 app.use('/api/v1/keycloak/user', keycloakUserRouter);
 app.use('/api/v1/auth', authrouter);
 app.use('/api/v1/keycloak/auth', keycloakAuthRoute)
+
+// For case test Case router start 
+app.use('/api/v1/ucc', uccRouter);
+app.use('/api/v1/roadSafetyaudit', roadSafetyAuditRouter);
+app.use('/api/v1/tollmaster', tollMasterRouter)
+// For case test Case router end 
 
 
 const __filename = fileURLToPath(import.meta.url);

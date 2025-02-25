@@ -24,6 +24,7 @@ router.put('/users/updateUserById', checkToken, updateUserById);
 router.get('/org/getOffice', checkToken, getOfficeDetails);
 router.get('/org/getContracts', checkToken, getContractDetails);
 // Transfer User from PIU to PIU
-router.patch('/transfer', checkToken, userRoleResourcePermissionBasedAccess(['Admin'], ['User'], ['User Transfer']), transferUser)
+// router.patch('/transfer', checkToken, userRoleResourcePermissionBasedAccess(['Admin'], ['User'], ['User Transfer']), transferUser)
+router.patch('/transfer', checkToken, transferUser)
 
 export default router;  

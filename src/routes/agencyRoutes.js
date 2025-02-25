@@ -9,8 +9,9 @@ import {
 import checkToken  from '../middlewares/checkToken.js';
 import { createBulkAgency } from "../controllers/bulkRegistrationController.js";
 //import { verifyOtp, signup , getUserDetails , getSapDetails, authenticateEntity, getAllUsers, createUser , updateUserStatus, updateUser} from "../controllers/userController.js"
-
+import multer from "multer";
 const agencyRoutes = Router();
+const upload = multer({ dest: "uploads/" });
 
 agencyRoutes.post("/",checkToken, createAgency);
 agencyRoutes.get("/",checkToken, getAllAgencies);

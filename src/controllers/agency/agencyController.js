@@ -7,6 +7,7 @@ import { customAlphabet } from 'nanoid';
 import crypto from 'crypto';
 import {sendEmail} from '../../services/emailService.js';
 import organizationSchema from "../../validations/agencyValidation.js";
+import {loginSchema} from "../../validations/loginAgencyValidation.js";
 //import { Message } from "twilio/lib/twiml/MessagingResponse.js";
 
 // Create a new agency
@@ -240,23 +241,69 @@ export const deleteAgency = async (req, res) => {
 export const loginAgency = async (req, res) => {
 
   const { email, password } = req.body;
-   // Check if user exists
-   const userAgency = await prisma.organization_master.findUnique({ where: { contact_email:email } });
-   if (!userAgency) return res.status(401).json({ error: "Invalid email or password" });
 
+  const { error } = loginSchema.validate(req.body, { abortEarly: false });
+
+  if (error) {
+      return res.status(400).json({ errors: error.details.map(err => err.message) });
+  }
+
+  try {
+   // Check if user exists
+   const userAgency = await prisma.organization_master.findFirst({ where: { contact_email:email } });
+   if (!userAgency) return res.status(401).json({ success: false,status: STATUS_CODES.NOT_FOUND, message: "Invalid email or password" });
+    if(!userAgency.password) return res.status(400).json({ success: false,status: STATUS_CODES.NOT_FOUND, message: "Create your password on clicking Forget Password" });
      // Compare password
-     const isMatch = await bcrypt.compare(password, user.password);
-     if (!isMatch) return res.status(401).json({ error: "Invalid email or password" });
+     const isMatch = await bcrypt.compare(password, userAgency.password);
+     if (!isMatch) return res.status(401).json({success: false,status: STATUS_CODES.NOT_FOUND, message: "Invalid email or password" });
 
       // Generate JWT Token
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+      const payload = {
+        user: {
+          org_id: userAgency.org_id, // Include the user ID (or any other info)
+          name: userAgency.name,
+          org_type: userAgency.org_type,
+          contractor_agency_type: userAgency.contractor_agency_type,
+          date_of_incorporation: userAgency.date_of_incorporation,
+          selection_method: userAgency.selection_method,
+          empanelment_start_date: userAgency.empanelment_start_date,
+          empanelment_end_date: userAgency.empanelment_end_date,
+          organization_data: userAgency.organization_data,
+          spoc_details: userAgency.spoc_details,
+          tin: userAgency.tin,
+          contact_number: userAgency.contact_number,
+          gst_number: userAgency.gst_number,
+          pan: userAgency.pan,
+          contact_email: userAgency.contact_email,
+          invite_status: userAgency.invite_status,
+          is_active: userAgency.is_active,
+          created_by: userAgency.created_by,
+          created_date: userAgency.created_date,
+          last_updated_by: userAgency.last_updated_by,
+          last_updated_date: userAgency.last_updated_date,
+          status: userAgency.status,
+          is_entity_locker_verified: userAgency.is_entity_locker_verified,
+          CIN: userAgency.CIN,
+          entity_data: userAgency.entity_data
+        }
+      };
+    const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, { expiresIn: "1h" });
     
     res.status(STATUS_CODES.OK).json({
       success: true,
       status: STATUS_CODES.OK,
       message: "Login successful",
-      data: userAgency
+      data: { access_token: token }
     });
+
+  } catch (err) {
+    console.error(err);
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+      message: "Something went wrong! Please try after sometime."
+    });
+  }
     //res.json({ message: "Login successful", token });
 }
 

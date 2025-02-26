@@ -6,7 +6,9 @@ import {
     getAgencyByInviteId,
     updateAgency,
     deleteAgency,
-    loginAgency} from "../controllers/agency/agencyController.js";
+    loginAgency,
+    agencyPasswordResetLink,
+    resetAgencyPassword} from "../controllers/agency/agencyController.js";
 import checkToken  from '../middlewares/checkToken.js';
 import { createBulkAgency } from "../controllers/bulkRegistrationController.js";
 import multer from "multer";
@@ -19,7 +21,9 @@ agencyRoutes.get("/:id",checkToken, getAgencyById);
 agencyRoutes.get("/invite/:id", getAgencyByInviteId);
 agencyRoutes.put("/:id",checkToken, updateAgency);
 agencyRoutes.delete("/:id",checkToken, deleteAgency);
-agencyRoutes.post("/login", loginAgency)
+agencyRoutes.post("/login", loginAgency);
+agencyRoutes.post("/password-reset-link", agencyPasswordResetLink);
+agencyRoutes.post("/reset-password", resetAgencyPassword);
 
 //###### Agency Bulk Route #####//
 agencyRoutes.post("/bulk-register-csv", upload.single("file"), createBulkAgency);

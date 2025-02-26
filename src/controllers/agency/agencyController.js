@@ -251,7 +251,7 @@ export const loginAgency = async (req, res) => {
   try {
    // Check if user exists
    const userAgency = await prisma.organization_master.findFirst({ where: { contact_email:email } });
-   if (!userAgency) return res.status(401).json({ success: false,status: STATUS_CODES.NOT_FOUND, message: "Invalid email or password" });
+   if (!userAgency) return res.status(400).json({ success: false,status: STATUS_CODES.NOT_FOUND, message: "Invalid email or password" });
     if(!userAgency.password) return res.status(400).json({ success: false,status: STATUS_CODES.NOT_FOUND, message: "Create your password on clicking Forget Password" });
      // Compare password
      const isMatch = await bcrypt.compare(password, userAgency.password);
@@ -305,6 +305,89 @@ export const loginAgency = async (req, res) => {
     });
   }
     //res.json({ message: "Login successful", token });
+}
+
+
+
+export const agencyPasswordResetLink = async (req, res) =>{
+  const { email } = req.body;
+
+  try{
+  const userAgency = await prisma.organization_master.findFirst({ where: { contact_email:email } });
+  if (!userAgency) return res.status(404).json({ error: "Agency not found" });
+
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1-hour expiry
+
+  await prisma.organization_master.update({
+    where: { org_id:userAgency.org_id },
+    data: { 
+      password_reset_id : resetToken, 
+      password_reset_expiry : resetTokenExpiry 
+    },
+});
+
+const resetLink = `${process.env.BASE_URL}/reset-password?token=${resetToken}`;
+
+//////////////////////Send Email /////////////
+const subject = 'Password Reset Request for Agency DATALAKE 3.0';
+const text = `Click the link to reset your password: ${resetLink}`;
+const emailtosent = email;
+
+sendEmail(emailtosent, subject, text)
+
+
+res.status(STATUS_CODES.CREATED).json({
+success: true,
+status: STATUS_CODES.CREATED,
+message: 'Password reset email sent!.',
+//data:  newAgency,
+} );
+
+} catch (err) {
+  console.error(err);
+  res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+    success: false,
+    status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+    message: "Something went wrong! Please try after sometime."
+  });
+}
+
+//res.json({ message: "Password reset email sent!" });
+
+}
+
+export const resetAgencyPassword = async (req, res) =>{
+
+      const { token, newPassword } = req.body;
+
+
+     try{
+      const userAgency = await prisma.organization_master.findFirst({ where: { password_reset_id: token } });
+      if (!userAgency) return res.status(400).json({ error: "Invalid or expired token" });
+
+      if (userAgency.password_reset_expiry < new Date()) {
+        return res.status(400).json({ error: "Token expired" });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      await prisma.organization_master.update({
+        where: { org_id: userAgency.org_id },
+        data: { password: hashedPassword, password_reset_id: null, password_reset_expiry: null },
+      });
+
+    res.json({ message: "Password reset successful!" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+      message: "Something went wrong! Please try after sometime."
+    });
+
+}
 }
 
 //bhawesh new code////////////////////////////////////////////////////////////////////

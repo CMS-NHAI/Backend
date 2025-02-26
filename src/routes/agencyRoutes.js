@@ -5,10 +5,10 @@ import {
     getAgencyById,
     getAgencyByInviteId,
     updateAgency,
-    deleteAgency} from "../controllers/agency/agencyController.js";
+    deleteAgency,
+    loginAgency} from "../controllers/agency/agencyController.js";
 import checkToken  from '../middlewares/checkToken.js';
 import { createBulkAgency } from "../controllers/bulkRegistrationController.js";
-//import { verifyOtp, signup , getUserDetails , getSapDetails, authenticateEntity, getAllUsers, createUser , updateUserStatus, updateUser} from "../controllers/userController.js"
 import multer from "multer";
 const agencyRoutes = Router();
 const upload = multer({ dest: "uploads/" });
@@ -19,6 +19,7 @@ agencyRoutes.get("/:id",checkToken, getAgencyById);
 agencyRoutes.get("/invite/:id", getAgencyByInviteId);
 agencyRoutes.put("/:id",checkToken, updateAgency);
 agencyRoutes.delete("/:id",checkToken, deleteAgency);
+agencyRoutes.post("/login", loginAgency)
 
 //###### Agency Bulk Route #####//
 agencyRoutes.post("/bulk-register-csv", upload.single("file"), createBulkAgency);

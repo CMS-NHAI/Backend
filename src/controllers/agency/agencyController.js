@@ -364,10 +364,10 @@ export const resetAgencyPassword = async (req, res) =>{
 
      try{
       const userAgency = await prisma.organization_master.findFirst({ where: { password_reset_id: token } });
-      if (!userAgency) return res.status(400).json({ error: "Invalid or expired token" });
+      if (!userAgency) return res.status(400).json({ success: false,status:400, message: "Invalid or expired token" });
 
       if (userAgency.password_reset_expiry < new Date()) {
-        return res.status(400).json({ error: "Token expired" });
+        return res.status(400).json({ success: false, status:400, message: "Token expired" });
       }
 
       const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -377,7 +377,13 @@ export const resetAgencyPassword = async (req, res) =>{
         data: { password: hashedPassword, password_reset_id: null, password_reset_expiry: null },
       });
 
-    res.json({ message: "Password reset successful!" });
+      res.status(STATUS_CODES.OK).json({
+        success: true,
+        status: STATUS_CODES.OK,
+        message: "Password reset successful!."
+      });
+
+   // res.json({ message: "Password reset successful!" });
 
   } catch (err) {
     console.error(err);

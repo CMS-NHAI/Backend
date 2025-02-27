@@ -47,27 +47,28 @@ app.use(compression());
 app.use(cors({ origin: '*' }));
 app.use(bodyParser.json());
 
-app.use(express.json()); 
+app.use(express.json({limit: '5mb'}));
+app.use(express.urlencoded({limit: '5mb', extended: true})); 
  
-app.use('/api/v1/otp', router);
-app.use('/api/v1/auth', router);
-app.use('/api/v1/user', userrouter);
-app.use('/api/v1/', userrouter);
-app.use('/api/v1/agencies', agencyRoutes)
+app.use('/auth/api/v1/otp', router);
+app.use('/auth/api/v1/auth', router);
+app.use('/auth/api/v1/user', userrouter);
+app.use('/auth/api/v1/', userrouter);
+app.use('/auth/api/v1/agencies', agencyRoutes)
 
 // keycloak route
-app.use('/api/v1/role', rolerouter);
-app.use('/api/v1/scope', scoperouter);
-app.use('/api/v1/resource', resourcerouter);
-app.use('/api/v1/policy', policyrouter);
-app.use('/api/v1/keycloak/user', keycloakUserRouter);
-app.use('/api/v1/auth', authrouter);
-app.use('/api/v1/keycloak/auth', keycloakAuthRoute)
+app.use('/auth/api/v1/role', rolerouter);
+app.use('/auth/api/v1/scope', scoperouter);
+app.use('/auth/api/v1/resource', resourcerouter);
+app.use('/auth/api/v1/policy', policyrouter);
+app.use('/auth/api/v1/keycloak/user', keycloakUserRouter);
+app.use('/auth/api/v1/auth', authrouter);
+app.use('/auth/api/v1/keycloak/auth', keycloakAuthRoute)
 
 // For case test Case router start 
-app.use('/api/v1/ucc', uccRouter);
-app.use('/api/v1/roadSafetyaudit', roadSafetyAuditRouter);
-app.use('/api/v1/tollmaster', tollMasterRouter)
+app.use('/auth/api/v1/ucc', uccRouter);
+app.use('/auth/api/v1/roadSafetyaudit', roadSafetyAuditRouter);
+app.use('/auth/api/v1/tollmaster', tollMasterRouter)
 // For case test Case router end 
 
 
@@ -81,40 +82,6 @@ app.get("/.well-known/assetlinks.json", (req, res) => {
   res.sendFile(path.join(__dirname, "public/.well-known/assetlinks.json"));
 });
 
-//app.use('/api/user', userRoutes);
-//app.use("/api/v1/article", ArticleRouter);
-//app.use("/api/v1/user", UserRouter);
-
-// send otp start
-app.post('/send-email', async (req, res) => {
-  try {
-    const {to, subject, text} = req.body
-    const otpResponse = await sendEmail(to, subject, text);
-    res.status(200).send(otpResponse);
-  } catch (error) {
-    res.status(500).send('Failed to send email');
-  }
-});
-
-app.post('/send-otp', async (req, res) => {
-  try {
-    const {mobileno} = req.body
-    const otpResponse = await sendOtpSMS(mobileno);
-    res.status(200).send(otpResponse);
-  } catch (error) {
-    res.status(500).send('Failed to send OTP');
-  }
-});
-
-app.post('/send-link', async (req, res) => {
-  try {
-    const {mobileno, invitationLink} = req.body
-    const otpResponse = await sendOtpSMSForInvite(mobileno, invitationLink);
-    res.status(200).send(otpResponse);
-  } catch (error) {
-    res.status(500).send('Failed to send invitation on sms');
-  }
-});
 // send otp end
 
 app.get('/', (req, res) => {

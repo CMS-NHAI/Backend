@@ -3,6 +3,7 @@ import { getAccessTokenFromDigiLocker, getAccessTokenFromDigiLockerMobile} from 
 import { parseXmlToJson } from "../helper/parseXmlToJson.js";
 import prisma  from "../config/prismaClient.js";
 import jwt from "jsonwebtoken";
+import { STATUS_CODES } from "../constants/statusCodesConstant.js";
 
 /**
  *

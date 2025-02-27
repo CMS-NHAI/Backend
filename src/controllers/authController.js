@@ -175,11 +175,14 @@ export const digiLockerFinalRegistration = async(req, res)=>{
       msg: "User verified successfully.",
     });
 
-  }catch(error){
-
-    res.status().json({ success:false, msg:error.message})
-
-  }
+  }catch (err) {
+      //console.error(err);
+      res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+        message: "Something went wrong! Please try after sometime."
+      });
+    }
 
 }
 

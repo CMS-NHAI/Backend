@@ -13,11 +13,11 @@ import { STATUS_CODES } from "../constants/statusCodesConstant.js";
  * 
  */
 
-const base64ToVector128 = (base64String) => {
+const base64ToVector128 = (base64String, res) => {
   const buffer = Buffer.from(base64String, 'base64');
   
   if (buffer.length !== 16) {
-    res.status(500).json({
+   return res.status(500).json({
       success: true,
       msg: "Invalid input: Base64 must decode to 16 bytes (128 bits)",
     });
@@ -144,7 +144,7 @@ export const digiLockerFinalRegistration = async(req, res)=>{
 
   if(employee.user_type == 'External'){
     const { base64String } = req.body
-    const vectorImage = base64ToVector128(base64String);
+    const vectorImage = base64ToVector128(base64String, res);
     await prisma.user_master.update({
       where: {
         email: userEmail,
@@ -178,9 +178,9 @@ export const digiLockerFinalRegistration = async(req, res)=>{
 
   }catch (err) {
       console.error(err);
-      res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+      res.status(500).json({
         success: false,
-        status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+        status: 500,
         message: "Something went wrong! Please try after sometime."
       });
     }

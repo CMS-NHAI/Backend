@@ -1,7 +1,8 @@
 import { Router } from 'express';
-import { verifyOtp, verifyEmailOtpLatest,getUserByInviteId, createInvitation, verifyEmailOtpAgency, verifyOtpLatest,  signup , getUserDetails , getSapDetails, authenticateEntity, getAllUsers, createUser , updateUserStatus, updateUser , inviteUser, getUserById , updateUserById , getOfficeDetails, getContractDetails} from "../controllers/userController.js"
+import { verifyOtp, verifyEmailOtpLatest,getUserByInviteId, createInvitation, verifyEmailOtpAgency, verifyOtpLatest,  signup , getUserDetails , getSapDetails, authenticateEntity, getAllUsers, createUser , updateUserStatus, updateUser , inviteUser, getUserById , updateUserById , getOfficeDetails, getContractDetails, transferUser} from "../controllers/userController.js"
 import checkToken  from '../middlewares/checkToken.js';
 const router = Router();
+import { userRoleResourcePermissionBasedAccess } from '../middlewares/testCases/permissionMiddleware.js'
 
 //router.post('/verify-otp', verifyOtp);
 router.post('/verify-otp', verifyOtpLatest);
@@ -22,5 +23,8 @@ router.post('/users/getUserById', checkToken, getUserById);
 router.put('/users/updateUserById', checkToken, updateUserById);
 router.get('/org/getOffice', checkToken, getOfficeDetails);
 router.get('/org/getContracts', checkToken, getContractDetails);
+// Transfer User from PIU to PIU
+// router.patch('/transfer', checkToken, userRoleResourcePermissionBasedAccess(['Admin'], ['User'], ['User Transfer']), transferUser)
+router.patch('/transfer', checkToken, transferUser)
 
 export default router;  

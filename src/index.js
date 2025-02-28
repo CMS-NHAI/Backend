@@ -22,6 +22,7 @@ import keycloakAuthRoute from './routes/keycloak/keycloakAuthRoute.js'
 import uccRouter from './routes/testCases/uccRoute.js'
 import roadSafetyAuditRouter from './routes/testCases/roadSafetyAuditRoute.js'
 import tollMasterRouter from './routes/testCases/tollMasterRoute.js'
+import piuRouter from './routes/testCases/piuRoute.js'
 // for test cases end
 import path from "path";
 import { fileURLToPath } from 'url';
@@ -42,35 +43,34 @@ i18n.configure({
 
 app.use(i18n.init);
 app.use(helmet());
-app.use(express.urlencoded({ extended: true }));
 app.use(compression());
 app.use(cors({ origin: '*' }));
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: "10mb" }));
 
-app.use(express.json({limit: '5mb'}));
-app.use(express.urlencoded({limit: '5mb', extended: true})); 
+//app.use(express.json({ limit: "10mb" })); 
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
  
-app.use('/auth/api/v1/otp', router);
-app.use('/auth/api/v1/auth', router);
-app.use('/auth/api/v1/user', userrouter);
-app.use('/auth/api/v1/', userrouter);
-app.use('/auth/api/v1/agencies', agencyRoutes)
+app.use('/backend/auth/api/v1/otp', router);
+app.use('/backend/auth/api/v1/auth', router);
+app.use('/backend/auth/api/v1/user', userrouter);
+app.use('/backend/auth/api/v1/', userrouter);
+app.use('/backend/auth/api/v1/agencies', agencyRoutes)
 
 // keycloak route
-app.use('/auth/api/v1/role', rolerouter);
-app.use('/auth/api/v1/scope', scoperouter);
-app.use('/auth/api/v1/resource', resourcerouter);
-app.use('/auth/api/v1/policy', policyrouter);
-app.use('/auth/api/v1/keycloak/user', keycloakUserRouter);
-app.use('/auth/api/v1/auth', authrouter);
-app.use('/auth/api/v1/keycloak/auth', keycloakAuthRoute)
+app.use('/backend/auth/api/v1/role', rolerouter);
+app.use('/backend/auth/api/v1/scope', scoperouter);
+app.use('/backend/auth/api/v1/resource', resourcerouter);
+app.use('/backend/auth/api/v1/policy', policyrouter);
+app.use('/backend/auth/api/v1/keycloak/user', keycloakUserRouter);
+app.use('/backend/auth/api/v1/auth', authrouter);
+app.use('/backend/auth/api/v1/keycloak/auth', keycloakAuthRoute)
 
 // For case test Case router start 
-app.use('/auth/api/v1/ucc', uccRouter);
-app.use('/auth/api/v1/roadSafetyaudit', roadSafetyAuditRouter);
-app.use('/auth/api/v1/tollmaster', tollMasterRouter)
+app.use('/backend/auth/api/v1/ucc', uccRouter);
+app.use('/backend/auth/api/v1/roadSafetyaudit', roadSafetyAuditRouter);
+app.use('/backend/auth/api/v1/tollmaster', tollMasterRouter)
+app.use('/backend/auth/api/v1/piu', piuRouter)
 // For case test Case router end 
-
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -82,7 +82,9 @@ app.get("/.well-known/assetlinks.json", (req, res) => {
   res.sendFile(path.join(__dirname, "public/.well-known/assetlinks.json"));
 });
 
-// send otp end
+//app.use('/api/user', userRoutes);
+//app.use("/api/v1/article", ArticleRouter);
+//app.use("/api/v1/user", UserRouter);
 
 app.get('/', (req, res) => {
   res.status(STATUS_CODES.OK).send({

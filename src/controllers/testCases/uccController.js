@@ -22,7 +22,7 @@ export const uccList = async (req, res) => {
             where: { ucc_id: userUccPiuData[0]?.ucc_id }
         });
 
-        if (filteredData.length > 0) {
+        if (userUccData.length > 0) {
             res.status(STATUS_CODES.OK).json({ success: true, status: STATUS_CODES.OK, message: `List of ${userOfficeData[0]?.office_name} retrieved successfully.`, data: userUccData });
         } else {
             res.status(STATUS_CODES.NOT_FOUND).json({ success: false, status: STATUS_CODES.NOT_FOUND, message: `No data found for PIU ${userOfficeData[0]?.office_name}.` });

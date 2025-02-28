@@ -114,13 +114,13 @@ export const digiLockerFinalRegistration = async(req, res)=>{
     req.headers.Authorization || req.headers.authorization;
 
   if (!authorizationHeader) {
-    return res.status(400).json({ msg: "Authorization header is missing" });
+    return res.status(400).json({ status:false, status:400, message: "Authorization header is missing" });
   }
 
   const token = authorizationHeader.split(" ")[1];
 
   if (!token) {
-    return res.status(400).json({ msg: "Token is missing or invalid" });
+    return res.status(400).json({ status:false, status:400, message: "Token is missing or invalid" });
   }
 
   // Decode the token (without verifying) to get the payload
@@ -172,7 +172,8 @@ export const digiLockerFinalRegistration = async(req, res)=>{
 
     res.status(200).json({
       success: true,
-      msg: "User verified successfully.",
+      status:200,
+      message: "User verified successfully.",
     });
 
   }catch (err) {

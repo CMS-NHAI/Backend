@@ -17,7 +17,7 @@ const base64ToVector128 = (base64String, res) => {
   const buffer = Buffer.from(base64String, 'base64');
   
   if (buffer.length !== 16) {
-   return res.status(500).json({
+    res.status(500).json({
       success: true,
       msg: "Invalid input: Base64 must decode to 16 bytes (128 bits)",
     });
@@ -109,7 +109,6 @@ export const digiLockerUserDetail = async (req, res) => {
 
 export const digiLockerFinalRegistration = async(req, res)=>{
 
-  
   try{
     const authorizationHeader =
     req.headers.Authorization || req.headers.authorization;
@@ -144,14 +143,14 @@ export const digiLockerFinalRegistration = async(req, res)=>{
 
   if(employee.user_type == 'External'){
     const { base64String } = req.body
-    const vectorImage = base64ToVector128(base64String, res);
+   // const vectorImage = base64ToVector128(base64String, res);
     await prisma.user_master.update({
       where: {
         email: userEmail,
       },
       data: {
         is_digilocker_verified: true,
-        user_vector_image: vectorImage,
+        user_vector_image: base64String,
       },
       select: {
         user_id: true,

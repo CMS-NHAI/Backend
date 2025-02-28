@@ -814,6 +814,8 @@ export const verifyOtpLatest = async (req, res) => {
       office_location: user.office_location,
       office_id: user.office_id,
       designation: user.designation,
+      division: user.division,
+      department: user.department
     };
 
     // Replace 'your_secret_key' with your actual secret key for signing the token
@@ -842,7 +844,10 @@ export const verifyOtpLatest = async (req, res) => {
         office_id: user.office_id,
         user_type: user.user_type,
         user_role: user.user_role,
-        organization_id: user.organization_id
+        organization_id: user.organization_id,
+        designation: user.designation,
+        division: user.division,
+        department: user.department
 
       },
     });

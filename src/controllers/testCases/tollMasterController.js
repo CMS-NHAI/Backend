@@ -4,7 +4,7 @@ import { tollMasterUccDataList } from '../../ucc_test_data/tollMasterUccDataList
 export const viewTollMaster = async (req, res) => {
     try {
 
-        res.status(200).json({ success: true, permission: `View permission allowed on ${req.userDivision} UCC.` });
+        res.status(200).json({ success: true, permission: `View permission has been granted.` });
 
     } catch (error) {
         res.status(500).json({ success: false, msg: error.message });

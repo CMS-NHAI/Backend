@@ -229,6 +229,9 @@ export const getUserDetails = async (req, res) => {
         email_id: user.email,
         designation: user.designation,
         office_location: user.office_location,
+        office_id: user.office_id,
+        division: user.division,
+        department: user.department,
         user_type: user.user_type,
         user_role:keyCloakDetails?.userRole,
         userAuthroization:keyCloakDetails?.userAuthorization
@@ -274,6 +277,7 @@ export const getUserByPhoneNo = async (mobile_number) => {
 
   }
 };
+
 export const getSapDetails = async (req, res) => {
   // const { sap_id , device_id, client_id} = req.body;
   const { sap_id } = req.body;
@@ -332,7 +336,6 @@ export const getSapDetails = async (req, res) => {
   }
 };
 
-
 async function generateEntityAccessToken(code, req, res) {
   try {
     const query = {
@@ -377,8 +380,7 @@ async function generateEntityAccessToken(code, req, res) {
   }
 }
 
-//get entity data 
-
+// get entity data 
 export const authenticateEntity = async (req, res) => {
   try {
     const { code, userEmail } = req.body;

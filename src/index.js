@@ -22,6 +22,7 @@ import keycloakAuthRoute from './routes/keycloak/keycloakAuthRoute.js'
 import uccRouter from './routes/testCases/uccRoute.js'
 import roadSafetyAuditRouter from './routes/testCases/roadSafetyAuditRoute.js'
 import tollMasterRouter from './routes/testCases/tollMasterRoute.js'
+import piuRouter from './routes/testCases/piuRoute.js'
 // for test cases end
 import path from "path";
 import { fileURLToPath } from 'url';
@@ -64,12 +65,12 @@ app.use('/api/v1/keycloak/user', keycloakUserRouter);
 app.use('/api/v1/auth', authrouter);
 app.use('/api/v1/keycloak/auth', keycloakAuthRoute)
 
-// For case test Case router start 
+// For case test Case router start
 app.use('/api/v1/ucc', uccRouter);
 app.use('/api/v1/roadSafetyaudit', roadSafetyAuditRouter);
 app.use('/api/v1/tollmaster', tollMasterRouter)
+app.use('/api/v1/piu', piuRouter)
 // For case test Case router end 
-
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -84,38 +85,6 @@ app.get("/.well-known/assetlinks.json", (req, res) => {
 //app.use('/api/user', userRoutes);
 //app.use("/api/v1/article", ArticleRouter);
 //app.use("/api/v1/user", UserRouter);
-
-// send otp start
-app.post('/send-email', async (req, res) => {
-  try {
-    const {to, subject, text} = req.body
-    const otpResponse = await sendEmail(to, subject, text);
-    res.status(200).send(otpResponse);
-  } catch (error) {
-    res.status(500).send('Failed to send email');
-  }
-});
-
-app.post('/send-otp', async (req, res) => {
-  try {
-    const {mobileno} = req.body
-    const otpResponse = await sendOtpSMS(mobileno);
-    res.status(200).send(otpResponse);
-  } catch (error) {
-    res.status(500).send('Failed to send OTP');
-  }
-});
-
-app.post('/send-link', async (req, res) => {
-  try {
-    const {mobileno, invitationLink} = req.body
-    const otpResponse = await sendOtpSMSForInvite(mobileno, invitationLink);
-    res.status(200).send(otpResponse);
-  } catch (error) {
-    res.status(500).send('Failed to send invitation on sms');
-  }
-});
-// send otp end
 
 app.get('/', (req, res) => {
   res.status(STATUS_CODES.OK).send({

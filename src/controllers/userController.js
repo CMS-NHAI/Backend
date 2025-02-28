@@ -24,6 +24,8 @@ import { getKeycloakUserPermission } from "../services/keycloakService/getUserDe
 import { keycloakUpdateUserRole } from "../helper/keycloak/keycloakUpdateUserRole.js";
 import { sendOtpSMS, sendOtpSMSForInvite } from "../services/cdacOtpService.js";
 const uniqueUsername = uuidv4();
+
+
 const getEmployeeBySAPID = async (sapId) => {
   try {
 
@@ -241,6 +243,7 @@ export const getUserDetails = async (req, res) => {
     });
   }
 };
+
 export const getUserByPhoneNo = async (mobile_number) => {
   try {
 
@@ -809,7 +812,10 @@ export const verifyOtpLatest = async (req, res) => {
       email: user.email,
       phone_number: user.mobile_number,
       office_location: user.office_location,
+      office_id: user.office_id,
       designation: user.designation,
+      division: user.division,
+      department: user.department
     };
 
     // Replace 'your_secret_key' with your actual secret key for signing the token
@@ -835,9 +841,13 @@ export const verifyOtpLatest = async (req, res) => {
         designation: user.designation,
         is_digilocker_verified: user.is_digilocker_verified,
         office_location: user.office_location,
+        office_id: user.office_id,
         user_type: user.user_type,
         user_role: user.user_role,
-        organization_id: user.organization_id
+        organization_id: user.organization_id,
+        designation: user.designation,
+        division: user.division,
+        department: user.department
 
       },
     });
@@ -1428,6 +1438,8 @@ export const updateUserById = async (req, res) => {
     });
   }
 };
+
+
 export const getOfficeDetails = async (req, res) => {
 
 
@@ -1465,6 +1477,8 @@ export const getOfficeDetails = async (req, res) => {
     data: officeList,
   });
 };
+
+
 export const getContractDetails = async (req, res) => {
 
 
@@ -1499,7 +1513,6 @@ export const getContractDetails = async (req, res) => {
 
 };
 
-
 /**
  * Method : @patch
  * Params : @user_id , @office_location
@@ -1509,18 +1522,18 @@ export const getContractDetails = async (req, res) => {
 export const transferUser = async (req, res) => {
   try {
 
-    const { user_id, office_location } = req.body
+    const { user_id, office_id } = req.body
 
     // Validate that both user_id and office_location are provided
-    if (!user_id || !office_location) {
-      return res.status(400).json({ message: "User ID and office location are required." });
+    if (!user_id || !office_id) {
+      return res.status(400).json({ message: "User ID and office id are required." });
     }
     await prisma.user_master.update({
       where: { user_id },
-      data: { office_location: office_location },
+      data: { office_id: office_id },
     });
 
-    res.status(200).json({ message: `User transfer to ${office_location} PIU` })
+    res.status(200).json({ message: `User transfer successfully.` })
   } catch (error) {
     res.status(500).json({ message: error.message })
   }

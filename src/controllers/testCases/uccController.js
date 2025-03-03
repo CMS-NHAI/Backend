@@ -1,4 +1,3 @@
-import { uccDummyData } from '../../ucc_test_data/uccDummyData.js'
 import prisma from "../../config/prismaClient.js";
 import { STATUS_CODES } from "../../constants/statusCodesConstant.js";
 
@@ -8,85 +7,207 @@ import { STATUS_CODES } from "../../constants/statusCodesConstant.js";
 */
 export const uccList = async (req, res) => {
     try {
-        // Fetch the user's office data
-        const userOfficeData = await prisma.or_office_master.findMany({
+        // Ensure user data is available in the request
+        if (!req?.user?.office_id) {
+            return res.status(STATUS_CODES.BAD_REQUEST).json({
+                success: false,
+                status: STATUS_CODES.BAD_REQUEST,
+                message: 'User office ID is missing.',
+            });
+        }
+
+        // Find the office details based on user office_id
+        const officeDetail = await prisma.or_office_master.findUnique({
             where: {
-                office_id: req?.user?.office_id, // Fetch office based on the user input office_id
+                office_id: req.user.office_id,
             },
-            include: {
-               // organization_master: true,  // Include organization data
-                or_office_master: true,     // Include parent office data
-                other_or_office_master: true,  // Include child offices
+            select: {
+                office_id: true,
+                office_type: true,
+                office_name: true,
+            },
+        });
+
+        // If office details are not found, return an error
+        if (!officeDetail) {
+            return res.status(STATUS_CODES.NOT_FOUND).json({
+                success: false,
+                status: STATUS_CODES.NOT_FOUND,
+                message: `Office with ID ${req.user.office_id} not found.`,
+            });
+        }
+
+        // Check if the office type is 'HQ'
+        if (officeDetail.office_type === 'HQ') {
+            // Step 1: Fetch all sub-offices where parent_id matches the current office_id (sub-offices under HQ)
+            const offices = await prisma.or_office_master.findMany({
+                where: {
+                    parent_id: req.user.office_id,
+                },
+                select: {
+                    office_id: true,
+                },
+            });
+
+            if (offices.length === 0) {
+                return res.status(STATUS_CODES.NOT_FOUND).json({
+                    success: false,
+                    status: STATUS_CODES.NOT_FOUND,
+                    message: `No sub-offices found under the HQ office.`,
+                });
             }
-        });
 
-        // If user office data doesn't exist
-        if (!userOfficeData || userOfficeData.length === 0) {
-            return res.status(STATUS_CODES.NOT_FOUND).json({
-                success: false,
-                status: STATUS_CODES.NOT_FOUND,
-                message: "User office data not found.",
-            });
-        }
+            // Step 2: Get the piu_ids from ucc_piu table based on the fetched office_ids
+            const piuIds = offices.map(office => office.office_id);
 
-        // Get the list of child offices (PIUs) and add the current office id (RO)
-        let childOfficeIds = userOfficeData[0]?.other_or_office_master?.map(childOffice => childOffice.office_id) || [];
-        childOfficeIds.push(req?.user?.office_id);  // Add the RO office ID (the user office_id) for matching with PIUs
-
-        // Fetch the related ucc_piu data
-        const uccPiuData = await prisma.ucc_piu.findMany({
-            where: {
-                piu_id: {
-                    in: childOfficeIds,  // Filter for PIUs related to the RO and child PIUs
+            // Step 3: Fetch child offices under these PIUs
+            const officeData = await prisma.or_office_master.findMany({
+                where: {
+                    parent_id: {
+                        in: piuIds, // Filter by the PIU offices
+                    },
                 },
-            },
-        });
-
-        // Extract the ucc_id from the ucc_piu data
-        const uccIds = uccPiuData.map(ucc => ucc.ucc_id);
-
-        // If no ucc_piu data found, return with a message
-        if (uccIds.length === 0) {
-            return res.status(STATUS_CODES.NOT_FOUND).json({
-                success: false,
-                status: STATUS_CODES.NOT_FOUND,
-                message: `No ucc data found for ${userOfficeData[0]?.office_name}.`,
-            });
-        }
-
-        // Fetch the ucc_master data for the matching ucc_ids
-        const userUccData = await prisma.ucc_master.findMany({
-            where: {
-                ucc_id: {
-                    in: uccIds,  // Filter for ucc_ids that match the data from ucc_piu
+                select: {
+                    office_id: true,
                 },
-            },
-        });
-
-        // Return success response with ucc data
-        if (userUccData.length > 0) {
-            res.status(STATUS_CODES.OK).json({
-                success: true,
-                status: STATUS_CODES.OK,
-                message: `List of ${userOfficeData[0]?.office_name} retrieved successfully.`,
-                data: userUccData,  // Return the actual ucc_master data here
             });
+
+            if (officeData.length === 0) {
+                return res.status(STATUS_CODES.NOT_FOUND).json({
+                    success: false,
+                    status: STATUS_CODES.NOT_FOUND,
+                    message: `No additional offices found under the specified sub-offices.`,
+                });
+            }
+
+            const officeIds = officeData.map(office => office.office_id);
+
+            // Step 4: Get UCC data related to the office_ids from ucc_piu table
+            const uccPiuDatas = await prisma.ucc_piu.findMany({
+                where: {
+                    piu_id: {
+                        in: officeIds,
+                    },
+                },
+                select: {
+                    ucc_id: true,
+                },
+            });
+
+            if (uccPiuDatas.length === 0) {
+                return res.status(STATUS_CODES.NOT_FOUND).json({
+                    success: false,
+                    status: STATUS_CODES.NOT_FOUND,
+                    message: `No UCC data found for the offices under the HQ.`,
+                });
+            }
+
+            // Step 5: Fetch UCC details based on ucc_ids
+            const uccId = uccPiuDatas.map(ucc => ucc.ucc_id);
+
+            const userUccDatas = await prisma.ucc_master.findMany({
+                where: {
+                    ucc_id: {
+                        in: uccId,
+                    },
+                },
+            });
+
+            // Return the UCC data if found
+            if (userUccDatas.length > 0) {
+                return res.status(STATUS_CODES.OK).json({
+                    success: true,
+                    status: STATUS_CODES.OK,
+                    message: `UCC data for ${officeDetail?.office_name} retrieved successfully.`,
+                    data: userUccDatas,
+                });
+            } else {
+                return res.status(STATUS_CODES.NOT_FOUND).json({
+                    success: false,
+                    status: STATUS_CODES.NOT_FOUND,
+                    message: `No UCC data found for ${officeDetail?.office_name} the sub-offices under HQ.`,
+                });
+            }
+
         } else {
-            res.status(STATUS_CODES.NOT_FOUND).json({
-                success: false,
-                status: STATUS_CODES.NOT_FOUND,
-                message: `No ucc data found for ${userOfficeData[0]?.office_name}.`,
+            // If the office type is not 'HQ', handle the user's specific office type logic (e.g., RO or PIU)
+            const userOfficeData = await prisma.or_office_master.findMany({
+                where: {
+                    office_id: req.user.office_id,
+                },
+                include: {
+                    or_office_master: true, // Include parent office data
+                    other_or_office_master: true, // Include child offices
+                },
             });
+
+            if (!userOfficeData || userOfficeData.length === 0) {
+                return res.status(STATUS_CODES.NOT_FOUND).json({
+                    success: false,
+                    status: STATUS_CODES.NOT_FOUND,
+                    message: "User office data not found.",
+                });
+            }
+
+            // Get the list of child offices (PIUs) and include the current office (RO)
+            let childOfficeIds = userOfficeData[0]?.other_or_office_master?.map(childOffice => childOffice.office_id) || [];
+            childOfficeIds.push(req.user.office_id);  // Add current office id for matching PIUs
+
+            // Step 1: Fetch ucc_piu data for these child offices (PIUs)
+            const uccPiuData = await prisma.ucc_piu.findMany({
+                where: {
+                    piu_id: {
+                        in: childOfficeIds,
+                    },
+                },
+            });
+
+            if (uccPiuData.length === 0) {
+                return res.status(STATUS_CODES.NOT_FOUND).json({
+                    success: false,
+                    status: STATUS_CODES.NOT_FOUND,
+                    message: `No UCC data found for ${userOfficeData[0]?.office_name}.`,
+                });
+            }
+
+            // Step 2: Get the UCC details based on ucc_ids
+            const uccIds = uccPiuData.map(ucc => ucc.ucc_id);
+
+            // Fetch UCC data for matching ucc_ids
+            const userUccData = await prisma.ucc_master.findMany({
+                where: {
+                    ucc_id: {
+                        in: uccIds,
+                    },
+                },
+            });
+
+            // Return success or no data message
+            if (userUccData.length > 0) {
+                return res.status(STATUS_CODES.OK).json({
+                    success: true,
+                    status: STATUS_CODES.OK,
+                    message: `UCC data for ${userOfficeData[0]?.office_name} retrieved successfully.`,
+                    data: userUccData,
+                });
+            } else {
+                return res.status(STATUS_CODES.NOT_FOUND).json({
+                    success: false,
+                    status: STATUS_CODES.NOT_FOUND,
+                    message: `No UCC data found for ${userOfficeData[0]?.office_name}.`,
+                });
+            }
         }
+
     } catch (error) {
-        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+        console.error(error);
+        return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
             success: false,
             status: STATUS_CODES.INTERNAL_SERVER_ERROR,
-            message: error.message,
+            message: `Internal server error: ${error.message}`,
         });
     }
 };
-
 
 /**
  * Method : @patch

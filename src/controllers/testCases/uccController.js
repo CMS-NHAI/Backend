@@ -7,31 +7,86 @@ import { STATUS_CODES } from "../../constants/statusCodesConstant.js";
  * Description: @uccList method Use to retrive the ucc list.
 */
 export const uccList = async (req, res) => {
-
     try {
-
+        // Fetch the user's office data
         const userOfficeData = await prisma.or_office_master.findMany({
-            where: { office_id: req?.user?.office_id }
+            where: {
+                office_id: req?.user?.office_id, // Fetch office based on the user input office_id
+            },
+            include: {
+               // organization_master: true,  // Include organization data
+                or_office_master: true,     // Include parent office data
+                other_or_office_master: true,  // Include child offices
+            }
         });
 
-        const userUccPiuData = await prisma.ucc_piu.findMany({
-            where: { piu_id: userOfficeData[0]?.office_id }
-        });
-
-        const userUccData = await prisma.ucc_master.findMany({
-            where: { ucc_id: userUccPiuData[0]?.ucc_id }
-        });
-
-        if (userUccData.length > 0) {
-            res.status(STATUS_CODES.OK).json({ success: true, status: STATUS_CODES.OK, message: `List of ${userOfficeData[0]?.office_name} retrieved successfully.`, data: userUccData });
-        } else {
-            res.status(STATUS_CODES.NOT_FOUND).json({ success: false, status: STATUS_CODES.NOT_FOUND, message: `No data found for PIU ${userOfficeData[0]?.office_name}.` });
+        // If user office data doesn't exist
+        if (!userOfficeData || userOfficeData.length === 0) {
+            return res.status(STATUS_CODES.NOT_FOUND).json({
+                success: false,
+                status: STATUS_CODES.NOT_FOUND,
+                message: "User office data not found.",
+            });
         }
 
+        // Get the list of child offices (PIUs) and add the current office id (RO)
+        let childOfficeIds = userOfficeData[0]?.other_or_office_master?.map(childOffice => childOffice.office_id) || [];
+        childOfficeIds.push(req?.user?.office_id);  // Add the RO office ID (the user office_id) for matching with PIUs
+
+        // Fetch the related ucc_piu data
+        const uccPiuData = await prisma.ucc_piu.findMany({
+            where: {
+                piu_id: {
+                    in: childOfficeIds,  // Filter for PIUs related to the RO and child PIUs
+                },
+            },
+        });
+
+        // Extract the ucc_id from the ucc_piu data
+        const uccIds = uccPiuData.map(ucc => ucc.ucc_id);
+
+        // If no ucc_piu data found, return with a message
+        if (uccIds.length === 0) {
+            return res.status(STATUS_CODES.NOT_FOUND).json({
+                success: false,
+                status: STATUS_CODES.NOT_FOUND,
+                message: `No ucc data found for ${userOfficeData[0]?.office_name}.`,
+            });
+        }
+
+        // Fetch the ucc_master data for the matching ucc_ids
+        const userUccData = await prisma.ucc_master.findMany({
+            where: {
+                ucc_id: {
+                    in: uccIds,  // Filter for ucc_ids that match the data from ucc_piu
+                },
+            },
+        });
+
+        // Return success response with ucc data
+        if (userUccData.length > 0) {
+            res.status(STATUS_CODES.OK).json({
+                success: true,
+                status: STATUS_CODES.OK,
+                message: `List of ${userOfficeData[0]?.office_name} retrieved successfully.`,
+                data: userUccData,  // Return the actual ucc_master data here
+            });
+        } else {
+            res.status(STATUS_CODES.NOT_FOUND).json({
+                success: false,
+                status: STATUS_CODES.NOT_FOUND,
+                message: `No ucc data found for ${userOfficeData[0]?.office_name}.`,
+            });
+        }
     } catch (error) {
-        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, status: STATUS_CODES.INTERNAL_SERVER_ERROR, message: error.message });
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+            message: error.message,
+        });
     }
 };
+
 
 /**
  * Method : @patch
@@ -104,7 +159,7 @@ export const uccLog = async (req, res) => {
 
 export const createUcc = async (req, res) => {
     try {
-        res.status(STATUS_CODES.OK).json({ success: true, status: STATUS_CODES.OK, message: `Permission has been granted, but this module is currently unavailable and will be introduced in the future.` })
+        res.status(STATUS_CODES.OK).json({ success: true, status: STATUS_CODES.OK, message: `Permission has been granted.` })
     } catch (error) {
         res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, status: STATUS_CODES.INTERNAL_SERVER_ERROR, message: error.message });
     }
@@ -112,7 +167,7 @@ export const createUcc = async (req, res) => {
 
 export const updateUcc = async (req, res) => {
     try {
-        res.status(STATUS_CODES.OK).json({ success: true, status: STATUS_CODES.OK, message: `Permission has been granted, but this module is currently unavailable and will be introduced in the future.` })
+        res.status(STATUS_CODES.OK).json({ success: true, status: STATUS_CODES.OK, message: `Permission has been granted.` })
     } catch (error) {
         res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, status: STATUS_CODES.INTERNAL_SERVER_ERROR, message: error.message });
     }
@@ -120,7 +175,7 @@ export const updateUcc = async (req, res) => {
 
 export const deleteUcc = async (req, res) => {
     try {
-        res.status(STATUS_CODES.OK).json({ success: true, status: STATUS_CODES.OK, message: `Permission has been granted, but this module is currently unavailable and will be introduced in the future.` })
+        res.status(STATUS_CODES.OK).json({ success: true, status: STATUS_CODES.OK, message: `Permission has been granted.` })
     } catch (error) {
         res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, status: STATUS_CODES.INTERNAL_SERVER_ERROR, message: error.message });
     }

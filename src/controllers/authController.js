@@ -3,6 +3,7 @@ import { getAccessTokenFromDigiLocker, getAccessTokenFromDigiLockerMobile} from 
 import { parseXmlToJson } from "../helper/parseXmlToJson.js";
 import prisma  from "../config/prismaClient.js";
 import jwt from "jsonwebtoken";
+import { STATUS_CODES } from "../constants/statusCodesConstant.js";
 
 /**
  *
@@ -12,7 +13,7 @@ import jwt from "jsonwebtoken";
  * 
  */
 
-const base64ToVector128 = (base64String) => {
+const base64ToVector128 = (base64String, res) => {
   const buffer = Buffer.from(base64String, 'base64');
   
   if (buffer.length !== 16) {
@@ -108,19 +109,18 @@ export const digiLockerUserDetail = async (req, res) => {
 
 export const digiLockerFinalRegistration = async(req, res)=>{
 
-  
   try{
     const authorizationHeader =
     req.headers.Authorization || req.headers.authorization;
 
   if (!authorizationHeader) {
-    return res.status(400).json({ msg: "Authorization header is missing" });
+    return res.status(400).json({ status:false, status:400, message: "Authorization header is missing" });
   }
 
   const token = authorizationHeader.split(" ")[1];
 
   if (!token) {
-    return res.status(400).json({ msg: "Token is missing or invalid" });
+    return res.status(400).json({ status:false, status:400, message: "Token is missing or invalid" });
   }
 
   // Decode the token (without verifying) to get the payload
@@ -143,14 +143,14 @@ export const digiLockerFinalRegistration = async(req, res)=>{
 
   if(employee.user_type == 'External'){
     const { base64String } = req.body
-    const vectorImage = base64ToVector128(base64String);
+   // const vectorImage = base64ToVector128(base64String, res);
     await prisma.user_master.update({
       where: {
         email: userEmail,
       },
       data: {
         is_digilocker_verified: true,
-        user_vector_image: vectorImage,
+        user_vector_image: base64String,
       },
       select: {
         user_id: true,
@@ -172,14 +172,18 @@ export const digiLockerFinalRegistration = async(req, res)=>{
 
     res.status(200).json({
       success: true,
-      msg: "User verified successfully.",
+      status:200,
+      message: "User verified successfully.",
     });
 
-  }catch(error){
-
-    res.status().json({ success:false, msg:error.message})
-
-  }
+  }catch (err) {
+      console.error(err);
+      res.status(500).json({
+        success: false,
+        status: 500,
+        message: "Something went wrong! Please try after sometime."
+      });
+    }
 
 }
 

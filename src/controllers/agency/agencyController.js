@@ -255,7 +255,7 @@ export const loginAgency = async (req, res) => {
     if(!userAgency.password) return res.status(400).json({ success: false,status: STATUS_CODES.NOT_FOUND, message: "Create your password on clicking Forget Password" });
      // Compare password
      const isMatch = await bcrypt.compare(password, userAgency.password);
-     if (!isMatch) return res.status(401).json({success: false,status: STATUS_CODES.NOT_FOUND, message: "Invalid email or password" });
+     if (!isMatch) return res.status(400).json({success: false,status: STATUS_CODES.NOT_FOUND, message: "Invalid email or password" });
 
       // Generate JWT Token
       const payload = {

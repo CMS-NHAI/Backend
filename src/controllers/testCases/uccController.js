@@ -263,7 +263,7 @@ export const getAllUccList = async (req, res) => {
         res.status(STATUS_CODES.OK).json({ success: true, status: STATUS_CODES.OK, message: "Ucc list retrieve successfully.", uccList: userUccData })
     } catch (error) {
 
-        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, status: STATUS_CODES.INTERNAL_SERVER_ERROR, message: message.error })
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, status: STATUS_CODES.INTERNAL_SERVER_ERROR, message: error.message })
 
     }
 

@@ -314,7 +314,7 @@ export const agencyPasswordResetLink = async (req, res) =>{
 
   try{
   const userAgency = await prisma.organization_master.findFirst({ where: { contact_email:email } });
-  if (!userAgency) return res.status(404).json({ error: "Agency not found" });
+  if (!userAgency) return res.status(400).json({ success: false, status: STATUS_CODES.NOT_FOUND, message: "Agency email not found" });
 
   const resetToken = crypto.randomBytes(32).toString("hex");
   const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1-hour expiry

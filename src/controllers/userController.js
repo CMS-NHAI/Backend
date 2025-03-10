@@ -263,7 +263,11 @@ export const getUserByPhoneNo = async (mobile_number) => {
         email: true,
         designation: true,
         office_location: true,
-        user_type: true
+        user_type: true,
+        office_id: true,
+        division: true,
+        department: true
+        
       },
     });
     console.log('user', user);
@@ -486,6 +490,9 @@ export const getAllUsers = async (req, res) => {
     um.created_by,
     um.user_role,
     um.user_data,
+    um.office_id,
+    um.division,
+    um.department,
     um.office_mobile_number
 FROM tenant_nhai.user_master AS um
 INNER JOIN tenant_nhai.registration_invitation AS ri

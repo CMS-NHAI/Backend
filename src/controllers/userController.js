@@ -263,7 +263,11 @@ export const getUserByPhoneNo = async (mobile_number) => {
         email: true,
         designation: true,
         office_location: true,
-        user_type: true
+        user_type: true,
+        office_id: true,
+        division: true,
+        department: true
+        
       },
     });
     console.log('user', user);

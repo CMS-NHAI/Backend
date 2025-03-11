@@ -9,10 +9,10 @@ import { generateFiveDigitRandomNumber } from './randomNumberService.js';
 
 function hashGenerator(username, senderId, content, secureKey) {
 
-     const finalString = username?.trim() + senderId?.trim() + content?.trim() + secureKey?.trim();
-     const hash = crypto.createHash('sha512');
-     hash.update(finalString);
-     return hash.digest('hex');
+    const finalString = username?.trim() + senderId?.trim() + content?.trim() + secureKey?.trim();
+    const hash = crypto.createHash('sha512');
+    hash.update(finalString);
+    return hash.digest('hex');
 }
 
 /**
@@ -25,7 +25,7 @@ export const sendOtpSMS = async (mobileno) => {
 
     let responseString = '';
     try {
-         const otp = generateFiveDigitRandomNumber()
+        const otp = generateFiveDigitRandomNumber()
         let content = `OTP for Login to NHAI is ${otp}. Digital India Corporation`
         const generatedHashKey = hashGenerator(process.env.CDAC_SMS_USERNAME, process.env.CDAC_SMS_SENDERID, content, process.env.CDAC_SMS_SECURE_KEY);
         const data = {
@@ -51,10 +51,12 @@ export const sendOtpSMS = async (mobileno) => {
         if (msgContent[0] == "402") {
             return {
                 status: Number(msgContent[0]),
-                message: "Messages send successfully"
+                message: "Messages send successfully",
+                genOtp: otp
+                
             };
         }
-
+         // const result = responseString.concat(" ", otp);
         return responseString
     } catch (error) {
         console.error('Error sending OTP SMS:', error);
@@ -64,18 +66,19 @@ export const sendOtpSMS = async (mobileno) => {
 
 }
 
-
+/**
+ * Description : @sendOtpSMSForInvite method use to send invitation link on the given mobile number.
+ * Params @mobileno & @invitationLink - Pass the mobile where the invitation link will be sent. 
+*/
 export const sendOtpSMSForInvite = async (mobileno, invitation_link) => {
 
     let responseString = '';
     try {
-         const otp = generateFiveDigitRandomNumber()
-        let content = `Dear Sir/Ma'am, 
-                          You have been invited to join Datalake 3.0. Please click the link
-                           ${invitation_link}
-                           Thanks & Regards,
-                           NHAI Group`
+        let content = `Dear Sir/Ma'am, You have been invited to join Datalake 3.0. Please click the link https://nhaistaging.dic.org.in/${invitation_link}
+Thanks & Regards, NHAI Group`
+
         const generatedHashKey = hashGenerator(process.env.CDAC_SMS_USERNAME, process.env.CDAC_SMS_SENDERID, content, process.env.CDAC_SMS_SECURE_KEY);
+        
         const data = {
             username: process.env.CDAC_SMS_USERNAME,
             password: process.env.CDAC_SMS_PASSWORD,
@@ -84,7 +87,7 @@ export const sendOtpSMSForInvite = async (mobileno, invitation_link) => {
             senderid: process.env.CDAC_SMS_SENDERID,
             key: generatedHashKey,
             smsservicetype: process.env.CDAC_SMS_SERVICE_TYPE,
-            templateid: process.env.CDAC_SMS_TEMPLATEID,
+            templateid: process.env.CDAC_SMS_TEMPLATEID_For_INVITATION_LINK,
         };
 
         const response = await axios.post('https://msdgweb.mgov.gov.in/esms/sendsmsrequestDLT', data, {
@@ -92,6 +95,8 @@ export const sendOtpSMSForInvite = async (mobileno, invitation_link) => {
                 'Content-Type': 'application/x-www-form-urlencoded',
             }
         });
+
+        console.log("response")
 
         responseString = response.data;
 

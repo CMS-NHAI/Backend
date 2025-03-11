@@ -1,10 +1,13 @@
 import prisma from "../../config/prismaClient.js";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 import { STATUS_CODES } from "../../constants/statusCodesConstant.js";
 import { v4 as uuidv4 } from 'uuid';
+import { customAlphabet } from 'nanoid';
 import crypto from 'crypto';
 import {sendEmail} from '../../services/emailService.js';
 import organizationSchema from "../../validations/agencyValidation.js";
+import {loginSchema} from "../../validations/loginAgencyValidation.js";
 //import { Message } from "twilio/lib/twiml/MessagingResponse.js";
 
 // Create a new agency
@@ -26,8 +29,10 @@ export const createAgency = async (req, res) => {
     const newAgency = await prisma.organization_master.create({ data: data });
 
     ///////////////////////////////////////////////////
+   // const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 6); // 6-character ID
+    //console.log(nanoid()); 
     const uniqueUsername2 = uuidv4();
-    const generateInvitationLink = `http://10.3.0.19:3000/signup/agency/${uniqueUsername2}`
+    const generateInvitationLink = `${process.env.BASE_URL}/signup/agency/${uniqueUsername2}`
     //const uniqueToken = crypto.randomBytes(16).toString("hex");
     //return `http://localhost:3000/signup/agency?${uniqueToken}`;
 
@@ -83,20 +88,38 @@ export const createAgency = async (req, res) => {
 // Get all agencies
 export const getAllAgencies = async (req, res) => {
   try {
+    const { page = 1, limit = 9 } = req.query;
+    const pageNumber = parseInt(page, 10);
+    const limitNumber = parseInt(limit, 10);
+    const skip = (pageNumber - 1) * limitNumber;
+
     const agencies = await prisma.organization_master.findMany({
       orderBy: {
         org_id: 'desc', 
-      }
+      },
+      skip,
+      take: limitNumber,
      // where: {
        // deletedAt: null // Only include rows where `deletedAt` is null
      // }
     });
+
+    const totalRecords = await prisma.organization_master.count();
+    const totalPages = Math.ceil(totalRecords / limitNumber);
+
     res.status(STATUS_CODES.OK).json({
       
       success: true,
       status: STATUS_CODES.OK,
       message: 'Agency List Retrived Successfully.',
-      data: { agencies },
+      data: { agencies, 
+              pagination: {
+              totalRecords,
+              totalPages,
+              currentPage: pageNumber,
+              limit: limitNumber,
+              }, 
+           },
       });
   } catch (error) {
     console.log(error)
@@ -215,166 +238,162 @@ export const deleteAgency = async (req, res) => {
   }
 };
 
+export const loginAgency = async (req, res) => {
+
+  const { email, password } = req.body;
+
+  const { error } = loginSchema.validate(req.body, { abortEarly: false });
+
+  if (error) {
+      return res.status(400).json({ errors: error.details.map(err => err.message) });
+  }
+
+  try {
+   // Check if user exists
+   const userAgency = await prisma.organization_master.findFirst({ where: { contact_email:email } });
+   if (!userAgency) return res.status(400).json({ success: false,status: STATUS_CODES.NOT_FOUND, message: "Invalid email or password" });
+    if(!userAgency.password) return res.status(400).json({ success: false,status: STATUS_CODES.NOT_FOUND, message: "Create your password on clicking Forget Password" });
+     // Compare password
+     const isMatch = await bcrypt.compare(password, userAgency.password);
+     if (!isMatch) return res.status(400).json({success: false,status: STATUS_CODES.NOT_FOUND, message: "Invalid email or password" });
+
+      // Generate JWT Token
+      const payload = {
+        user: {
+          org_id: userAgency.org_id, // Include the user ID (or any other info)
+          name: userAgency.name,
+          org_type: userAgency.org_type,
+          contractor_agency_type: userAgency.contractor_agency_type,
+          date_of_incorporation: userAgency.date_of_incorporation,
+          selection_method: userAgency.selection_method,
+          empanelment_start_date: userAgency.empanelment_start_date,
+          empanelment_end_date: userAgency.empanelment_end_date,
+          organization_data: userAgency.organization_data,
+          spoc_details: userAgency.spoc_details,
+          tin: userAgency.tin,
+          contact_number: userAgency.contact_number,
+          gst_number: userAgency.gst_number,
+          pan: userAgency.pan,
+          contact_email: userAgency.contact_email,
+          invite_status: userAgency.invite_status,
+          is_active: userAgency.is_active,
+          created_by: userAgency.created_by,
+          created_date: userAgency.created_date,
+          last_updated_by: userAgency.last_updated_by,
+          last_updated_date: userAgency.last_updated_date,
+          status: userAgency.status,
+          is_entity_locker_verified: userAgency.is_entity_locker_verified,
+          CIN: userAgency.CIN,
+          entity_data: userAgency.entity_data
+        }
+      };
+    const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, { expiresIn: "1h" });
+    
+    res.status(STATUS_CODES.OK).json({
+      success: true,
+      status: STATUS_CODES.OK,
+      message: "Login successful",
+      data: { access_token: token, ...payload }
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+      message: "Something went wrong! Please try after sometime."
+    });
+  }
+    //res.json({ message: "Login successful", token });
+}
+
+
+
+export const agencyPasswordResetLink = async (req, res) =>{
+  const { email } = req.body;
+
+  try{
+  const userAgency = await prisma.organization_master.findFirst({ where: { contact_email:email } });
+  if (!userAgency) return res.status(400).json({ success: false, status: STATUS_CODES.NOT_FOUND, message: "Agency email not found" });
+
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1-hour expiry
+
+  await prisma.organization_master.update({
+    where: { org_id:userAgency.org_id },
+    data: { 
+      password_reset_id : resetToken, 
+      password_reset_expiry : resetTokenExpiry 
+    },
+});
+
+const resetLink = `${process.env.BASE_URL}/reset-password?token=${resetToken}`;
+
+//////////////////////Send Email /////////////
+const subject = 'Password Reset Request for Agency DATALAKE 3.0';
+const text = `Click the link to reset your password: ${resetLink}`;
+const emailtosent = email;
+
+sendEmail(emailtosent, subject, text)
+
+
+res.status(STATUS_CODES.CREATED).json({
+success: true,
+status: STATUS_CODES.CREATED,
+message: 'Password reset email sent!.',
+//data:  newAgency,
+} );
+
+} catch (err) {
+  console.error(err);
+  res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+    success: false,
+    status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+    message: "Something went wrong! Please try after sometime."
+  });
+}
+
+//res.json({ message: "Password reset email sent!" });
+
+}
+
+export const resetAgencyPassword = async (req, res) =>{
+
+      const { token, newPassword } = req.body;
+
+
+     try{
+      const userAgency = await prisma.organization_master.findFirst({ where: { password_reset_id: token } });
+      if (!userAgency) return res.status(400).json({ success: false,status:400, message: "Invalid or expired token" });
+
+      if (userAgency.password_reset_expiry < new Date()) {
+        return res.status(400).json({ success: false, status:400, message: "Token expired" });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      await prisma.organization_master.update({
+        where: { org_id: userAgency.org_id },
+        data: { password: hashedPassword, password_reset_id: null, password_reset_expiry: null },
+      });
+
+      res.status(STATUS_CODES.OK).json({
+        success: true,
+        status: STATUS_CODES.OK,
+        message: "Password reset successful!."
+      });
+
+   // res.json({ message: "Password reset successful!" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+      message: "Something went wrong! Please try after sometime."
+    });
+
+}
+}
+
 //bhawesh new code////////////////////////////////////////////////////////////////////
-
-
-
-
-
-/**
- *Get Agency Details by Agency Id.*  
- **/
-
-//  export const agencyDetailById = async(req, res) => {
-
-//     const { org_id } = req.params
-
-//     try {
-//       const organization = await prisma.organization_master.findUnique({
-//         where: {
-//           org_id: parseInt(org_id),
-//         },
-//       });
-  
-//       if (organization) {
-//         res.status(STATUS_CODES.OK).json(organization);
-//       } else {
-//         res.status(STATUS_CODES.NOT_FOUND).json({ message: 'Agency or Organization not found' });
-//       }
-//     } catch (error) {
-//       res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ error: 'An error occurred while fetching the Agency or organization details' });
-//     }
-
-// }
-
-// export const createAgency = async(req, res) =>{
-
-//   //const { name, contact_number, contact_email, org_type, contractor_agency_type, date_of_incorporation, selection_method, empanelment_start_date, empanelment_end_date, spoc_details, tin, gst_number, pan} = req.body;
-   
-
-//   try{
-//     console.log(req.body);
-//   }catch(err){
-
-//   }
-
-// }
-
-// export const createAgencyByinviteid = async(req, res) =>{
-
-// }
-
-// export const getAllAgencies = async(req, res) =>{
-
-//   try{
-//     const pageSize = parseInt(req.query.pageSize) || 10;  
-//     const page = parseInt(req.query.page) || 1;  
-
-//     if (pageSize <= 0 || page <= 0) {
-//       return res.status(STATUS_CODES.BAD_REQUEST).json({
-//         success: false,
-//         message: 'Invalid page or pageSize. Both should be positive integers.',
-//       });
-//     }
-
-//     // Calculate skip and take based on pageSize and page
-//     const skip = (page - 1) * pageSize;
-//     const take = pageSize;
-
-//      // Query users from the organization_master table with pagination
-//      const agency = await prisma.organization_master.findMany({
-//       skip: skip,
-//       take: take,
-//       select: {
-//         org_id: true,
-//         name: true,
-//         contact_number: true,
-//         contact_email: true,
-//         org_type: true,
-//         contractor_agency_type: true,
-//         date_of_incorporation: true,
-//         selection_method: true,
-//         empanelment_start_date: true,
-//         empanelment_end_date: true,
-//         spoc_details: true,
-//         tin: true,
-//         gst_number: true,
-//         pan: true,
-//         organization_data:true,
-//         is_active:true,
-//         created_by:true,
-//         created_by:true,
-
-//         //spoc_details : true,
-//         //tin: true
-//         //contact_number
-//       }
-//     });
-
-//     if (agency.length === 0) {
-//       return res.status(STATUS_CODES.NOT_FOUND).json({
-//         success: false,
-//         message: 'Agency or Organization not found.',
-//         data: [],
-//       });
-//     }
-
-//       // Get the total count of users for pagination info
-//       const totalAgency = await prisma.organization_master.count();
-
-//       // Return the paginated list of users
-//       return res.status(STATUS_CODES.OK).json({
-//         success: true,
-//         message: 'Agency or Organization retrieved successfully.',
-//         data: agency,
-//         pagination: {
-//           page,
-//           pageSize,
-//           total: totalAgency,
-//           totalPages: Math.ceil(totalAgency / pageSize),
-//         },
-//       });
-
-//   }catch(err){
-//     return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-//       success: false,
-//       message: err.message || 'Internal Server Error',
-//     });
-
-//   }
-
-// }
-
-// export const getAgencyById = async(req, res) =>{
-//   const { id } = req.params;
-//   //console.log(req.params);
-//   try {
-//     // Validate ID (it should be an integer)
-//     let agencyId = parseInt(id); 
-//     const agency = await prisma.organization_master.findUnique({
-//       where: { org_id: agencyId },
-//     });
-
-//     if (!agency) {
-//       return res.status(STATUS_CODES.NOT_FOUND).json({
-//         success: false,
-//         status:STATUS_CODES.NOT_FOUND,
-//         message: 'Agency or Organization not found.',
-//       });
-//     }
-
-//     // Respond with the agency details
-//     res.status(STATUS_CODES.OK).json({
-//       success: true,
-//       status:STATUS_CODES.OK,
-//       data: agency,
-//     });
-//   } catch (error) {
-//       console.error(error);
-//       res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-//       success: false,
-//       status:STATUS_CODES.INTERNAL_SERVER_ERROR,
-//       message: 'An unexpected error occurred.',
-//     });
-//   }
-// }

@@ -255,7 +255,7 @@ export const loginAgency = async (req, res) => {
     if(!userAgency.password) return res.status(400).json({ success: false,status: STATUS_CODES.NOT_FOUND, message: "Create your password on clicking Forget Password" });
      // Compare password
      const isMatch = await bcrypt.compare(password, userAgency.password);
-     if (!isMatch) return res.status(401).json({success: false,status: STATUS_CODES.NOT_FOUND, message: "Invalid email or password" });
+     if (!isMatch) return res.status(400).json({success: false,status: STATUS_CODES.NOT_FOUND, message: "Invalid email or password" });
 
       // Generate JWT Token
       const payload = {
@@ -314,7 +314,7 @@ export const agencyPasswordResetLink = async (req, res) =>{
 
   try{
   const userAgency = await prisma.organization_master.findFirst({ where: { contact_email:email } });
-  if (!userAgency) return res.status(404).json({ error: "Agency not found" });
+  if (!userAgency) return res.status(400).json({ success: false, status: STATUS_CODES.NOT_FOUND, message: "Agency email not found" });
 
   const resetToken = crypto.randomBytes(32).toString("hex");
   const resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1-hour expiry

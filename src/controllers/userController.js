@@ -223,12 +223,16 @@ export const getUserDetails = async (req, res) => {
       message: "User details retrieved successfully.",
       data: {
         sap_id: user.sap_id,
+        user_id : user.user_id,
         name: user.name,
         date_of_birth: user.date_of_birth,  // Assuming date_of_birth is returned as a Date object
         mobile_number: user.mobile_number,
         email_id: user.email,
         designation: user.designation,
         office_location: user.office_location,
+        office_id: user.office_id,
+        division: user.division,
+        department: user.department,
         user_type: user.user_type,
         user_role:keyCloakDetails?.userRole,
         userAuthroization:keyCloakDetails?.userAuthorization
@@ -253,6 +257,7 @@ export const getUserByPhoneNo = async (mobile_number) => {
         mobile_number: mobile_number,  // Search by phone_number
       },
       select: {
+        user_id : true,
         sap_id: true,
         name: true,
         date_of_birth: true,
@@ -260,7 +265,11 @@ export const getUserByPhoneNo = async (mobile_number) => {
         email: true,
         designation: true,
         office_location: true,
-        user_type: true
+        user_type: true,
+        office_id: true,
+        division: true,
+        department: true
+        
       },
     });
     console.log('user', user);
@@ -274,6 +283,7 @@ export const getUserByPhoneNo = async (mobile_number) => {
 
   }
 };
+
 export const getSapDetails = async (req, res) => {
   // const { sap_id , device_id, client_id} = req.body;
   const { sap_id } = req.body;
@@ -332,7 +342,6 @@ export const getSapDetails = async (req, res) => {
   }
 };
 
-
 async function generateEntityAccessToken(code, req, res) {
   try {
     const query = {
@@ -377,8 +386,7 @@ async function generateEntityAccessToken(code, req, res) {
   }
 }
 
-//get entity data 
-
+// get entity data 
 export const authenticateEntity = async (req, res) => {
   try {
     const { code, userEmail } = req.body;
@@ -484,6 +492,9 @@ export const getAllUsers = async (req, res) => {
     um.created_by,
     um.user_role,
     um.user_data,
+    um.office_id,
+    um.division,
+    um.department,
     um.office_mobile_number
 FROM tenant_nhai.user_master AS um
 INNER JOIN tenant_nhai.registration_invitation AS ri

@@ -110,6 +110,14 @@ export const sendOtpToUserLatest = async (req, res) => {
     }
   });
 
+  if (!user) {
+    return res.status(STATUS_CODES.BAD_REQUEST).json({
+      success: false,
+      status: STATUS_CODES.BAD_REQUEST,
+      message: 'Invalid phone number.',
+    });
+  }
+
   try {
     const recentOtps = await prisma.otp_verification.count({
       where: {

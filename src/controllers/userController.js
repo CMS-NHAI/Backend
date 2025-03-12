@@ -1354,6 +1354,20 @@ export const getUserById = async (req, res) => {
 
     user.role =getKeyCloakDataforUser?.userRole
     user.permission = getKeyCloakDataforUser?.userAuthorization
+
+    const userSpcfcData = [{
+      user_id: user.user_id,
+      user_name: user.name,
+      user_email: user.email,
+      mobile_number: user.mobile_number,
+      user_role: user.user_role,
+      user_type: user.user_type,
+      user_vector_image: user.user_vector_image,
+      unique_username: user.unique_username,
+      designation: user.designation
+    }];
+    user["userSpcfcData"] = userSpcfcData;
+
     // Return the user data if found
     res.status(STATUS_CODES.OK).json({
       success: true,

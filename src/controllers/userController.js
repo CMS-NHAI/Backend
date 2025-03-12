@@ -223,6 +223,7 @@ export const getUserDetails = async (req, res) => {
       message: "User details retrieved successfully.",
       data: {
         sap_id: user.sap_id,
+        user_id : user.user_id,
         name: user.name,
         date_of_birth: user.date_of_birth,  // Assuming date_of_birth is returned as a Date object
         mobile_number: user.mobile_number,
@@ -256,6 +257,7 @@ export const getUserByPhoneNo = async (mobile_number) => {
         mobile_number: mobile_number,  // Search by phone_number
       },
       select: {
+        user_id : true,
         sap_id: true,
         name: true,
         date_of_birth: true,

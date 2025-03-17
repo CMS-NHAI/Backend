@@ -141,7 +141,9 @@ export const sendOtpToUserLatest = async (req, res) => {
     if (phoneNumber.startsWith("+91")) {
       phoneNumber = phoneNumber.substring(3); 
     }
+
    // const smsinfo = await sendOtpSMS(phoneNumber)
+
     const hashed = await hashOTP(12345)//(smsinfo.genOtp);
     
     await prisma.otp_verification.create({

@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { STATUS_CODES } from "../../constants/statusCodesConstant.js";
 import { v4 as uuidv4 } from 'uuid';
-import { customAlphabet } from 'nanoid';
+import { customAlphabet, nanoid } from 'nanoid';
 import crypto from 'crypto';
 import {sendEmail} from '../../services/emailService.js';
 import organizationSchema from "../../validations/agencyValidation.js";
@@ -29,10 +29,12 @@ export const createAgency = async (req, res) => {
     const newAgency = await prisma.organization_master.create({ data: data });
 
     ///////////////////////////////////////////////////
-   // const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 6); // 6-character ID
+    //const naoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', 6); // 6-character ID
+    //console.log(naoid) 
     //console.log(nanoid()); 
-    const uniqueUsername2 = uuidv4();
-    const generateInvitationLink = `${process.env.BASE_URL}/signup/agency/${uniqueUsername2}`
+    //const uniqueUsername2 = uuidv4();
+    const naoid = nanoid(6);
+    const generateInvitationLink = `${process.env.BASE_URL}/signup?inviteid=${naoid}`
     //const uniqueToken = crypto.randomBytes(16).toString("hex");
     //return `http://localhost:3000/signup/agency?${uniqueToken}`;
 
@@ -51,7 +53,7 @@ export const createAgency = async (req, res) => {
         invite_message: "You are invited to join the platform NHAI Datalake 3.0.",
         expiry_date: new Date(new Date().setDate(new Date().getDate() + 7)),
         created_by: 15, //newAgency.user_id,
-        unique_invitation_id : uniqueUsername2
+        unique_invitation_id : naoid
       },
     })
 

@@ -45,7 +45,7 @@ export const createAgency = async (req, res) => {
     const invitation = await prisma.registration_invitation.create({
       data: {
         org_id: newAgency.org_id,
-        user_id: 5,//newAgency.user_id,
+        //user_id: 5,//newAgency.user_id,
         invitation_link,
         short_url: null, // Optionally generate and store a short URL
         invitation_status: "Pending",
@@ -53,7 +53,8 @@ export const createAgency = async (req, res) => {
         invite_message: "You are invited to join the platform NHAI Datalake 3.0.",
         expiry_date: new Date(new Date().setDate(new Date().getDate() + 7)),
         created_by: 15, //newAgency.user_id,
-        unique_invitation_id : naoid
+        unique_invitation_id : naoid,
+        invitation_type: "Agency"
       },
     })
 
@@ -148,15 +149,16 @@ export const getAgencyById = async (req, res) => {
 
 export const getAgencyByInviteId = async(req, res) =>{
   const{id}= req.params;
+  const { inviteid } = req.query
   try{
         const agency = await prisma.registration_invitation.findFirst({
-          where :{unique_invitation_id: id}
+          where :{unique_invitation_id: inviteid}
         });
         if (!agency) {
           return res.status(STATUS_CODES.NOT_FOUND).json({
             success: false,
             status:STATUS_CODES.NOT_FOUND,
-            message: "Agency Link Invalid or expired invitation" });
+            message: "Link Invalid or expired invitation" });
         }
         
           // Check if invitation has expired
@@ -166,10 +168,17 @@ export const getAgencyByInviteId = async(req, res) =>{
             status:STATUS_CODES.BAD_REQUEST,
             message: 'Invitation has expired' });
         }
-        const inviteagency = await prisma.organization_master.findUnique({ 
-          where: { org_id: agency.org_id } 
-        });
-
+        if (agency.invitation_type ==="Agency")
+        {
+          const inviteagency = await prisma.organization_master.findUnique({ 
+            where: { org_id: agency.org_id } 
+          });
+        }else if(agency.invitation_type ==="User"){
+          const inviteagency = await prisma.user_master.findUnique({
+            where: { user_id: agency.user_id }
+          });
+        }
+      console.log(inviteagency)
 
         await prisma.registration_invitation.update({
           where: { invitation_id: agency.invitation_id},

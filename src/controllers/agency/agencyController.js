@@ -45,7 +45,7 @@ export const createAgency = async (req, res) => {
     const invitation = await prisma.registration_invitation.create({
       data: {
         org_id: newAgency.org_id,
-        user_id: 5,//newAgency.user_id,
+        //user_id: 5,//newAgency.user_id,
         invitation_link,
         short_url: null, // Optionally generate and store a short URL
         invitation_status: "Pending",
@@ -53,7 +53,8 @@ export const createAgency = async (req, res) => {
         invite_message: "You are invited to join the platform NHAI Datalake 3.0.",
         expiry_date: new Date(new Date().setDate(new Date().getDate() + 7)),
         created_by: 15, //newAgency.user_id,
-        unique_invitation_id : naoid
+        unique_invitation_id : naoid,
+        invitation_type: "Agency"
       },
     })
 

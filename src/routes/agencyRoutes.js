@@ -18,7 +18,7 @@ const upload = multer({ dest: "uploads/" });
 agencyRoutes.post("/",checkToken, createAgency);
 agencyRoutes.get("/",checkToken, getAllAgencies);
 agencyRoutes.get("/:id",checkToken, getAgencyById);
-agencyRoutes.get("/invite", getAgencyByInviteId);
+agencyRoutes.get("/invite/:id", getAgencyByInviteId);
 agencyRoutes.put("/:id",checkToken, updateAgency);
 agencyRoutes.delete("/:id",checkToken, deleteAgency);
 agencyRoutes.post("/login", loginAgency);

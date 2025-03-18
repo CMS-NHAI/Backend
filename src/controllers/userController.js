@@ -15,7 +15,7 @@ import { userIdValidation } from '../validations/getUserValidation.js';
 import { editUserValidationSchema } from '../validations/editUserValidation.js';
 import { orgIdValidationSchema } from '../validations/getOfficeValidation.js';
 import { v4 as uuidv4 } from 'uuid';
-import { customAlphabet } from 'nanoid';
+import { customAlphabet, nanoid } from 'nanoid';
 import crypto from "crypto";
 import axios from "axios";
 import { sendEmail } from '../services/emailService.js';
@@ -1196,8 +1196,8 @@ export const inviteUser = async (req, res) => {
 
 
     ///////////////////////////////////////////////////
-    
-    const generateInvitationLink = `${process.env.BASE_URL}/signup/user/${uniqueUsername2}`
+    const naoid = nanoid(6);
+    const generateInvitationLink = `${process.env.BASE_URL}/signup?inviteid=${naoid}`
     //const uniqueToken = crypto.randomBytes(16).toString("hex");
     //return `http://localhost:3000/signup/agency?${uniqueToken}`;
 
@@ -1216,7 +1216,8 @@ export const inviteUser = async (req, res) => {
         invite_message: "You are invited to join the platform.",
         expiry_date: new Date(new Date().setDate(new Date().getDate() + 7)),
         created_by: user.user_id,
-        unique_invitation_id: uniqueUsername2
+        unique_invitation_id: naoid,
+        invitation_type: "User"
       },
     })
 

@@ -1546,17 +1546,36 @@ export const getContractDetails = async (req, res) => {
 */
 
 export const transferUser = async (req, res) => {
-  try {
 
+  try {
     const { user_id, office_id } = req.body
 
-    // Validate that both user_id and office_location are provided
     if (!user_id || !office_id) {
       return res.status(400).json({ message: "User ID and office id are required." });
     }
+    
+    const userId = Number(user_id)
+    const officeId = Number(office_id)
+
+    const userDetail = await prisma.user_master.findFirst({
+      where: { user_id:userId },
+    });
+
+    if (!userDetail) {
+      return res.status(404).json({ message: `User not found on the given user id ${userId}.` });
+    }
+
+    const officeDetail = await prisma.or_office_master.findFirst({
+      where: { office_id : officeId },
+    });
+
+    if (!officeDetail) {
+      return res.status(404).json({ message: `Office not found on the given office id ${officeId}.` });
+    }
+
     await prisma.user_master.update({
-      where: { user_id },
-      data: { office_id: office_id },
+      where: { user_id:userId },
+      data: { office_id: officeId },
     });
 
     res.status(200).json({ message: `User transfer successfully.` })

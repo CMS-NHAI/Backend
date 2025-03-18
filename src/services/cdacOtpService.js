@@ -74,7 +74,7 @@ export const sendOtpSMSForInvite = async (mobileno, invitation_link) => {
 
     let responseString = '';
     try {
-        let content = `Dear Sir/Ma'am, You have been invited to join Datalake 3.0. Please click the link https://nhaistaging.dic.org.in/${invitation_link}
+        let content = `Dear Sir/Ma'am, You have been invited to join Datalake 3.0. Please click the link ${invitation_link}
 Thanks & Regards, NHAI Group`
 
         const generatedHashKey = hashGenerator(process.env.CDAC_SMS_USERNAME, process.env.CDAC_SMS_SENDERID, content, process.env.CDAC_SMS_SECURE_KEY);

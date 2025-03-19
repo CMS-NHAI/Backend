@@ -1565,6 +1565,77 @@ export const transferUser = async (req, res) => {
   }
 }
 
+export const getRegistrationInfoByInviteId = async(req, res) =>{
+      const {inviteid} = req.query
+      try {
+        const registerInfo = await prisma.registration_invitation.findFirst({
+          where: { unique_invitation_id: inviteid }
+        });
+        if (!registerInfo) {
+          return res.status(STATUS_CODES.NOT_FOUND).json({
+            success: false,
+            status: STATUS_CODES.NOT_FOUND,
+            message: "Link Invalid or expired invitation"
+          });
+        }
+
+         // Check if invitation has expired
+        if (new Date() > registerInfo.expiry_date) {
+          return res.status(400).json({
+            success: false,
+            status: STATUS_CODES.BAD_REQUEST,
+            message: 'Invitation has expired'
+          });
+        }
+
+        if(registerInfo.invitation_type == "User"){
+          const inviteUser = await prisma.user_master.findUnique({
+            where: { user_id: registerInfo.user_id,
+                     invitation_type: "User"
+             }
+          }); 
+          
+          res.status(STATUS_CODES.OK).json({
+            success: true,
+            status: STATUS_CODES.OK,
+            data: {
+              inviteUser,
+              ...registerInfo
+            }
+          });
+
+        }
+
+        if(registerInfo.invitation_type == "Agency"){
+          const inviteagency = await prisma.organization_master.findUnique({ 
+            where: { org_id: registerInfo.org_id,
+              invitation_type: "Agency"
+             } 
+          });
+          
+          res.status(STATUS_CODES.OK).json({
+            success: true,
+            status: STATUS_CODES.OK,
+            data: {
+              inviteagency,
+              ...registerInfo
+            }
+          });
+
+        }
+
+      }catch (error) {
+        console.log(error)
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+          success: false,
+          status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+          Message: "Error fetching User."
+        });
+    
+      }
+
+  }
+
 
 
 

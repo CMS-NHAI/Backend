@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { verifyOtp, verifyEmailOtpLatest,getUserByInviteId, createInvitation, verifyEmailOtpAgency, verifyOtpLatest,  signup , getUserDetails , getSapDetails, authenticateEntity, getAllUsers, createUser , updateUserStatus, updateUser , inviteUser, getUserById , updateUserById , getOfficeDetails, getContractDetails, transferUser} from "../controllers/userController.js"
+import { verifyOtp, verifyEmailOtpLatest,getUserByInviteId, createInvitation, verifyEmailOtpAgency, verifyOtpLatest,  signup , getUserDetails , getSapDetails, authenticateEntity, getAllUsers, createUser , updateUserStatus, updateUser , inviteUser, getUserById , updateUserById , getOfficeDetails, getContractDetails, transferUser, getRegistrationInfoByInviteId} from "../controllers/userController.js"
 import checkToken  from '../middlewares/checkToken.js';
 const router = Router();
 import { userRoleResourcePermissionBasedAccess } from '../middlewares/testCases/permissionMiddleware.js'
@@ -19,6 +19,7 @@ router.put('/users',checkToken,  updateUser);
 router.post('/users/invitationIndividual', checkToken, createInvitation);
 router.post('/users/inviteUser', checkToken, inviteUser);
 router.get('/users/invite/:id', getUserByInviteId);
+router.get('/users/registerInvite', getRegistrationInfoByInviteId);
 router.post('/users/getUserById', checkToken, getUserById);
 router.put('/users/updateUserById', checkToken, updateUserById);
 router.get('/org/getOffice', checkToken, getOfficeDetails);

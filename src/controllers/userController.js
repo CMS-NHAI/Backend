@@ -1546,17 +1546,36 @@ export const getContractDetails = async (req, res) => {
 */
 
 export const transferUser = async (req, res) => {
-  try {
 
+  try {
     const { user_id, office_id } = req.body
 
-    // Validate that both user_id and office_location are provided
     if (!user_id || !office_id) {
       return res.status(400).json({ message: "User ID and office id are required." });
     }
+    
+    const userId = Number(user_id)
+    const officeId = Number(office_id)
+
+    const userDetail = await prisma.user_master.findFirst({
+      where: { user_id:userId },
+    });
+
+    if (!userDetail) {
+      return res.status(404).json({ message: `User not found on the given user id ${userId}.` });
+    }
+
+    const officeDetail = await prisma.or_office_master.findFirst({
+      where: { office_id : officeId },
+    });
+
+    if (!officeDetail) {
+      return res.status(404).json({ message: `Office not found on the given office id ${officeId}.` });
+    }
+
     await prisma.user_master.update({
-      where: { user_id },
-      data: { office_id: office_id },
+      where: { user_id:userId },
+      data: { office_id: officeId },
     });
 
     res.status(200).json({ message: `User transfer successfully.` })
@@ -1564,6 +1583,75 @@ export const transferUser = async (req, res) => {
     res.status(500).json({ message: error.message })
   }
 }
+
+export const getRegistrationInfoByInviteId = async(req, res) =>{
+      const {inviteid} = req.query
+      try {
+        const registerInfo = await prisma.registration_invitation.findFirst({
+          where: { unique_invitation_id: inviteid }
+        });
+        if (!registerInfo) {
+          return res.status(STATUS_CODES.NOT_FOUND).json({
+            success: false,
+            status: STATUS_CODES.NOT_FOUND,
+            message: "Link Invalid or expired invitation"
+          });
+        }
+
+         // Check if invitation has expired
+        if (new Date() > registerInfo.expiry_date) {
+          return res.status(400).json({
+            success: false,
+            status: STATUS_CODES.BAD_REQUEST,
+            message: 'Invitation has expired'
+          });
+        }
+
+        if(registerInfo.invitation_type == "User"){
+          const inviteUser = await prisma.user_master.findUnique({
+            where: { user_id: registerInfo.user_id
+             }
+          }); 
+          
+          res.status(STATUS_CODES.OK).json({
+            success: true,
+            status: STATUS_CODES.OK,
+            data: {
+              inviteUser,
+              ...registerInfo
+            }
+          });
+
+        }
+
+        if(registerInfo.invitation_type == "Agency"){
+          const inviteagency = await prisma.organization_master.findUnique({ 
+            where: { org_id: registerInfo.org_id
+             } 
+          });
+          
+          res.status(STATUS_CODES.OK).json({
+            success: true,
+            status: STATUS_CODES.OK,
+            data: {
+              inviteagency,
+              ...registerInfo
+            }
+          });
+
+        }
+
+      }catch (error) {
+        console.log(error)
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+          success: false,
+          status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+          Message: "Error fetching User."
+        });
+    
+      }
+
+  }
 
 
 

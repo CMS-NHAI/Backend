@@ -1609,8 +1609,7 @@ export const getRegistrationInfoByInviteId = async(req, res) =>{
 
         if(registerInfo.invitation_type == "User"){
           const inviteUser = await prisma.user_master.findUnique({
-            where: { user_id: registerInfo.user_id,
-                     invitation_type: "User"
+            where: { user_id: registerInfo.user_id
              }
           }); 
           
@@ -1627,8 +1626,7 @@ export const getRegistrationInfoByInviteId = async(req, res) =>{
 
         if(registerInfo.invitation_type == "Agency"){
           const inviteagency = await prisma.organization_master.findUnique({ 
-            where: { org_id: registerInfo.org_id,
-              invitation_type: "Agency"
+            where: { org_id: registerInfo.org_id
              } 
           });
           

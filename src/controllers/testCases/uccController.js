@@ -7,6 +7,7 @@ import { STATUS_CODES } from "../../constants/statusCodesConstant.js";
 */
 export const uccList = async (req, res) => {
     try {
+
         // Ensure user data is available in the request
         if (!req?.user?.office_id) {
             return res.status(STATUS_CODES.BAD_REQUEST).json({
@@ -39,6 +40,7 @@ export const uccList = async (req, res) => {
 
         // Check if the office type is 'HQ'
         if (officeDetail.office_type === 'HQ') {
+           
             // Step 1: Fetch all sub-offices where parent_id matches the current office_id (sub-offices under HQ)
             const offices = await prisma.or_office_master.findMany({
                 where: {
@@ -130,6 +132,7 @@ export const uccList = async (req, res) => {
             }
 
         } else {
+           
             // If the office type is not 'HQ', handle the user's specific office type logic (e.g., RO or PIU)
             const userOfficeData = await prisma.or_office_master.findMany({
                 where: {
@@ -219,18 +222,35 @@ export const transferPiu = async (req, res) => {
     try {
         const { ucc_id, piu_id } = req.body;
 
-        if (!ucc_id || !piu_id) {
-            return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, status: STATUS_CODES.BAD_REQUEST, message: "User ID and office id are required." });
+        if (!ucc_id) {
+            return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, status: STATUS_CODES.BAD_REQUEST, message: "Ucc id is required." });
         }
+
+        if (!piu_id) {
+            return res.status(STATUS_CODES.BAD_REQUEST).json({ success: false, status: STATUS_CODES.BAD_REQUEST, message: "Piu id is required." });
+        }
+
+        const uccId = Number(ucc_id)
+        const piuId = Number(piu_id)
 
         const ucc_piuRecord = await prisma.ucc_piu.findFirst({
             where: {
-                ucc_id: ucc_id,
+                ucc_id: uccId,
             },
         });
 
         if (!ucc_piuRecord) {
-            return res.status(STATUS_CODES.NOT_FOUND).json({ status: STATUS_CODES.NOT_FOUND, message: "Record not found." });
+            return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, status: STATUS_CODES.NOT_FOUND, message: `Record not found by ucc id ${uccId}` });
+        }
+
+        const piuRecord = await prisma.or_office_master.findFirst({
+            where: {
+                office_id: piuId,
+            },
+        });
+
+        if (!piuRecord) {
+            return res.status(STATUS_CODES.NOT_FOUND).json({ success: false, status: STATUS_CODES.NOT_FOUND, message: `Record not found by piu id ${piuId}` });
         }
 
         await prisma.ucc_piu.update({
@@ -238,14 +258,14 @@ export const transferPiu = async (req, res) => {
                 id: ucc_piuRecord?.id,
             },
             data: {
-                piu_id: piu_id,
+                piu_id: piuId,
             },
         });
 
-        res.status(STATUS_CODES.OK).json({ status: STATUS_CODES.OK, message: "Piu transferred successfully." });
+        res.status(STATUS_CODES.OK).json({ success:true, status: STATUS_CODES.OK, message: "Piu transferred successfully." });
 
     } catch (error) {
-        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ status: STATUS_CODES.INTERNAL_SERVER_ERROR, message: error.message });
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success:false, status: STATUS_CODES.INTERNAL_SERVER_ERROR, message: error.message });
     }
 
 }

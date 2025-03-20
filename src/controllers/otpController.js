@@ -148,7 +148,7 @@ export const sendOtpToUserLatest = async (req, res) => {
       return res.status(500).json({
         success: false,
         status: 500,
-        message: "https://msdgweb.mgov.gov.in ",smsinfo
+        message: smsinfo
       });
 
     }

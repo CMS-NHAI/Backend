@@ -143,6 +143,15 @@ export const sendOtpToUserLatest = async (req, res) => {
     }
 
     const smsinfo = await sendOtpSMS(phoneNumber)
+    console.log("CDAC SMS INFO >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", smsinfo)
+    if(!smsinfo.genOtp){
+      return res.status(500).json({
+        success: false,
+        status: 500,
+        message: smsinfo
+      });
+
+    }
     const hashed = await hashOTP(smsinfo.genOtp);
 
     

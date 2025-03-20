@@ -1550,8 +1550,12 @@ export const transferUser = async (req, res) => {
   try {
     const { user_id, office_id } = req.body
 
-    if (!user_id || !office_id) {
-      return res.status(400).json({ message: "User ID and office id are required." });
+    if (!user_id) {
+      return res.status(400).json({ success:false, status:STATUS_CODES.BAD_REQUEST, message: "User id is required." });
+    }
+
+    if (!office_id) {
+      return res.status(400).json({ success:false, status:STATUS_CODES.BAD_REQUEST, message: "Office id is required." });
     }
     
     const userId = Number(user_id)
@@ -1562,7 +1566,7 @@ export const transferUser = async (req, res) => {
     });
 
     if (!userDetail) {
-      return res.status(404).json({ message: `User not found on the given user id ${userId}.` });
+      return res.status(404).json({ success:false, status:STATUS_CODES.NOT_FOUND, message: `User not found on the given user id ${userId}.` });
     }
 
     const officeDetail = await prisma.or_office_master.findFirst({
@@ -1570,17 +1574,26 @@ export const transferUser = async (req, res) => {
     });
 
     if (!officeDetail) {
-      return res.status(404).json({ message: `Office not found on the given office id ${officeId}.` });
+      return res.status(404).json({ success:false, status:STATUS_CODES.NOT_FOUND, message: `Office not found on the given office id ${officeId}.` });
     }
 
-    await prisma.user_master.update({
+    const updatedUser = await prisma.user_master.update({
       where: { user_id:userId },
       data: { office_id: officeId },
+      select: {
+        user_id: true, 
+        office_id: true,
+        or_office_master: {
+          select: {
+            office_id: true,
+            office_name: true,
+          }
+        },
+      },
     });
-
-    res.status(200).json({ message: `User transfer successfully.` })
+    res.status(200).json({success:true, status:STATUS_CODES.OK, message: `User transfer successfully.` })
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ success:false, status:STATUS_CODES.INTERNAL_SERVER_ERROR, message: error.message })
   }
 }
 

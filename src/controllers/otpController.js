@@ -142,8 +142,8 @@ export const sendOtpToUserLatest = async (req, res) => {
       phoneNumber = phoneNumber.substring(3); 
     }
 
-    //const smsinfo = await sendOtpSMS(phoneNumber)
-    /*console.log("CDAC SMS INFO >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", smsinfo)
+    const smsinfo = await sendOtpSMS(phoneNumber)
+    console.log("CDAC SMS INFO >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", smsinfo)
     if(!smsinfo.genOtp){
       return res.status(500).json({
         success: false,
@@ -151,8 +151,8 @@ export const sendOtpToUserLatest = async (req, res) => {
         message: smsinfo
       });
 
-    }*/
-    const hashed = await hashOTP(12345) //(smsinfo.genOtp);
+    }
+    const hashed = await hashOTP(smsinfo.genOtp);
 
     
     await prisma.otp_verification.create({

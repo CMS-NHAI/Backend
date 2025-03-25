@@ -149,7 +149,8 @@ export const getAgencyById = async (req, res) => {
 
 export const getAgencyByInviteId = async(req, res) =>{
   const{id}= req.params;
-  const { inviteid } = req.query
+  const { inviteid } = req.query;
+  let inviteagency;
   try{
         const agency = await prisma.registration_invitation.findFirst({
           where :{unique_invitation_id: inviteid}
@@ -170,11 +171,11 @@ export const getAgencyByInviteId = async(req, res) =>{
         }
         if (agency.invitation_type ==="Agency")
         {
-          const inviteagency = await prisma.organization_master.findUnique({ 
+          inviteagency = await prisma.organization_master.findUnique({ 
             where: { org_id: agency.org_id } 
           });
         }else if(agency.invitation_type ==="User"){
-          const inviteagency = await prisma.user_master.findUnique({
+          inviteagency = await prisma.user_master.findUnique({
             where: { user_id: agency.user_id }
           });
         }

@@ -41,6 +41,18 @@ export const createAgency = async (req, res) => {
 
     const invitation_link = generateInvitationLink;
 
+    const randomUser = await prisma.user_master.findFirst({
+     
+    });
+    console.log('random user ' ,randomUser);
+
+    if (!randomUser) {
+      return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+        message: "No users found to assign 'created_by'.",
+      });
+    }
     // Save the invitation in the database
     const invitation = await prisma.registration_invitation.create({
       data: {
@@ -52,7 +64,7 @@ export const createAgency = async (req, res) => {
         invite_to: newAgency.contact_email,
         invite_message: "You are invited to join the platform NHAI Datalake 3.0.",
         expiry_date: new Date(new Date().setDate(new Date().getDate() + 7)),
-        created_by: 1030, //newAgency.user_id,
+        created_by: randomUser.user_id, //newAgency.user_id,
         unique_invitation_id : naoid,
         invitation_type: "Agency"
       },

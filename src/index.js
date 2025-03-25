@@ -82,6 +82,12 @@ app.get("/.well-known/assetlinks.json", (req, res) => {
   res.sendFile(path.join(__dirname, "public/.well-known/assetlinks.json"));
 });
 
+app.get("/.well-known/apple-app-site=association", (req, res) => {
+  res.sendFile(path.join(__dirname, "public/.well-known/apple-app-site=association"));
+});
+
+
+
 //app.use('/api/user', userRoutes);
 //app.use("/api/v1/article", ArticleRouter);
 //app.use("/api/v1/user", UserRouter);

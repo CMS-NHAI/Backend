@@ -178,7 +178,7 @@ export const getAgencyByInviteId = async(req, res) =>{
             where: { user_id: agency.user_id }
           });
         }
-      console.log(inviteagency)
+      //console.log(inviteagency)
 
         await prisma.registration_invitation.update({
           where: { invitation_id: agency.invitation_id},
@@ -196,7 +196,7 @@ export const getAgencyByInviteId = async(req, res) =>{
         res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ 
         success: false,
         status:STATUS_CODES.INTERNAL_SERVER_ERROR,
-        Message: "Error fetching agency."
+        Message: error.messsage
       });
 
   }

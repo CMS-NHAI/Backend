@@ -92,7 +92,7 @@ app.get("/.well-known/apple-app-site=association.json", (req, res) => {
 //app.use("/api/v1/article", ArticleRouter);
 //app.use("/api/v1/user", UserRouter);
 
-app.get('/backend', (req, res) => {
+app.get('/backend/auth', (req, res) => {
   res.status(STATUS_CODES.OK).send({
     message: `Welcome to Datalake 3.0 ${APP_CONSTANTS.APP_NAME} v${APP_CONSTANTS.VERSION}`,
   });

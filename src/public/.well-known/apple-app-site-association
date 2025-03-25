@@ -1,0 +1,14 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "2A43ZNWB4F.com.nhai.datalake",
+        "paths": [
+          "/signup*",
+          "/"
+        ]
+      }
+    ]
+  }
+}

@@ -1,6 +1,9 @@
 import {keycloakAccessToken} from "../../helper/keycloakAccessToken.js";
 import axios from 'axios';
 import keycloakConfig from '../../constants/keycloak.json' with {type: "json"}; 
+import { allScopes } from "../../constants/keycloak/allScopes.js";
+import { STATUS_CODES } from "../../constants/statusCodesConstant.js";
+import { RESPONSE_MESSAGES } from "../../constants/responseMessages.js";
 
 const { realm, serverUrl, client_name_id } = keycloakConfig;
 
@@ -110,5 +113,23 @@ export const keycloakResourceList = async (req, res) => {
         msg: `Error: ${error.message}`,
       });
     }
+  }
+};
+
+/**
+ * Method @GET
+ * Description : Get specific scope under resource
+*/
+export const keycloakGetResourceScope = async (req, res) => {
+  try {
+    res.status(STATUS_CODES.OK).json({
+      success: RESPONSE_MESSAGES.SUCCESS.status,
+      message: RESPONSE_MESSAGES.SUCCESS.RESOURCE_SCOPE_LIST,
+      date:allScopes
+     
+    });
+  } catch (error) {
+    // Handle validation or API errors
+    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ success: false, message: error.message });
   }
 };

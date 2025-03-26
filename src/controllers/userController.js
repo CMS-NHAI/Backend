@@ -182,6 +182,7 @@ export const signup = async (req, res) => {
 };
 
 export const getUserDetails = async (req, res) => {
+ 
   const { mobile_number } = req.body;
 
   const { error } = phoneValidationSchema.validate({ mobile_number });
@@ -272,14 +273,15 @@ export const getUserByPhoneNo = async (mobile_number) => {
         
       },
     });
-    console.log('user', user);
+   
     return user; // Return user data or null if not found
   } catch (err) {
-    res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-      success: "false",
-      status: STATUS_CODES.INTERNAL_SERVER_ERROR,
-      message: err.message,
-    });
+    return err.message
+    // res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
+    //   success: "false",
+    //   status: STATUS_CODES.INTERNAL_SERVER_ERROR,
+    //   message: err.message,
+    // });
 
   }
 };
@@ -506,7 +508,13 @@ ORDER BY um.user_id DESC
     // SELECT COUNT(*) AS count
     // FROM "tenant_nhai"."registration_invitation"`;
 
-    const totalUsersCount = await prisma.registration_invitation.count();
+    //const totalUsersCount = await prisma.registration_invitation.count();
+    const totalUsersCount = await prisma.$queryRaw`
+      SELECT COUNT(*) AS count
+      FROM tenant_nhai.user_master AS um
+      INNER JOIN tenant_nhai.registration_invitation AS ri
+          ON um.user_id = ri.user_id`;
+const total = Number(totalUsersCount[0]?.count) || 0;
 
     const usersWithDummyData = users.map(user => ({
       ...user,
@@ -531,8 +539,8 @@ ORDER BY um.user_id DESC
       pagination: {
         page,
         pageSize,
-        total: totalUsersCount,
-        totalPages: Math.ceil(totalUsersCount / pageSize),
+        total: total,
+        totalPages: Math.ceil(total / pageSize),
       },
     });
   } catch (err) {
@@ -1178,7 +1186,7 @@ export const inviteUser = async (req, res) => {
 
 
     await keycloakAddUser({
-      username: user.name,
+      username: user.user_id,
       email: user.email,
       firstName: user.name,
       lastName: user.name,
@@ -1187,13 +1195,11 @@ export const inviteUser = async (req, res) => {
       designation: user.designation,
     })
 
-
     const getKeyCloakDataforUser = await getKeycloakUserPermission({ mobileNumber: user.mobile_number })
     const assignRoles = await keycloakUpdateUserRole({
       userId: getKeyCloakDataforUser.userDetail.id,
       roleName: roles_permission
     })
-
 
     ///////////////////////////////////////////////////
     const naoid = nanoid(6);
@@ -1392,7 +1398,6 @@ export const getUserById = async (req, res) => {
 export const updateUserById = async (req, res) => {
   const { user_id, name, email, mobile_number, office_mobile_number, designation, user_type, status, office, contracts, roles_permission } = req.body;
 
-
   // Validate user_id using Joi validation schema
   const { error } = editUserValidationSchema.validate(req.body);
 
@@ -1464,7 +1469,6 @@ export const updateUserById = async (req, res) => {
     });
   }
 };
-
 
 export const getOfficeDetails = async (req, res) => {
 

@@ -113,7 +113,7 @@ export const sendOtpToUserLatest = async (req, res) => {
     return res.status(STATUS_CODES.BAD_REQUEST).json({
       success: false,
       status: STATUS_CODES.BAD_REQUEST,
-      message: 'Invalid phone number.',
+      message: 'No user found',
     });
   }
 

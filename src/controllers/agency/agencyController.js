@@ -161,11 +161,12 @@ export const getAgencyById = async (req, res) => {
 
 export const getAgencyByInviteId = async(req, res) =>{
   const{id}= req.params;
-  const { inviteid } = req.query;
+  // const { inviteid } = req.params;
+  console.log('inviteid ', id);
   let inviteagency;
   try{
         const agency = await prisma.registration_invitation.findFirst({
-          where :{unique_invitation_id: inviteid}
+          where :{unique_invitation_id: id}
         });
         if (!agency) {
           return res.status(STATUS_CODES.NOT_FOUND).json({
@@ -173,7 +174,7 @@ export const getAgencyByInviteId = async(req, res) =>{
             status:STATUS_CODES.NOT_FOUND,
             message: "Link Invalid or expired invitation" });
         }
-        
+        console.log('agency ', agency);
           // Check if invitation has expired
         if (new Date() > agency.expiry_date) {
           return res.status(400).json({ 

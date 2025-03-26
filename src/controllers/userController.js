@@ -508,7 +508,13 @@ ORDER BY um.user_id DESC
     // SELECT COUNT(*) AS count
     // FROM "tenant_nhai"."registration_invitation"`;
 
-    const totalUsersCount = await prisma.registration_invitation.count();
+    //const totalUsersCount = await prisma.registration_invitation.count();
+    const totalUsersCount = await prisma.$queryRaw`
+      SELECT COUNT(*) AS count
+      FROM tenant_nhai.user_master AS um
+      INNER JOIN tenant_nhai.registration_invitation AS ri
+          ON um.user_id = ri.user_id`;
+const total = Number(totalUsersCount[0]?.count) || 0;
 
     const usersWithDummyData = users.map(user => ({
       ...user,
@@ -533,8 +539,8 @@ ORDER BY um.user_id DESC
       pagination: {
         page,
         pageSize,
-        total: totalUsersCount,
-        totalPages: Math.ceil(totalUsersCount / pageSize),
+        total: total,
+        totalPages: Math.ceil(total / pageSize),
       },
     });
   } catch (err) {

@@ -181,6 +181,10 @@ export const signup = async (req, res) => {
   }
 };
 
+/**
+ * Method : @POST
+ * Description : Get user detail on the basis.
+*/
 export const getUserDetails = async (req, res) => {
  
   const { mobile_number } = req.body;
@@ -206,10 +210,9 @@ export const getUserDetails = async (req, res) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-
-    console.log('Decoded token:', decoded);
     const user = await getUserByPhoneNo(mobile_number);
     const keyCloakDetails = await getKeycloakUserPermission({mobileNumber:mobile_number,email:user?.email})
+  
     if (!user) {
       return res.status(STATUS_CODES.OK).json({
         success: "false",
@@ -218,29 +221,29 @@ export const getUserDetails = async (req, res) => {
       });
     }
 
-    // Construct and send the success response
     res.status(STATUS_CODES.OK).json({
       status: "success",
       message: "User details retrieved successfully.",
       data: {
-        sap_id: user.sap_id,
-        user_id : user.user_id,
-        name: user.name,
-        date_of_birth: user.date_of_birth,  // Assuming date_of_birth is returned as a Date object
-        mobile_number: user.mobile_number,
-        email_id: user.email,
-        designation: user.designation,
-        office_location: user.office_location,
-        office_id: user.office_id,
-        division: user.division,
-        department: user.department,
-        user_type: user.user_type,
+        sap_id: user?.sap_id,
+        user_id : user?.user_id,
+        name: user?.name,
+        date_of_birth: user?.date_of_birth,
+        mobile_number: user?.mobile_number,
+        email_id: user?.email,
+        designation: user?.designation,
+        office_location: user?.office_location,
+        office_id: user?.office_id,
+        division: user?.division,
+        department: user?.department,
+        user_type: user?.user_type,
+        functional_division: user?.functional_division_master,
+        state_division: user?.or_office_master,
         user_role:keyCloakDetails?.userRole,
         userAuthroization:keyCloakDetails?.userAuthorization
       },
     });
   } catch (err) {
-    console.error('Error during API request:', err);
     res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
       success: "false",
       status: STATUS_CODES.INTERNAL_SERVER_ERROR,
@@ -249,29 +252,34 @@ export const getUserDetails = async (req, res) => {
   }
 };
 
+/**
+ * Method : @GET
+ * Description : Get user detail on the basis on the basis of mobile number.
+*/
 export const getUserByPhoneNo = async (mobile_number) => {
   try {
 
-    // Query the user_master table to get user details by mobile_number
+    // Get user details by mobile_number
     const user = await prisma.user_master.findUnique({
       where: {
-        mobile_number: mobile_number,  // Search by phone_number
+        mobile_number: mobile_number,
       },
-      select: {
-        user_id : true,
-        sap_id: true,
-        name: true,
-        date_of_birth: true,
-        mobile_number: true,
-        email: true,
-        designation: true,
-        office_location: true,
-        user_type: true,
-        office_id: true,
-        division: true,
-        department: true
-        
-      },
+      include: {
+        functional_division_master: {
+          select: {
+            functional_division_id: true,
+            functional_division_name: true,
+          },
+        },
+        or_office_master: {
+          select: {
+            // office_id:true,
+            // office_name:true,
+            state:true
+          },
+        },
+       
+      }
     });
    
     return user; // Return user data or null if not found

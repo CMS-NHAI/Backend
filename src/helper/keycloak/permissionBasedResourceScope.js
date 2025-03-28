@@ -3,7 +3,7 @@ import keycloakConfig from '../../constants/keycloak.json' with {type: "json"};
 
 const { realm, serverUrl, client_name_id } = keycloakConfig;
 
-export const permissionBasedResourceScope = async (permissionId, permissionName, permissionOriginalName, token) => {
+export const permissionBasedResourceScope = async (permissionId, permissionName, permissionOriginalName, token, skip, take) => {
    
     try {
        
@@ -21,6 +21,10 @@ export const permissionBasedResourceScope = async (permissionId, permissionName,
                 Authorization: `Bearer ${token}`,
                 'Content-Type': 'application/json',
             },
+            params: {
+                first: skip,
+                max: take
+              }
         });
 
         const getPermissionBasedScopeUrl = `${serverUrl}/admin/realms/${realm}/clients/${client_name_id}/authz/resource-server/permission/${permissionId}/scopes`;
@@ -30,6 +34,10 @@ export const permissionBasedResourceScope = async (permissionId, permissionName,
                 Authorization: `Bearer ${token}`,
                 'Content-Type': 'application/json',
             },
+            params: {
+                first: skip,
+                max: take
+              }
         });
         // ==== merge resource and scope start =======
         const mergedResult = {

@@ -27,7 +27,7 @@ import piuRouter from './routes/testCases/piuRoute.js'
 import path from "path";
 import { fileURLToPath } from 'url';
 import { sendOtpSMS, sendOtpSMSForInvite } from "./services/cdacOtpService.js";
-import { sendEmail } from "./services/emailService.js";
+import sendEmailRoute from "./routes/sendEmailRoutes.js"
 
 const app = express();
 
@@ -49,8 +49,20 @@ app.use(bodyParser.json({ limit: "10mb" }));
 
 //app.use(express.json({ limit: "10mb" })); 
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
- 
+
+// for testing purpose
+app.post('/backend/auth/api/v1/send-otp', async(req, res)=>{
+  try{
+    const data = await sendOtpSMS(req.body.mobileno)
+    res.status(200).json({ message:'OTP send successfully!', data:data})
+  }catch(error){
+    res.status(500).json({ success:false, message:error.message})
+  }
+   
+});
+
 app.use('/backend/auth/api/v1/otp', router);
+app.use('/backend/auth/api/v1/email', sendEmailRoute);
 app.use('/backend/auth/api/v1/auth', router);
 app.use('/backend/auth/api/v1/user', userrouter);
 app.use('/backend/auth/api/v1/', userrouter);

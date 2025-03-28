@@ -28,7 +28,11 @@ export const RESPONSE_MESSAGES = {
     MIN_FILES_REQUIRED: 'Minimum 2 file is required.',
     AUDIO_FILE_REQUIRED: "Audio file is required.",
     DOCUMENT_TYPE_REQUIRED: "Document type is required.",
-    REQUESTED_END_POINT: "The requested end point is not found on this server."
+    REQUESTED_END_POINT: "The requested end point is not found on this server.",
+    EMAIL_NOT_FOUND : "Email is required.",
+    SUBJECT_NOT_FOUND : "Subject is required.",
+    EMAIL_TEXT_NOT_FOUND: "Text is required.",
+    EMAIL_FAIL : 'Error sending email, please try again later.',
 
   },
   SUCCESS: {
@@ -45,5 +49,6 @@ export const RESPONSE_MESSAGES = {
     AUDIO_UPLOADED: "Audio file uploaded successfully",
     ROLE_CREATED : "Role and Permission has been created successfully.",
     RESOURCE_SCOPE_LIST : "Resource and scope retrive successfully.",
+    EMAIL_SEND : "Email send successfully."
   },
 }

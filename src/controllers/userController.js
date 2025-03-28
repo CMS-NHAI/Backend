@@ -1165,6 +1165,7 @@ export const inviteUser = async (req, res) => {
   }
   const user_role = "Manager", aadhar_image = "", user_image = "";
   //if(user_type==="Internal - Contractual"){
+  // user_role should be dynamic
   const organization_id = 83;
   //}
   try {

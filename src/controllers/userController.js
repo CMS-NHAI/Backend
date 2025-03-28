@@ -505,7 +505,8 @@ export const getAllUsers = async (req, res) => {
     um.office_id,
     um.division,
     um.department,
-    um.office_mobile_number
+    um.office_mobile_number,
+    um.organization_id
 FROM tenant_nhai.user_master AS um
 INNER JOIN tenant_nhai.registration_invitation AS ri
     ON um.user_id = ri.user_id
@@ -524,11 +525,31 @@ ORDER BY um.user_id DESC
           ON um.user_id = ri.user_id`;
 const total = Number(totalUsersCount[0]?.count) || 0;
 
-    const usersWithDummyData = users.map(user => ({
-      ...user,
-      user_company_name: 'Company 1',
-      contract_details: 'Contract 1',
-    }));
+const usersWithDummyData = await Promise.all(users.map(async (user) => {
+  let user_company_name = 'Company 1';
+
+  if (user.user_type === 'Internal - Permanent' || user.user_type === 'Internal - Contractual') {
+    user_company_name = 'NHAI';
+  }
+
+  if (user.user_type === 'External') {
+    const organization = await prisma.organization_master.findUnique({
+      where: {
+        org_id : user.organization_id,
+      },
+    });
+
+    if (organization) {
+      user_company_name = organization.name; 
+    }
+  }
+
+  return {
+    ...user,
+    user_company_name,
+    contract_details: 'Contract 1',
+  };
+}));
     // console.log(user)
     // If no users are found, return a message
     if (!users) {
@@ -1165,6 +1186,7 @@ export const inviteUser = async (req, res) => {
   }
   const user_role = "Manager", aadhar_image = "", user_image = "";
   //if(user_type==="Internal - Contractual"){
+  // user_role should be dynamic
   const organization_id = 83;
   //}
   try {

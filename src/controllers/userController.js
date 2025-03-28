@@ -524,11 +524,20 @@ ORDER BY um.user_id DESC
           ON um.user_id = ri.user_id`;
 const total = Number(totalUsersCount[0]?.count) || 0;
 
-    const usersWithDummyData = users.map(user => ({
-      ...user,
-      user_company_name: 'Company 1',
-      contract_details: 'Contract 1',
-    }));
+const usersWithDummyData = users.map(user => {
+  let user_company_name = 'Company 1'; 
+
+  // Check if user_type is 'Internal - Permanent' or 'Internal - Contractual'
+  if (user.user_type === 'Internal - Permanent' || user.user_type === 'Internal - Contractual') {
+    user_company_name = 'NHAI';
+  }
+
+  return {
+    ...user,
+    user_company_name, 
+    contract_details: 'Contract 1',
+  };
+});
     // console.log(user)
     // If no users are found, return a message
     if (!users) {

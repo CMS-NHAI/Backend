@@ -12,7 +12,7 @@ import keycloakConfig from '../../constants/keycloak.json' with { type: "json" }
 import { createUpdateResourceAndScopes } from "../../helper/keycloak/createUpdateResourceAndScopes.js";
 import { createUpdatePermission } from "../../helper/keycloak/createUpdatePermission.js";
 import { createUpdateScope } from "../../helper/keycloak/createUpdateScope.js";
-
+import { initialValue, maxValue, pageValue, pageSizeValue } from "../../constants/keycloak/paginationConstant.js";
 
 const { realm, serverUrl, client_name_id } = keycloakConfig;
 
@@ -135,8 +135,6 @@ export async function updateRoleAndScopes(req, res) {
           roles: [{ id: checkRoleResponse.data.id }],
         };
 
-        // Log the URL to confirm correctness
-
         // Make the PUT request to update the policy
         const response = await axios.put(
           `${serverUrl}/admin/realms/${realm}/clients/${client_name_id}/authz/resource-server/policy/role/${policy.id}`,
@@ -184,16 +182,16 @@ export async function updateRoleAndScopes(req, res) {
     const authorization = req.body?.authorization
     if (authorization) {
 
-      // step 1: Create the scope
+      // Create the scope
       const scopeList = await createUpdateScope(authorization, token)
       const scopeIds = scopeList.map(scope => scope.id);
       const scopeNames = scopeList.map(scope => scope.name);
 
-      // Step 2: Create resources and scopes
+      // Create resources and scopes
       const resourceDetails = await createUpdateResourceAndScopes(authorization, scopeNames, scopeIds, token);
       const allResourceIds = resourceDetails.map(resource => resource._id);
 
-      // Step 3: Create permission if new resources and scopes are added
+      // Create permission if new resources and scopes are added
 
       try {
         await Promise.all(
@@ -233,6 +231,24 @@ export const keycloakRoleResourecScopeList = async (req, res) => {
 
   try {
 
+    // Pagination start
+    const first = parseInt(req.query.first) || initialValue;
+    const max = parseInt(req.query.max) || maxValue;
+
+    const pageSize = parseInt(req.query.pageSize) || pageSizeValue;
+    const page = parseInt(req.query.page) || pageValue;
+
+    if (pageSize <= 0 || page <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid page or pageSize. Both should be positive integers.',
+      });
+    }
+
+    const skip = (page - 1) * pageSize;
+    const take = pageSize;
+    // Pagination end
+
     // === get role ========
     const keycloakRoleUrl = `${serverUrl}/admin/realms/${realm}/roles`;
     const roleResponse = await axios.get(keycloakRoleUrl, {
@@ -240,6 +256,10 @@ export const keycloakRoleResourecScopeList = async (req, res) => {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
+      params: {
+        first: skip,
+        max: take
+      }
     });
 
     // === get policy start ====
@@ -250,6 +270,10 @@ export const keycloakRoleResourecScopeList = async (req, res) => {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
+      params: {
+        max: max,
+        first: first
+      }
     });
 
     // === filter policy on the basis of role start ===
@@ -272,6 +296,10 @@ export const keycloakRoleResourecScopeList = async (req, res) => {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
+      params: {
+        max: max,
+        first: first
+      }
     });
 
     // ==== Filter permission on the basis of policy name start ===
@@ -281,9 +309,9 @@ export const keycloakRoleResourecScopeList = async (req, res) => {
       cleanedPolicyNames.some(cleanedName => removeLastWord(permission.name).includes(cleanedName))
     );
 
-    const promises = policyBasedPermissions.map((permission) => permissionBasedResourceScope(permission.id, removeLastWord(permission.name), permission.name, token));
+    const promises = policyBasedPermissions.map((permission) => permissionBasedResourceScope(permission.id, removeLastWord(permission.name), permission.name, token, skip, take));
     const results = await Promise.all(promises);
-
+    
     const roleData = roleResponse.data
       .map(role => {
         const rolePermissions = results.filter(permission => permission.permissionName === role.name);
@@ -303,7 +331,8 @@ export const keycloakRoleResourecScopeList = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Role list retrive successfuly.",
-      data: roleData,
+      count: roleData.length,
+      data: roleData
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -398,7 +427,7 @@ export const keycloakRoleList = async (req, res) => {
 
   try {
     // Pagination logic
-    const pageSize = parseInt(req.query.pageSize) || 10;
+    const pageSize = parseInt(req.query.pageSize) || 100;
     const page = parseInt(req.query.page) || 1;
 
     if (pageSize <= 0 || page <= 0) {

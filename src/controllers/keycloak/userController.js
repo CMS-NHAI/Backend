@@ -12,7 +12,6 @@ export const keycloakAddUser = async (req, res) => {
   }
 
   const {
-    username,
     email,
     firstName,
     lastName,
@@ -60,6 +59,7 @@ export const keycloakAddUser = async (req, res) => {
 export const keycloakUserList = async (req, res) => {
   const token = await keycloakAccessToken();
 
+
   if (!token) {
     return res.status(400).json({ msg: "Token is missing or invalid" });
   }
@@ -67,7 +67,7 @@ export const keycloakUserList = async (req, res) => {
   const keycloakUrl = `${serverUrl}/admin/realms/${realm}/users`;
 
   // Get pagination parameters from query (default to page 1 and page size of 10)
-  const { page = 1, size = 10 } = req.query;
+  const { page = 1, size = 100 } = req.query;
 
   // Calculate first based on page and size
   const first = (page - 1) * size;

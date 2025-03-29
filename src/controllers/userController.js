@@ -189,7 +189,6 @@ export const signup = async (req, res) => {
 export const getUserDetails = async (req, res) => {
  
   const { mobile_number } = req.body;
-
   const { error } = phoneValidationSchema.validate({ mobile_number });
 
   if (error) {
@@ -200,17 +199,8 @@ export const getUserDetails = async (req, res) => {
     });
   }
 
-  const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
-
-  if (!token) {
-    return res.status(STATUS_CODES.UNAUTHORIZED).json({
-      success: false,
-      message: RESPONSE_MESSAGES.ERROR.UNAUTHORIZATION,
-    });
-  }
-
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+  
     const user = await getUserByPhoneNo(mobile_number);
     const keyCloakDetails = await getKeycloakUserPermission({mobileNumber:mobile_number,email:user?.email})
   
@@ -259,9 +249,9 @@ export const getUserDetails = async (req, res) => {
  * Description : Get user detail on the basis on the basis of mobile number.
 */
 export const getUserByPhoneNo = async (mobile_number) => {
+
   try {
 
-    // Get user details by mobile_number
     const user = await prisma.user_master.findUnique({
       where: {
         mobile_number: mobile_number,
@@ -277,27 +267,18 @@ export const getUserByPhoneNo = async (mobile_number) => {
             }
           }
         },
-
         functional_division_master: {
           select: {
             functional_division_id: true,
             functional_division_name: true,
           },
         },
-       
-       
       }
     });
    
-    return user; // Return user data or null if not found
+    return user;
   } catch (err) {
     return err.message
-    // res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-    //   success: "false",
-    //   status: STATUS_CODES.INTERNAL_SERVER_ERROR,
-    //   message: err.message,
-    // });
-
   }
 };
 

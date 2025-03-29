@@ -23,6 +23,7 @@ import { keycloakAddUser } from "../services/keycloakService/keycloakAddUser.js"
 import { getKeycloakUserPermission } from "../services/keycloakService/getUserDetailsPermission.js"
 import { keycloakUpdateUserRole } from "../helper/keycloak/keycloakUpdateUserRole.js";
 import { sendOtpSMS, sendOtpSMSForInvite } from "../services/cdacOtpService.js";
+import { RESPONSE_MESSAGES } from "../constants/responseMessages.js";
 const uniqueUsername = uuidv4();
 
 
@@ -204,7 +205,7 @@ export const getUserDetails = async (req, res) => {
   if (!token) {
     return res.status(STATUS_CODES.UNAUTHORIZED).json({
       success: false,
-      message: 'Authorization token is required.',
+      message: RESPONSE_MESSAGES.ERROR.UNAUTHORIZATION,
     });
   }
 
@@ -215,15 +216,16 @@ export const getUserDetails = async (req, res) => {
   
     if (!user) {
       return res.status(STATUS_CODES.OK).json({
-        success: "false",
+        success: RESPONSE_MESSAGES.ERROR.Fail,
         status: STATUS_CODES.OK,
-        message: "User not found with the provided phone number.",
+        message: RESPONSE_MESSAGES.ERROR.USER_NOT_FOUND_BY_MOBILE,
       });
     }
 
     res.status(STATUS_CODES.OK).json({
-      status: "success",
-      message: "User details retrieved successfully.",
+      success: RESPONSE_MESSAGES.SUCCESS.status,
+      status: STATUS_CODES.OK,
+      message: RESPONSE_MESSAGES.SUCCESS.USER_DETAIL,
       data: {
         sap_id: user?.sap_id,
         user_id : user?.user_id,
@@ -245,7 +247,7 @@ export const getUserDetails = async (req, res) => {
     });
   } catch (err) {
     res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-      success: "false",
+      success: RESPONSE_MESSAGES.ERROR.Fail,
       status: STATUS_CODES.INTERNAL_SERVER_ERROR,
       message: err.message,
     });
@@ -265,19 +267,24 @@ export const getUserByPhoneNo = async (mobile_number) => {
         mobile_number: mobile_number,
       },
       include: {
+        or_office_master: {
+          include:{
+            organization_master:true,
+            ucc_piu:{
+              include:{
+                ucc_master:true
+              }
+            }
+          }
+        },
+
         functional_division_master: {
           select: {
             functional_division_id: true,
             functional_division_name: true,
           },
         },
-        or_office_master: {
-          select: {
-            // office_id:true,
-            // office_name:true,
-            state:true
-          },
-        },
+       
        
       }
     });

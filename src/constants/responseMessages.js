@@ -34,7 +34,18 @@ export const RESPONSE_MESSAGES = {
     EMAIL_TEXT_NOT_FOUND: "Text is required.",
     EMAIL_FAIL : 'Error sending email, please try again later.',
     USER_NOT_FOUND_BY_MOBILE: "User not found with the provided phone number.",
-    UNAUTHORIZATION: "Authorization token is required."
+    UNAUTHORIZATION: "Authorization token is required.",
+    INVALIDE_ROLE : "Invalid roles. Please provide an array of roles.",
+    INVALIDE_RESOURCE : "Invalid resources. Please provide an array of resources.",
+    INVALIDE_PERMISSION : "Invalid permissions. Please provide an array of permissions.",
+    INVALIDE_TOKEN : "Token is missing or invalid.",
+    EMAIL_MOBILE_NOT_FOUND : "Mobile number or email is required.",
+    USER_DETAIL_NOT_FOUND : "User details not found.",
+    ROLE_NOT_ALLOWED : "Forbidden: Insufficient roles.",
+    RESOURCE_NOT_FOUND : "Forbidden: No matching resources found.",
+    INSUFFICIENT_PERMISSION: "Forbidden: Insufficient permissions.",
+    UNEXPECTED_ERROR: "An unexpected error occurred.",
+    ACCESS_TOKEN_FAIL: 'Failed to retrieve Keycloak access token'
 
   },
   SUCCESS: {

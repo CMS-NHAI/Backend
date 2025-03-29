@@ -1,7 +1,7 @@
 import { STATUS_CODES } from "../constants/statusCodesConstant.js";
 import { RESPONSE_MESSAGES } from "../constants/responseMessages.js";
 import { sendEmail } from "../services/emailService.js";
-import { emailValdation } from "../validations/emailValidation.js";
+import { emailValdation } from "../validations/validation.js";
 
 export const sendEmailViaZoho = async (req, res) => {
 

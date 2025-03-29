@@ -3,7 +3,7 @@ import session from 'express-session'
 import Keycloak from 'keycloak-connect'
 import axios from 'axios'
 // import keycloakConfig from '../../constants/keycloak.json' with {type: "json"};
-import { keycloakCredential } from '../../constants/keycloakCredential.js';
+import { keycloakCredential } from '../../constants/keycloak/keycloakCredential.js'
 const app = express();
 
 // Initialize Keycloak middleware and session storage

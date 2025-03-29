@@ -1,5 +1,6 @@
-import nodemailer from 'nodemailer'
+import nodemailer from 'nodemailer';
 import { config } from 'dotenv';
+import { RESPONSE_MESSAGES } from '../constants/responseMessages.js';
 config();
 
 const transporter = nodemailer.createTransport({
@@ -12,14 +13,39 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-export const sendEmail = (to, subject, text) => {
+export const sendEmail = async (to, subject, text) => {
+  try {
+   
+    const mailOptions = {
+      from: process.env.ZOHO_EMAIL,
+      to: to,
+      subject: subject,
+      text: text,
+    };
 
-  const mailOptions = {
-    from: process.env.ZOHO_EMAIL,
-    to: to,                       
-    subject: subject,            
-    text: text,
-  };
-
-  return transporter.sendMail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
+    return {
+      success: true,
+      message: info.response,
+      info
+    };
+  } catch (error) {
+    if (error.response) {
+      return {
+        success: RESPONSE_MESSAGES.ERROR.Fail,
+        message: `${error.response}`, 
+        response: error.response,
+        responseCode: error.responseCode,
+        error: error.message
+      };
+    } else {
+      return {
+        success: false,
+        message: `${error.message}`,
+        error
+      };
+    }
+  }
 };
+
+

@@ -3,7 +3,7 @@ import { keycloakAccessToken } from "../../helper/keycloak/keycloakAccessToken.j
 import keycloakConfig from '../../constants/keycloak.json' with {type: "json"};
 import { getUserByEmailOrMobile } from "../../helper/keycloak/getUserByEmailOrMobile.js";
 const { realm, serverUrl } = keycloakConfig;
-import { getKeycloakUserPermission } from "../../services/keycloakService/getUserDetailsPermission.js"
+import { getKeycloakUserPermission } from "../../services/keycloak/getUserDetailsPermission.js"
 
 
 /**
@@ -139,6 +139,7 @@ export const userRoleResourcePermissionBasedAccess = (userRoles, userResource, u
 
             // Validate resources
             const matchedResource = userDetail?.userAuthorization?.filter(auth => userResource.includes(auth.resource));
+            
             if (!matchedResource || matchedResource.length === 0) {
                 return res.status(403).json({ message: "Forbidden: No matching resources found" });
             }
@@ -147,15 +148,14 @@ export const userRoleResourcePermissionBasedAccess = (userRoles, userResource, u
             const hasPermission = matchedResource.some(auth => 
                 auth.scope.some(scope => userPermission.includes(scope))
             );
-
+           
             if (!hasPermission) {
                 return res.status(403).json({ message: "Forbidden: Insufficient permissions" });
             }
 
-            // Proceed to the next middleware/controller if validation is successful
             next();
         } catch (error) {
-            console.error(error);  // Log the error for debugging
+            console.error(error);
             return res.status(500).json({ message: error.message || "An unexpected error occurred." });
         }
     };

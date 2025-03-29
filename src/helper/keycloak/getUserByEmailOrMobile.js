@@ -17,8 +17,4 @@ export const getUserByEmailOrMobile = async (email, mobileNumber, token) => {
       users = await getKeycloakData(`${url}?first=0&max=1000`, token);
       return users.find(user => user?.attributes?.mobile?.includes(mobileNumber));
     }
-   
-  
-    // Find user matching mobile number
-  
   };

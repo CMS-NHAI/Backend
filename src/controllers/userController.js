@@ -19,8 +19,8 @@ import { customAlphabet, nanoid } from 'nanoid';
 import crypto from "crypto";
 import axios from "axios";
 import { sendEmail } from '../services/emailService.js';
-import { keycloakAddUser } from "../services/keycloakService/keycloakAddUser.js";
-import { getKeycloakUserPermission } from "../services/keycloakService/getUserDetailsPermission.js"
+import { keycloakAddUser } from "../services/keycloak/keycloakAddUser.js";
+import { getKeycloakUserPermission } from "../services/keycloak/getUserDetailsPermission.js"
 import { keycloakUpdateUserRole } from "../helper/keycloak/keycloakUpdateUserRole.js";
 import { sendOtpSMS, sendOtpSMSForInvite } from "../services/cdacOtpService.js";
 import { RESPONSE_MESSAGES } from "../constants/responseMessages.js";

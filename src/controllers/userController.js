@@ -527,7 +527,10 @@ const total = Number(totalUsersCount[0]?.count) || 0;
 
 const usersWithDummyData = await Promise.all(users.map(async (user) => {
   let user_company_name = 'Company 1';
+  const getKeyCloakDataforUser = await getKeycloakUserPermission({mobileNumber:user?.mobile_number,email:user?.email})
 
+    user.user_role = getKeyCloakDataforUser?.userRole;
+    user.permission = getKeyCloakDataforUser?.userAuthorization
   if (user.user_type === 'Internal - Permanent' || user.user_type === 'Internal - Contractual') {
     user_company_name = 'NHAI';
   }

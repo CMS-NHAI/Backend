@@ -33,6 +33,8 @@ export const RESPONSE_MESSAGES = {
     SUBJECT_NOT_FOUND : "Subject is required.",
     EMAIL_TEXT_NOT_FOUND: "Text is required.",
     EMAIL_FAIL : 'Error sending email, please try again later.',
+    USER_NOT_FOUND_BY_MOBILE: "User not found with the provided phone number.",
+    UNAUTHORIZATION: "Authorization token is required."
 
   },
   SUCCESS: {
@@ -49,6 +51,7 @@ export const RESPONSE_MESSAGES = {
     AUDIO_UPLOADED: "Audio file uploaded successfully",
     ROLE_CREATED : "Role and Permission has been created successfully.",
     RESOURCE_SCOPE_LIST : "Resource and scope retrive successfully.",
-    EMAIL_SEND : "Email send successfully."
+    EMAIL_SEND : "Email send successfully.",
+    USER_DETAIL : "User details retrieved successfully.",
   },
 }

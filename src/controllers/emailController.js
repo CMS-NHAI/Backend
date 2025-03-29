@@ -4,9 +4,9 @@ import { sendEmail } from "../services/emailService.js";
 import { emailValdation } from "../validations/emailValidation.js";
 
 export const sendEmailViaZoho = async (req, res) => {
+
   const { email, subject, text } = req.body;
 
-  // Validate the email, subject, and text
   const validationError = emailValdation(email, subject, text);
   if (validationError) {
     return res.status(STATUS_CODES.BAD_REQUEST).json({
@@ -17,24 +17,26 @@ export const sendEmailViaZoho = async (req, res) => {
   }
 
   try {
+  
     const emailResponse = await sendEmail(email, subject, text);
-
+ 
     if (emailResponse.success) {
-      return res.status(emailResponse.responseCode).json({
-        success: true,
-        status: emailResponse.responseCode,
-        message: emailResponse.message
+      return res.status(STATUS_CODES.OK).json({
+        success: RESPONSE_MESSAGES.SUCCESS.status,
+        status: STATUS_CODES.OK,
+        message: RESPONSE_MESSAGES.SUCCESS.EMAIL_SEND
       });
     } else {
+    
       return res.status(emailResponse.responseCode).json({
-        success: false,
+        success: RESPONSE_MESSAGES.ERROR.Fail,
         status: emailResponse.responseCode,
         message: emailResponse.message, 
       });
     }
   } catch (error) {
     return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
-      success: false,
+      success: RESPONSE_MESSAGES.ERROR.Fail,
       status: STATUS_CODES.INTERNAL_SERVER_ERROR,
       message: RESPONSE_MESSAGES.ERROR.EMAIL_FAIL,
     });

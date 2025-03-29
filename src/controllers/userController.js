@@ -506,7 +506,8 @@ export const getAllUsers = async (req, res) => {
     um.division,
     um.department,
     um.office_mobile_number,
-    um.organization_id
+    um.organization_id ,
+    ri.created_by
 FROM tenant_nhai.user_master AS um
 INNER JOIN tenant_nhai.registration_invitation AS ri
     ON um.user_id = ri.user_id
@@ -531,6 +532,17 @@ const usersWithDummyData = await Promise.all(users.map(async (user) => {
 
     user.user_role = getKeyCloakDataforUser?.userRole;
     user.permission = getKeyCloakDataforUser?.userAuthorization
+  if (user.created_by) {
+    const creator = await prisma.user_master.findUnique({
+      where: {
+        user_id: user.created_by,
+      },
+      select: {
+        name: true,
+      },
+    });
+    user.created_by = creator?.name || ''; 
+  }
   if (user.user_type === 'Internal - Permanent' || user.user_type === 'Internal - Contractual') {
     user_company_name = 'NHAI';
   }
@@ -1254,7 +1266,7 @@ export const inviteUser = async (req, res) => {
         invite_to: user.email,
         invite_message: "You are invited to join the platform.",
         expiry_date: new Date(new Date().setDate(new Date().getDate() + 7)),
-        created_by: user.user_id,
+        created_by: req.user.user_id,
         unique_invitation_id: naoid,
         invitation_type: "User"
       },
